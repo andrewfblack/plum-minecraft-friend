@@ -6,9 +6,9 @@ export function offlineAnswer(question) {
   const q = cleanText(question).toLowerCase();
   const topics = [
     [/\b(tree|trees|sapling|saplings|orchard|fruit)\b|where.*\bplums\b/, 'Find plum trees in newly explored plains and forests. Break their fruit-speckled leaves for a chance of plums and saplings. Plant a sapling on dirt or grass with 5 blocks of width and 6 blocks of height clear. It grows while loaded, or use bone meal. Feed the plums to two tamed adult friends to breed them!'],
-    [/\b(breed|breeding|babies|baby|grow)\b/, 'Give an amethyst shard to each adult Plum to tame them, then give each a plum while they are close together. A little Plum will appear! Babies grow up in about 20 loaded minutes; plums speed that up. Tame your baby with an amethyst shard too.'],
-    [/\b(tame|taming|follow|friend)\b/, 'Use an amethyst shard on me to become my owner. I will follow you! Hold a book and interact with me to talk.'],
-    [/\b(heal|healing|hurt|health|help)\b/, 'Stay within 8 blocks of your tamed Plum for gentle regeneration. I can also answer questions about crafting, beds, torches, mining, farming, and breeding.'],
+    [/\b(breed|breeding|babies|baby|grow)\b/, 'Give a plum to each tamed adult Plum while they are close together. A little Plum will appear! Babies grow up in about 20 loaded minutes; plums speed that up. Tame your baby with a plum too.'],
+    [/\b(tame|taming|follow|friend)\b/, 'Give me a plum fruit to become my owner. I will follow you! Hold a book and interact with me to talk.'],
+    [/\b(heal|healing|hurt|health|help)\b/, 'Stay within 8 blocks of your tamed Plum for gentle regeneration. Ordinary damage cannot hurt me. I can also answer questions about crafting, beds, torches, mining, farming, and breeding.'],
     [/\b(die|dead|damage|immortal|invincible)\b/, 'Normal survival damage cannot hurt me! Administrative removal, /kill, and some engine edge cases are outside my protection. Keep me near you on adventures.'],
     [/\b(torch|torches|light)\b/, 'Craft torches with coal or charcoal above a stick. Light your shelter and bring extra torches when you explore caves.'],
     [/\b(bed|sleep|night)\b/, 'Make a bed with three matching wool blocks above three planks. Sleep in the Overworld to set your respawn point. Beds explode if you try to sleep in the Nether or End!'],

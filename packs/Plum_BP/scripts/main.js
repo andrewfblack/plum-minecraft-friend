@@ -22,7 +22,7 @@ function nearOwner(player, friend) {
 async function talk(player, friend) {
   if (openForms.has(player.id)) return;
   if (!nearOwner(player, friend)) {
-    tell(player, 'Give me an amethyst shard to tame me first. Only my owner can open my conversation.');
+    tell(player, 'Give me a plum fruit to tame me first. Only my owner can open my conversation.');
     return;
   }
   openForms.add(player.id);
@@ -33,7 +33,7 @@ async function talk(player, friend) {
       .button('Ask a question').button('How do I care for you?').button('Goodbye').show(player);
     if (menu.canceled || menu.selection === 2 || !nearOwner(player, friend)) return;
     if (menu.selection === 1) {
-      tell(player, 'Tame with amethyst shards. Breed adults with plums. Babies grow in 20 loaded minutes and can be tamed too. Hold a book and interact to talk!');
+      tell(player, 'Tame me by giving me a plum. Breed adults with plums. Babies grow in 20 loaded minutes and can be tamed too. Hold a book and interact to talk!');
       return;
     }
     let again = true;
@@ -81,7 +81,16 @@ world.afterEvents.playerLeave.subscribe(({ playerId }) => {
 });
 
 world.afterEvents.playerSpawn.subscribe(({ player, initialSpawn }) => {
-  if (initialSpawn) system.runTimeout(() => tell(player, 'Find a Plum Spawn Egg in Creative. Tame me with an amethyst shard, then hold a book and interact to chat.'), 60);
+  if (initialSpawn) system.runTimeout(() => tell(player, 'Find a Plum Spawn Egg in Creative. Tame me with a plum fruit, then hold a book and interact to chat.'), 60);
+});
+
+// Plum rejects ordinary damage: restore full health the instant a hit lands.
+world.afterEvents.entityHurt.subscribe(({ hurtEntity }) => {
+  if (hurtEntity.typeId !== TYPE) return;
+  const health = hurtEntity.getComponent('minecraft:health');
+  try {
+    hurtEntity.setHealth(health ? health.effectiveMax : 100);
+  } catch { /* The event fires for hits that finish the entity in the same tick. */ }
 });
 
 // One healing effect per owner, regardless of how many friends they breed.

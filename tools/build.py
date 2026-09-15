@@ -68,9 +68,9 @@ def build(net_version='1.0.0-beta', admin_version='1.0.0-beta'):
         'minecraft:navigation.walk': {'can_path_over_water': False, 'avoid_water': True, 'avoid_damage_blocks': True, 'can_pass_doors': True},
         'minecraft:breathable': {'total_supply': 15, 'suffocate_time': -1, 'breathes_water': True, 'breathes_air': True},
         'minecraft:nameable': {},
-        'minecraft:tameable': {'probability': 1, 'tame_items': ['minecraft:amethyst_shard'], 'tame_event': {'event': 'minecraft:on_tame', 'target': 'self'}},
+        'minecraft:tameable': {'probability': 1, 'tame_items': ['plum:plum'], 'tame_event': {'event': 'minecraft:on_tame', 'target': 'self'}},
         'minecraft:behavior.float': {'priority': 0},
-        'minecraft:behavior.tempt': {'priority': 6, 'speed_multiplier': 1.0, 'items': ['minecraft:amethyst_shard', 'plum:plum']},
+        'minecraft:behavior.tempt': {'priority': 6, 'speed_multiplier': 1.0, 'items': ['plum:plum']},
         'minecraft:behavior.random_stroll': {'priority': 8, 'speed_multiplier': 0.6},
         'minecraft:behavior.look_at_player': {'priority': 7, 'look_distance': 8, 'probability': 0.08},
         'minecraft:interact': {'interactions': [{'on_interact': {'filters': {'all_of': [{'test': 'is_family', 'subject': 'other', 'value': 'player'}, {'test': 'has_equipment', 'subject': 'other', 'domain': 'hand', 'value': 'minecraft:book'}]}, 'event': 'plum:talk', 'target': 'self'}, 'interact_text': 'action.interact.plum_talk'}]}
@@ -132,11 +132,11 @@ This zip contains the server packs and a Python service; it is not a mobile impo
 ## Play
 
 1. Spawn two friends with Plum Spawn Egg in Creative, or /summon plum:friend ~ ~ ~.
-2. Use an amethyst shard on each to tame them. They follow their owner.
+2. Give each a plum fruit to tame them. They follow their owner.
 3. Hold a book and interact (Talk to Plum on touch, right-click on PC).
 4. Choose Ask a question and type your message. Replies are private.
 5. Feed two nearby tamed adults a plum each to breed a half-size baby.
-6. Tame the baby with another shard. Babies grow in 20 loaded minutes; plums help.
+6. Tame the baby with a plum too. Babies grow in 20 loaded minutes; plums help.
 7. Stay within 8 blocks of your tamed friend for regeneration.
 
 Find plum trees in newly generated plains and forests. Break their fruit-speckled leaves
