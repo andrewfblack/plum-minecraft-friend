@@ -134,7 +134,7 @@ def build_friend(name, data):
     png(ROOT / f'art/{name}-face.png', [[face[y // 16][x // 16] for x in range(256)] for y in range(256)])
 
 def build(net_version='1.0.0-beta', admin_version='1.0.0-beta'):
-    version = [1, 2, 1]
+    version = [1, 2, 2]
     for path, name, uid, modules in [
         (BP, 'Fruity Friends', BP_ID, [
             {'type': 'data', 'uuid': 'fce620e4-42ac-4477-a84b-c8113d47ba2e', 'version': version},

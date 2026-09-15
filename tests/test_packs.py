@@ -74,6 +74,11 @@ class PackTests(unittest.TestCase):
         for fruit, entity_file in [('plum', 'friend.json'), ('apple', 'apple.json')]:
             fruit_item = read(bp / 'items' / f'{fruit}.json')['minecraft:item']['description']['identifier']
             self.assertEqual(fruit_item, f'{fruit}:{fruit}')
+            icon = read(bp / 'items' / f'{fruit}.json')['minecraft:item']['components']['minecraft:icon']
+            icon_key = icon['textures']['default'] if isinstance(icon, dict) else icon
+            atlas = read(rp / 'textures/item_texture.json')['texture_data']
+            self.assertIn(icon_key, atlas)
+            self.assertTrue((rp / (atlas[icon_key]['textures'] + '.png')).exists())
             entity = read(bp / 'entities' / entity_file)['minecraft:entity']
             self.assertEqual(entity['component_groups'][f'{fruit}:adult']['minecraft:breedable']['breed_items'], [fruit_item])
             self.assertEqual(entity['component_groups'][f'{fruit}:baby']['minecraft:ageable']['feed_items'], [fruit_item])
@@ -93,8 +98,8 @@ class PackTests(unittest.TestCase):
             for atlas in ['item_texture.json', 'terrain_texture.json']:
                 for entry in read(rp / 'textures' / atlas)['texture_data'].values():
                     self.assertTrue((rp / (entry['textures'] + '.png')).exists())
-        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 1])
+        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 2])
         with zipfile.ZipFile(ROOT / 'dist/Fruity-Friends-Dedicated-Server.zip') as z:
-            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 1])
+            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 2])
 
 if __name__ == '__main__': unittest.main()

@@ -53,7 +53,7 @@ def build_fruit(bp, rp, root, write, png, fruit, accumulate):
             'description': {'identifier': item, 'menu_category': {'category': 'nature'}},
             'components': {
                 'minecraft:display_name': {'value': f'item.{item}.name'},
-                'minecraft:icon': f'{fruit}_fruit', 'minecraft:max_stack_size': 64,
+                'minecraft:icon': {'textures': {'default': f'{fruit}_fruit'}}, 'minecraft:max_stack_size': 64,
                 'minecraft:food': {'nutrition': 4, 'saturation_modifier': 0.3},
                 'minecraft:use_animation': 'eat',
                 'minecraft:use_modifiers': {'use_duration': 1.6, 'movement_modifier': 0.35},

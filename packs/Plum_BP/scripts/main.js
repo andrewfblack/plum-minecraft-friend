@@ -271,6 +271,8 @@ async function talk(player, friend) {
     const goodbye = cfg.shop ? 3 : 2;
     if (menu.canceled || menu.selection === goodbye || !nearOwner(player, friend)) return;
     if (cfg.shop && menu.selection === 1) {
+      // Release the talk lock before entering the shop so shop() can re-acquire it.
+      openForms.delete(player.id);
       await shop(player, friend);
       return;
     }
@@ -331,44 +333,53 @@ world.afterEvents.playerSpawn.subscribe(({ player, initialSpawn }) => {
 // Talk to a nearby tamed friend straight from chat: "Plum ...", "hey Apple, ...", "@plum hi", etc.
 // chatSend is not declared in this build's type surface, so guard at runtime; the book stays as fallback.
 const chatEvents = /** @type {any} */ (world.beforeEvents);
-try {
-  chatEvents.chatSend?.subscribe((event) => {
-    // The friend's name must lead the message, optionally after a greeting like hey/hi/hello.
-    const match = event.message.match(/^\s*(?:(hey|hi|hello)[,!\s]+@?([a-zA-Z]+)\b|@?([a-zA-Z]+))\s*[:,]?\s*(.*)$/i);
-    const name = match && (match[2] || match[3]);
-    const friendType = name && FRIEND_NAMES[name.toLowerCase()];
-    if (!friendType) return;
-    const player = event.sender;
-    const friend = nearestTamed(friendType, player);
-    if (!friend) return;
-    event.cancel = true;
-    const cfg = FRIENDS[friendType];
-    const baby = friend.hasComponent('minecraft:is_baby');
-    const question = cleanText(match[4] || 'hi');
-    system.run(() => {
-      if (!player.isValid) return;
-      world.sendMessage(`<${player.name}> ${event.message}`);
-      if (system.currentTick < (nextQuestion.get(player.id) ?? 0)) {
-        chatReply(cfg, 'Give me a few seconds to think before another question.');
-        return;
-      }
-      nextQuestion.set(player.id, system.currentTick + 100);
-      chatReply(cfg, 'Thinking...');
-      answerQuestion(question, {
-        playerId: player.id,
-        dimension: player.dimension.id,
-        baby,
-        friend: cfg.name.toLowerCase(),
-      }).then((answer) => {
-        if (player.isValid) chatReply(cfg, cleanText(answer, 1400));
-      }).catch((error) => {
-        console.warn(`[${cfg.name}] Chat answer failed: ${error}`);
-        if (player.isValid) chatReply(cfg, 'I had trouble answering that - try again!');
+if (!chatEvents?.chatSend) {
+  console.warn('[Chat] beforeEvents.chatSend is unavailable on this engine; use the book to talk instead.');
+} else {
+  try {
+    chatEvents.chatSend.subscribe((event) => {
+      // The friend's name must lead the message, optionally after a greeting like hey/hi/hello.
+      const match = event.message.match(/^\s*(?:(hey|hi|hello)[,!\s]+@?([a-zA-Z]+)\b|@?([a-zA-Z]+))\s*[:,]?\s*(.*)$/i);
+      const name = match && (match[2] || match[3]);
+      const friendType = name && FRIEND_NAMES[name.toLowerCase()];
+      if (!friendType) return;
+      const player = event.sender;
+      if (!player?.isValid) return;
+      const question = cleanText(match[4] || 'hi');
+      // Defer to the next tick: lookups and replies run in read-write mode, never the read-only before scope.
+      // The player's message is not cancelled, so it broadcasts normally and the friend answers after it.
+      system.run(() => {
+        try {
+          if (!player.isValid) return;
+          const friend = nearestTamed(friendType, player);
+          if (!friend) return; // no tamed friend within range; message already went out as normal chat
+          const cfg = FRIENDS[friendType];
+          if (system.currentTick < (nextQuestion.get(player.id) ?? 0)) {
+            chatReply(cfg, 'Give me a few seconds to think before another question.');
+            return;
+          }
+          nextQuestion.set(player.id, system.currentTick + 100);
+          chatReply(cfg, 'Thinking...');
+          const baby = friend.hasComponent('minecraft:is_baby');
+          answerQuestion(question, {
+            playerId: player.id,
+            dimension: player.dimension.id,
+            baby,
+            friend: cfg.name.toLowerCase(),
+          }).then((answer) => {
+            if (player.isValid) chatReply(cfg, cleanText(answer, 1400));
+          }).catch((error) => {
+            console.warn(`[${cfg.name}] Chat answer failed: ${error}`);
+            if (player.isValid) chatReply(cfg, 'I had trouble answering that - try again!');
+          });
+        } catch (error) {
+          console.warn(`[Friend chat] Reply failed: ${error}`);
+        }
       });
     });
-  });
-} catch (error) {
-  console.warn('[Chat] Chat responses are not available on this engine; use the book to talk instead.');
+  } catch (error) {
+    console.warn('[Chat] Chat responses are not available on this engine; use the book to talk instead.');
+  }
 }
 
 // Grow a baby friend by planting its fruit on tilled farmland instead of eating it.
