@@ -1,0 +1,17 @@
+{
+  "resource_pack_name": "plum_friend",
+  "texture_name": "atlas.terrain",
+  "padding": 8,
+  "num_mip_levels": 4,
+  "texture_data": {
+    "plum_leaves": {
+      "textures": "textures/blocks/plum_leaves"
+    },
+    "plum_sapling_leaf": {
+      "textures": "textures/blocks/plum_sapling_leaf"
+    },
+    "plum_bark": {
+      "textures": "textures/blocks/plum_bark"
+    }
+  }
+}

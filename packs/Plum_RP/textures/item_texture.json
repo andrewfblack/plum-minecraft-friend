@@ -1,0 +1,9 @@
+{
+  "resource_pack_name": "plum_friend",
+  "texture_name": "atlas.items",
+  "texture_data": {
+    "plum_fruit": {
+      "textures": "textures/items/plum"
+    }
+  }
+}

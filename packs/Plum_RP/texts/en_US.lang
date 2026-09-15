@@ -1,0 +1,6 @@
+entity.plum:friend.name=Plum
+item.spawn_egg.entity.plum:friend.name=Plum Spawn Egg
+action.interact.plum_talk=Talk to Plum
+item.plum:plum.name=Plum Fruit
+tile.plum:plum_leaves.name=Plum Leaves
+tile.plum:plum_sapling.name=Plum Sapling

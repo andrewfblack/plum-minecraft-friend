@@ -1,0 +1,29 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "Plum \u2022 Purple Cube Friend Resources",
+    "description": "A smiling purple companion with babies, healing, and offline typed Minecraft help.",
+    "uuid": "834d72cc-8c7f-498f-adfa-269e215f86e8",
+    "version": [
+      1,
+      1,
+      0
+    ],
+    "min_engine_version": [
+      1,
+      21,
+      90
+    ]
+  },
+  "modules": [
+    {
+      "type": "resources",
+      "uuid": "6b250c6d-d093-4cb1-b16b-a42cd137d4bb",
+      "version": [
+        1,
+        1,
+        0
+      ]
+    }
+  ]
+}

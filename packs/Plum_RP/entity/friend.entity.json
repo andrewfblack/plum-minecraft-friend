@@ -1,0 +1,32 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "plum:friend",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/plum"
+      },
+      "geometry": {
+        "default": "geometry.plum"
+      },
+      "render_controllers": [
+        "controller.render.plum"
+      ],
+      "animations": {
+        "bob": "animation.plum.bob"
+      },
+      "scripts": {
+        "animate": [
+          "bob"
+        ]
+      },
+      "spawn_egg": {
+        "base_color": "#9154DB",
+        "overlay_color": "#F6C1F4"
+      }
+    }
+  }
+}
