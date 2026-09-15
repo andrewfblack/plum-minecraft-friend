@@ -1,6 +1,6 @@
 # Fruity Friends
 
-**Fruity Friends** is a family of smiling, animated cube companions for **Minecraft Bedrock**, with half-size baby forms. The first friend is **Plum**, a purple cube with a sweet tooth for plums; version **1.2.0** adds **Apple**, a red cube friend who owns **Applezon**, a blocky parody of a giant online shop, plus edible apple fruit and naturally generated apple trees. Fruit-based friends grow from planting their fruit on tilled farmland, and each will do something different. This project includes an offline add-on and a Dedicated Server edition with typed AI conversation for mobile and Windows players.
+**Fruity Friends** is a family of smiling, animated cube companions for **Minecraft Bedrock**, with half-size baby forms. The first friend is **Plum**, a purple cube with a sweet tooth for plums; version **1.2.0** added **Apple**, a red cube friend who owns **Applezon**, a blocky parody of a giant online shop, plus edible apple fruit and naturally generated apple trees. Version **1.2.1** renamed the add-on to **Fruity Friends** and lets you greet a friend in chat (`hey Apple, ...`). Fruit-based friends grow from planting their fruit on tilled farmland, and each will do something different. This project includes an offline add-on and a Dedicated Server edition with typed AI conversation for mobile and Windows players.
 
 ## Downloads
 
@@ -47,7 +47,7 @@ The differences:
 
 ## Updating from version 1.1.0
 
-Reimport the updated offline add-on, or stop BDS and replace the pack folders from the new server archive. On BDS, update both world pack-list entries to **`[1,2,0]`**, preserving entries for other packs. Replace `plum-service/bridge.py` too and restart the bridge so the AI knows about Apple, Applezon, and apple trees. Keep existing pack UUIDs, credentials, and world data.
+Reimport the updated offline add-on, or stop BDS and replace the pack folders from the new server archive. On BDS, update both world pack-list entries to **`[1,2,1]`**, preserving entries for other packs. Replace `plum-service/bridge.py` too and restart the bridge so the AI knows about Apple, Applezon, and apple trees. Keep existing pack UUIDs, credentials, and world data.
 
 ## Protection and following
 

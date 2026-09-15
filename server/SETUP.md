@@ -38,7 +38,7 @@ Resource pack:
 
 Set `texturepack-required=true` in `server.properties` so players receive Plum's appearance. Do not enable the offline pack alongside the AI pack; they are two editions of the same add-on.
 
-**Updating an existing Fruity Friends installation:** replace the pack folders and `plum-service/bridge.py`, change both existing world-pack entries to `[1,2,0]`, and restart both processes. Preserve your current credentials/configuration. New plum and apple trees appear only in newly generated terrain; explore new plains/forests or plant a Creative sapling in an old area.
+**Updating an existing Fruity Friends installation:** replace the pack folders and `plum-service/bridge.py`, change both existing world-pack entries to `[1,2,1]`, and restart both processes. Preserve your current credentials/configuration. New plum and apple trees appear only in newly generated terrain; explore new plains/forests or plant a Creative sapling in an old area.
 
 ## 3. Allow the scripts to reach their local service
 
