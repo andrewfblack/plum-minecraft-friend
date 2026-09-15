@@ -1,0 +1,32 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "apple:friend",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/apple"
+      },
+      "geometry": {
+        "default": "geometry.apple"
+      },
+      "render_controllers": [
+        "controller.render.apple"
+      ],
+      "animations": {
+        "bob": "animation.apple.bob"
+      },
+      "scripts": {
+        "animate": [
+          "bob"
+        ]
+      },
+      "spawn_egg": {
+        "base_color": "#C62828",
+        "overlay_color": "#6AB04A"
+      }
+    }
+  }
+}

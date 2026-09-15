@@ -1,5 +1,7 @@
 import { offlineAnswer } from './knowledge.js';
-export const chatLabel = 'Offline Minecraft guide';
+export function chatLabelFor(friend) {
+  return friend === 'apple' ? 'Applezon order desk • offline help' : 'Offline Minecraft guide';
+}
 export async function answerQuestion(question, context) {
-  return offlineAnswer(question);
+  return offlineAnswer(question, context.friend);
 }

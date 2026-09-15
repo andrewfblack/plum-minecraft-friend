@@ -1,6 +1,12 @@
 entity.plum:friend.name=Plum
 item.spawn_egg.entity.plum:friend.name=Plum Spawn Egg
 action.interact.plum_talk=Talk to Plum
+entity.apple:friend.name=Apple
+item.spawn_egg.entity.apple:friend.name=Apple Spawn Egg
+action.interact.apple_talk=Talk to Apple
 item.plum:plum.name=Plum Fruit
 tile.plum:plum_leaves.name=Plum Leaves
 tile.plum:plum_sapling.name=Plum Sapling
+item.apple:apple.name=Apple Fruit
+tile.apple:apple_leaves.name=Apple Leaves
+tile.apple:apple_sapling.name=Apple Sapling

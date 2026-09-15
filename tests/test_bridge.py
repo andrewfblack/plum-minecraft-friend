@@ -16,8 +16,8 @@ spec.loader.exec_module(bridge)
 class BridgeTests(unittest.TestCase):
     def setUp(self):
         self.calls = []
-        def reply(*args):
-            self.calls.append(args)
+        def reply(*args, **kwargs):
+            self.calls.append((args, kwargs))
             return 'Hello adventurer!'
         self.state = bridge.State('test-token-' * 4, 'fake-key', 'test-model', reply)
 
@@ -31,11 +31,11 @@ class BridgeTests(unittest.TestCase):
             self.assertEqual(self.state.answer(self.body())[0], 200)
         self.assertEqual(len(self.state.sessions[key]['history']), 8)
         self.state.answer(self.body('two'))
-        self.assertEqual(self.calls[-1][1], [])
+        self.assertEqual(self.calls[-1][0][1], [])
         self.assertNotIn('one', json.dumps(self.calls))
 
     def test_rejects_invalid_inputs_without_calling_ai(self):
-        for body in [[], {}, self.body(question=''), self.body(question='x' * 401), {'playerId': 9, 'question': 'hey'}, dict(self.body(), dimension='invented')]:
+        for body in [[], {}, self.body(question=''), self.body(question='x' * 401), {'playerId': 9, 'question': 'hey'}, dict(self.body(), dimension='invented'), dict(self.body(), friend='banana')]:
             self.assertEqual(self.state.answer(body)[0], 400)
         self.assertEqual(self.calls, [])
 
@@ -79,5 +79,15 @@ class BridgeTests(unittest.TestCase):
             self.assertFalse(sent['store'])
             self.assertNotIn('tools', sent)
             self.assertEqual(request.full_url, 'https://api.openai.com/v1/responses')
+            self.assertIn('Plum', sent['instructions'])
+            self.assertIn('Plum is an adult', sent['input'][-1]['content'])
+
+    def test_apple_friend_selects_applezon_instructions(self):
+        payload = {'output': [{'type': 'message', 'content': [{'type': 'output_text', 'text': 'Shop hard!'}]}]}
+        with patch('urllib.request.urlopen', return_value=io.BytesIO(json.dumps(payload).encode())) as mocked:
+            self.assertEqual(bridge.ask_openai('deliver?', [], 'minecraft:overworld', True, 'fake-key', 'test-model', friend='apple'), 'Shop hard!')
+            sent = json.loads(mocked.call_args.args[0].data)
+            self.assertIn('Applezon', sent['instructions'])
+            self.assertIn('Apple is a baby', sent['input'][-1]['content'])
 
 if __name__ == '__main__': unittest.main()

@@ -1,6 +1,6 @@
 # Plum — your purple Minecraft friend
 
-Plum is a smiling, animated purple cube companion for **Minecraft Bedrock**, with a half-size baby form. Version **1.1.0** adds edible plum fruit, naturally generated plum trees, and plantable saplings. This project includes an offline add-on and a Dedicated Server edition with typed AI conversation for mobile and Windows players.
+Plum is a smiling, animated purple cube companion for **Minecraft Bedrock**, with a half-size baby form. Version **1.2.0** adds **Apple**, a red cube friend who owns **Applezon**, a blocky parody of a giant online shop, plus edible apple fruit and naturally generated apple trees. Version **1.1.0** added edible plum fruit, naturally generated plum trees, and plantable saplings. This project includes an offline add-on and a Dedicated Server edition with typed AI conversation for mobile and Windows players.
 
 ## Downloads
 
@@ -14,8 +14,8 @@ Plum is a smiling, animated purple cube companion for **Minecraft Bedrock**, wit
 1. Start by **planting a plum fruit on tilled farmland** — a tiny baby Plum sprouts from the soil. In Creative you can instead spawn two friends directly with the **Plum Spawn Egg**.
 2. Give a **plum fruit** to each Plum to tame him. One plum always works.
 3. He follows his owner, steps up blocks, and can catch up with normal pet teleporting.
-4. Hold an ordinary **book**, point at your Plum, and use **Talk to Plum** / interact. On PC, right-click; on mobile, use the interaction control for your chosen touch layout. Select **Ask a question**, type, and press **Ask**. Answers appear in a private window and your private chat. No chat commands or operator permissions are needed to talk.
-5. Give a **plum fruit to each of two nearby tamed adults** to breed them. The cooldown is one minute. Apples no longer work for breeding or baby growth.
+4. Talk to your friend two ways. **In chat**: while a tamed Plum is within 10 blocks, just type his name — for example `Plum, what is redstone?` or `@plum hi`. He answers in chat instantly (or with his knowledge base offline). **With a book**: hold an ordinary **book**, point at your Plum, and use **Talk to Plum** / interact. On PC, right-click; on mobile, use the interaction control for your chosen touch layout. Select **Ask a question**, type, and press **Ask**. Answers appear in a private window and your private chat. No chat commands or operator permissions are needed to talk.
+5. Give a **plum fruit to each of two nearby tamed adult Plums** to breed them. The cooldown is one minute. Apple breeds with apple fruit; vanilla minecraft apples don't breed either friend.
 6. Babies are half-size and follow a parent until tamed. Give a baby a plum fruit to make it yours. Babies grow after approximately **20 minutes while loaded**; plums accelerate growth. Babies cannot breed until grown.
 7. Stay within **8 blocks** of your tamed Plum for regeneration. Having several Plums does not multiply the effect.
 
@@ -33,9 +33,21 @@ Trees will not be added retroactively to old chunks. Explore beyond previously g
 
 ![Plum fruit](art/plum-fruit.png)
 
-## Updating from version 1.0.0
+## Apple and the Applezon shop
 
-Reimport the updated offline add-on, or stop BDS and replace the Plum pack folders from the new server archive. On BDS, update both world pack-list entries to **`[1,1,0]`**, preserving entries for other packs. Replace `plum-service/bridge.py` too and restart the bridge so the AI knows about plum trees. Keep existing pack UUIDs, credentials, and world data.
+Apple is a smiling red cube box with a green leaf and his own Applezon brand. He works just like Plum — plant an **apple fruit** on tilled farmland to grow a baby Apple, tame him with an **apple**, breed two adults with apples, and talk to him with a book. His baby grows in the same 20 loaded minutes.
+
+The differences:
+
+- **Apple does not heal you.** Stay near your tamed Plum (within 8 blocks) for regeneration; Apple brings deliveries instead.
+- Find **red-speckled apple trees** in newly generated plains and forests; their leaves drop apples and Apple Saplings, just like plum trees. `/give @s apple:apple_sapling 1` and `/give @s apple:apple 16` work in Creative too.
+- Interact with Apple and choose **Shop at Applezon**. Every delivery costs **one apple fruit**. Pick **What does Apple recommend?** for a surprise item, tool, or block, or **Search the catalog** for something specific (try "pickaxe", "torches", "elytra", or "cake").
+
+![Apple's face](art/apple-face.png)
+
+## Updating from version 1.1.0
+
+Reimport the updated offline add-on, or stop BDS and replace the pack folders from the new server archive. On BDS, update both world pack-list entries to **`[1,2,0]`**, preserving entries for other packs. Replace `plum-service/bridge.py` too and restart the bridge so the AI knows about Apple, Applezon, and apple trees. Keep existing pack UUIDs, credentials, and world data.
 
 ## Protection and following
 

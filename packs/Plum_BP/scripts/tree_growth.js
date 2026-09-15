@@ -1,6 +1,11 @@
 const SOIL = new Set(['minecraft:grass_block', 'minecraft:grass', 'minecraft:dirt', 'minecraft:coarse_dirt', 'minecraft:podzol', 'minecraft:moss_block']);
 const REPLACEABLE = new Set(['minecraft:air', 'minecraft:short_grass', 'minecraft:tall_grass']);
 
+const PLANS = {
+  'plum:plum_sapling': ['minecraft:oak_log', 'plum:plum_leaves'],
+  'apple:apple_sapling': ['minecraft:oak_log', 'apple:apple_leaves'],
+};
+
 // A compact five-block-wide crown, four-block trunk and a six-block total height.
 export function treePlan(origin) {
   const result = [];
@@ -16,7 +21,9 @@ export function treePlan(origin) {
 }
 
 export function growTree(sapling) {
-  if (sapling.typeId !== 'plum:plum_sapling') return false;
+  const plan = PLANS[sapling.typeId];
+  if (!plan) return false;
+  const [trunkType, leafType] = plan;
   const originals = [];
   let written = 0;
   try {
@@ -28,8 +35,8 @@ export function growTree(sapling) {
       const block = sapling.dimension.getBlock(step.location);
       if (!block) return false;
       const isRoot = step.location.x === origin.x && step.location.y === origin.y && step.location.z === origin.z;
-      if (!(isRoot && block.typeId === 'plum:plum_sapling') && !REPLACEABLE.has(block.typeId)) return false;
-      originals.push({ block, permutation: block.permutation, type: step.type });
+      if (!(isRoot && block.typeId === sapling.typeId) && !REPLACEABLE.has(block.typeId)) return false;
+      originals.push({ block, permutation: block.permutation, type: step.type === 'minecraft:oak_log' ? trunkType : leafType });
     }
     for (const entry of originals) {
       entry.block.setType(entry.type);

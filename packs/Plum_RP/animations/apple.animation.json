@@ -1,0 +1,22 @@
+{
+  "format_version": "1.8.0",
+  "animations": {
+    "animation.apple.bob": {
+      "loop": true,
+      "bones": {
+        "body": {
+          "position": [
+            0,
+            "math.abs(math.sin(query.anim_time * 180)) * 0.7",
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            "math.sin(query.modified_distance_moved * 70) * 3"
+          ]
+        }
+      }
+    }
+  }
+}

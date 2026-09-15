@@ -4,6 +4,9 @@
   "texture_data": {
     "plum_fruit": {
       "textures": "textures/items/plum"
+    },
+    "apple_fruit": {
+      "textures": "textures/items/apple"
     }
   }
 }

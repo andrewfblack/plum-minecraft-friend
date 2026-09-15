@@ -1,0 +1,50 @@
+{
+  "format_version": "1.13.0",
+  "minecraft:tree_feature": {
+    "description": {
+      "identifier": "apple:apple_tree"
+    },
+    "trunk": {
+      "trunk_block": "minecraft:oak_log",
+      "trunk_height": {
+        "range_min": 4,
+        "range_max": 5
+      }
+    },
+    "canopy": {
+      "leaf_block": "apple:apple_leaves",
+      "canopy_offset": {
+        "min": -2,
+        "max": -2
+      },
+      "min_width": 1,
+      "canopy_slope": {
+        "rise": 1,
+        "run": 1
+      },
+      "variation_chance": {
+        "numerator": 9,
+        "denominator": 10
+      }
+    },
+    "base_block": "minecraft:dirt",
+    "may_grow_on": [
+      "minecraft:grass_block",
+      "minecraft:dirt",
+      "minecraft:coarse_dirt",
+      "minecraft:podzol",
+      "minecraft:moss_block"
+    ],
+    "may_replace": [
+      "minecraft:air",
+      "minecraft:short_grass",
+      "minecraft:tall_grass",
+      "apple:apple_leaves"
+    ],
+    "may_grow_through": [
+      "minecraft:air",
+      "minecraft:short_grass",
+      "minecraft:tall_grass"
+    ]
+  }
+}

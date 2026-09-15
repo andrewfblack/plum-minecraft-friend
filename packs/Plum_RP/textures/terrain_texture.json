@@ -12,6 +12,15 @@
     },
     "plum_bark": {
       "textures": "textures/blocks/plum_bark"
+    },
+    "apple_leaves": {
+      "textures": "textures/blocks/apple_leaves"
+    },
+    "apple_sapling_leaf": {
+      "textures": "textures/blocks/apple_sapling_leaf"
+    },
+    "apple_bark": {
+      "textures": "textures/blocks/apple_bark"
     }
   }
 }
