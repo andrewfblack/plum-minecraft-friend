@@ -136,10 +136,10 @@ def build_friend(name, data):
 def build(net_version='1.0.0-beta', admin_version='1.0.0-beta'):
     version = [1, 2, 0]
     for path, name, uid, modules in [
-        (BP, 'Plum & Apple • Cube Friends', BP_ID, [
+        (BP, 'Fruity Friends', BP_ID, [
             {'type': 'data', 'uuid': 'fce620e4-42ac-4477-a84b-c8113d47ba2e', 'version': version},
             {'type': 'script', 'language': 'javascript', 'entry': 'scripts/main.js', 'uuid': 'a91c511c-d9d5-48e5-82c9-25cc48706cbb', 'version': version}]),
-        (RP, 'Plum & Apple • Cube Friend Resources', RP_ID, [
+        (RP, 'Fruity Friends Resources', RP_ID, [
             {'type': 'resources', 'uuid': '6b250c6d-d093-4cb1-b16b-a42cd137d4bb', 'version': version}])]:
         manifest = {'format_version': 2, 'header': {'name': name, 'description': 'Smiling cube companions with babies, healing, and offline typed Minecraft help. Apple runs the Applezon shop.', 'uuid': uid, 'version': version, 'min_engine_version': [1, 21, 90]}, 'modules': modules}
         if path == BP:
@@ -156,20 +156,20 @@ def build(net_version='1.0.0-beta', admin_version='1.0.0-beta'):
     icon = [[friend_texture('plum')[:16][y // 8][x // 8] for x in range(128)] for y in range(128)]
     for pack in (BP, RP): png(pack / 'pack_icon.png', icon)
     build_orchard(BP, RP, ROOT, write, png)
-    out = ROOT / 'dist/Plum-Friend.mcaddon'
+    out = ROOT / 'dist/Fruity-Friends.mcaddon'
     out.parent.mkdir(exist_ok=True)
     with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as archive:
         for pack in (BP, RP):
             for path in sorted(pack.rglob('*')):
                 if path.is_file(): archive.write(path, path.relative_to(ROOT / 'packs'))
     print(f'Built {out} ({out.stat().st_size:,} bytes)')
-    server_out = ROOT / 'dist/Plum-Dedicated-Server.zip'
+    server_out = ROOT / 'dist/Fruity-Friends-Dedicated-Server.zip'
     manifest = json.loads((BP / 'manifest.json').read_text())
     manifest['header']['name'] += ' • Server AI'
-    manifest['header']['description'] = 'Dedicated Server edition with typed AI chat. Requires Beta APIs and the Plum bridge.'
+    manifest['header']['description'] = 'Dedicated Server edition with typed AI chat. Requires Beta APIs and the Fruity Friends bridge.'
     manifest['dependencies'] += [{'module_name': '@minecraft/server-net', 'version': net_version}, {'module_name': '@minecraft/server-admin', 'version': admin_version}]
     with zipfile.ZipFile(server_out, 'w', zipfile.ZIP_DEFLATED) as archive:
-        archive.writestr('START-HERE.md', '''# Plum & Apple — Cube Friends
+        archive.writestr('START-HERE.md', '''# Fruity Friends
 
 Read plum-service/SETUP.md to install the AI edition on a Bedrock Dedicated Server.
 This zip contains the server packs and a Python service; it is not a mobile import file.
@@ -192,7 +192,7 @@ leaves in Survival for the matching fruit and sapling. Plant a sapling on soil w
 5-wide, 6-high space; wait for growth or use bone meal. Leaves do not decay automatically.
 Plums replace apples for breeding Plum; Apple uses apples. You can eat both fruits.
 
-Updating from 1.1.0: replace both pack folders and the bridge script, update each Plum
+Updating from 1.1.0: replace both pack folders and the bridge script, update each Fruity Friends
 world-pack-list entry to [1,2,0], and restart. Keep existing credentials and UUIDs.
 
 Friends resist ordinary damage and do not naturally despawn. Administrative removal,

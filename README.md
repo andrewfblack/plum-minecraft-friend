@@ -1,11 +1,11 @@
-# Plum — your purple Minecraft friend
+# Fruity Friends
 
-Plum is a smiling, animated purple cube companion for **Minecraft Bedrock**, with a half-size baby form. Version **1.2.0** adds **Apple**, a red cube friend who owns **Applezon**, a blocky parody of a giant online shop, plus edible apple fruit and naturally generated apple trees. Version **1.1.0** added edible plum fruit, naturally generated plum trees, and plantable saplings. This project includes an offline add-on and a Dedicated Server edition with typed AI conversation for mobile and Windows players.
+**Fruity Friends** is a family of smiling, animated cube companions for **Minecraft Bedrock**, with half-size baby forms. The first friend is **Plum**, a purple cube with a sweet tooth for plums; version **1.2.0** adds **Apple**, a red cube friend who owns **Applezon**, a blocky parody of a giant online shop, plus edible apple fruit and naturally generated apple trees. Fruit-based friends grow from planting their fruit on tilled farmland, and each will do something different. This project includes an offline add-on and a Dedicated Server edition with typed AI conversation for mobile and Windows players.
 
 ## Downloads
 
-- **`dist/Plum-Dedicated-Server.zip`** — the AI edition, behavior/resource packs, Python AI service, and server setup instructions. This is the edition for your requested setup.
-- **`dist/Plum-Friend.mcaddon`** — an importable offline edition for a quick local-world tryout. It has built-in Minecraft answers rather than open-ended AI.
+- **`dist/Fruity-Friends-Dedicated-Server.zip`** — the AI edition, behavior/resource packs, Python AI service, and server setup instructions. This is the edition for your requested setup.
+- **`dist/Fruity-Friends.mcaddon`** — an importable offline edition for a quick local-world tryout. It has built-in Minecraft answers rather than open-ended AI.
 
 ![Plum's face](art/plum-face.png)
 
@@ -14,7 +14,7 @@ Plum is a smiling, animated purple cube companion for **Minecraft Bedrock**, wit
 1. Start by **planting a plum fruit on tilled farmland** — a tiny baby Plum sprouts from the soil. In Creative you can instead spawn two friends directly with the **Plum Spawn Egg**.
 2. Give a **plum fruit** to each Plum to tame him. One plum always works.
 3. He follows his owner, steps up blocks, and can catch up with normal pet teleporting.
-4. Talk to your friend two ways. **In chat**: while a tamed Plum is within 10 blocks, just type his name — for example `Plum, what is redstone?` or `@plum hi`. He answers in chat instantly (or with his knowledge base offline). **With a book**: hold an ordinary **book**, point at your Plum, and use **Talk to Plum** / interact. On PC, right-click; on mobile, use the interaction control for your chosen touch layout. Select **Ask a question**, type, and press **Ask**. Answers appear in a private window and your private chat. No chat commands or operator permissions are needed to talk.
+4. Talk to your friend two ways. **In chat**: while a tamed Plum is within 10 blocks, just type his name first — for example `Plum, what is redstone?`, `hey Plum, hi`, or `@plum ping`. A greeting like `hey`/`hi`/`hello` can come before his name. He answers in chat instantly (or with his knowledge base offline). **With a book**: hold an ordinary **book**, point at your Plum, and use **Talk to Plum** / interact. On PC, right-click; on mobile, use the interaction control for your chosen touch layout. Select **Ask a question**, type, and press **Ask**. Answers appear in a private window and your private chat. No chat commands or operator permissions are needed to talk.
 5. Give a **plum fruit to each of two nearby tamed adult Plums** to breed them. The cooldown is one minute. Apple breeds with apple fruit; vanilla minecraft apples don't breed either friend.
 6. Babies are half-size and follow a parent until tamed. Give a baby a plum fruit to make it yours. Babies grow after approximately **20 minutes while loaded**; plums accelerate growth. Babies cannot breed until grown.
 7. Stay within **8 blocks** of your tamed Plum for regeneration. Having several Plums does not multiply the effect.
@@ -59,7 +59,7 @@ This does **not** promise protection from `/kill`, administrative entity deletio
 
 Target baseline: Bedrock **1.21.90 or newer**, using stable `@minecraft/server` 2.0.0 and `@minecraft/server-ui` 2.0.0 APIs. Use a current mutually compatible client/server build for the AI edition.
 
-On Windows, open `Plum-Friend.mcaddon` with Minecraft. On Android/iOS, use the file manager's **Open with / Share to Minecraft** option if available. Create a test world, activate **Plum** under Behavior Packs, and check that its Resource Pack is active too. This offline edition does not require Beta APIs.
+On Windows, open `Fruity-Friends.mcaddon` with Minecraft. On Android/iOS, use the file manager's **Open with / Share to Minecraft** option if available. Create a test world, activate **Fruity Friends** under Behavior Packs, and check that its Resource Pack is active too. This offline edition does not require Beta APIs.
 
 For AI conversation, follow **[the Dedicated Server setup guide](server/SETUP.md)**. Players join the server from mobile or Windows Bedrock and accept its resource download; the service runs on the server computer.
 

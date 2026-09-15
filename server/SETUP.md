@@ -1,4 +1,4 @@
-# Plum AI — Dedicated Server setup
+# Fruity Friends AI — Dedicated Server setup
 
 Run the official Bedrock Dedicated Server and this Python service **on the same Windows or Linux computer**. Mobile and PC players connect to that server normally. You need Python 3.10+, an OpenAI API key with API billing/access, and a Bedrock server version compatible with your mobile/PC clients. A ChatGPT subscription is not used by this service.
 
@@ -12,7 +12,7 @@ The networking and admin modules are [Dedicated Server experimental APIs](https:
 
 ## 2. Install the server edition
 
-Stop BDS. Extract `Plum-Dedicated-Server.zip` into its server directory. The archive contains:
+Stop BDS. Extract `Fruity-Friends-Dedicated-Server.zip` into its server directory. The archive contains:
 
 ```text
 behavior_packs/Plum_BP/
@@ -22,7 +22,7 @@ plum-service/config/
 world-pack-lists/
 ```
 
-Copy the two JSON files from `world-pack-lists` into `worlds/YOUR_WORLD/`. **If your world already uses packs, merge the Plum entry into each existing array instead of replacing it.** The entries are:
+Copy the two JSON files from `world-pack-lists` into `worlds/YOUR_WORLD/`. **If your world already uses packs, merge the Fruity Friends entry into each existing array instead of replacing it.** The entries are:
 
 Behavior pack:
 
@@ -38,9 +38,9 @@ Resource pack:
 
 Set `texturepack-required=true` in `server.properties` so players receive Plum's appearance. Do not enable the offline pack alongside the AI pack; they are two editions of the same add-on.
 
-**Updating an existing Plum 1.0.0 installation:** replace the pack folders and `plum-service/bridge.py`, change both existing Plum world-pack entries to `[1,1,0]`, and restart both processes. Preserve your current credentials/configuration. New plum trees appear only in newly generated terrain; explore new plains/forests or plant a Creative Plum Sapling in an old area.
+**Updating an existing Fruity Friends installation:** replace the pack folders and `plum-service/bridge.py`, change both existing world-pack entries to `[1,2,0]`, and restart both processes. Preserve your current credentials/configuration. New plum and apple trees appear only in newly generated terrain; explore new plains/forests or plant a Creative sapling in an old area.
 
-## 3. Allow Plum to reach its local service
+## 3. Allow the scripts to reach their local service
 
 Inside the BDS directory create:
 
@@ -48,7 +48,7 @@ Inside the BDS directory create:
 config/a91c511c-d9d5-48e5-82c9-25cc48706cbb/
 ```
 
-This is Plum's **script module UUID**, not the pack UUID. Copy `plum-service/config/permissions.json` and `variables.json` there. The permission file enables the four required modules and restricts outbound HTTP to the loopback service. `module_permissions` HTTP limits are supported in recent BDS releases; see [Bedrock 26.10 server changes](https://feedback.minecraft.net/hc/en-us/articles/44418129038733-Minecraft-Bedrock-Edition-26-10-Tiny-Takeover).
+This is the **script module UUID**, not the pack UUID. Copy `plum-service/config/permissions.json` and `variables.json` there. The permission file enables the four required modules and restricts outbound HTTP to the loopback service. `module_permissions` HTTP limits are supported in recent BDS releases; see [Bedrock 26.10 server changes](https://feedback.minecraft.net/hc/en-us/articles/44418129038733-Minecraft-Bedrock-Edition-26-10-Tiny-Takeover).
 
 The add-on manifest uses `1.0.0-beta` for server-net/server-admin. These are experimental: if your BDS Content Log lists a different accepted manifest version, use **that exact version** for the corresponding dependency in `behavior_packs/Plum_BP/manifest.json`. npm's versioned type-package suffix is not automatically the runtime manifest version. From source you can rebuild with:
 

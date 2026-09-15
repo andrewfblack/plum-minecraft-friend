@@ -8,7 +8,7 @@ ROOT = Path(__file__).parents[1]
 
 class PackTests(unittest.TestCase):
     def test_archives_and_script_dependencies(self):
-        for name, prefix in [('Plum-Friend.mcaddon', 'Plum_BP/'), ('Plum-Dedicated-Server.zip', 'behavior_packs/Plum_BP/')]:
+        for name, prefix in [('Fruity-Friends.mcaddon', 'Plum_BP/'), ('Fruity-Friends-Dedicated-Server.zip', 'behavior_packs/Plum_BP/')]:
             with zipfile.ZipFile(ROOT / 'dist' / name) as archive:
                 self.assertIsNone(archive.testzip())
                 for file in archive.namelist():
@@ -94,7 +94,7 @@ class PackTests(unittest.TestCase):
                 for entry in read(rp / 'textures' / atlas)['texture_data'].values():
                     self.assertTrue((rp / (entry['textures'] + '.png')).exists())
         self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 0])
-        with zipfile.ZipFile(ROOT / 'dist/Plum-Dedicated-Server.zip') as z:
+        with zipfile.ZipFile(ROOT / 'dist/Fruity-Friends-Dedicated-Server.zip') as z:
             self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 0])
 
 if __name__ == '__main__': unittest.main()

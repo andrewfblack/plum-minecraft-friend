@@ -325,16 +325,18 @@ world.afterEvents.playerLeave.subscribe(({ playerId }) => {
 });
 
 world.afterEvents.playerSpawn.subscribe(({ player, initialSpawn }) => {
-  if (initialSpawn) system.runTimeout(() => friendSay(player, FRIENDS['plum:friend'], 'Plant a plum or apple fruit on tilled farmland to grow a baby friend. Tame it with another fruit, then interact with me or type my name in chat (for example: "Plum, what is redstone?") to talk. Apple runs the Applezon shop!'), 60);
+  if (initialSpawn) system.runTimeout(() => friendSay(player, FRIENDS['plum:friend'], 'Plant a plum or apple fruit on tilled farmland to grow a baby friend. Tame it with another fruit, then interact with me or type my name in chat (for example: "Plum, what is redstone?" or "hey Apple, what do you sell?") to talk. Apple runs the Applezon shop!'), 60);
 });
 
-// Talk to a nearby tamed friend straight from chat: "Plum ...", "Apple, ...", or "@apple ...".
+// Talk to a nearby tamed friend straight from chat: "Plum ...", "hey Apple, ...", "@plum hi", etc.
 // chatSend is not declared in this build's type surface, so guard at runtime; the book stays as fallback.
 const chatEvents = /** @type {any} */ (world.beforeEvents);
 try {
   chatEvents.chatSend?.subscribe((event) => {
-    const match = event.message.match(/^\s*@?([a-zA-Z]+)\s*(?::|,)?\s*(.*)$/);
-    const friendType = match && FRIEND_NAMES[match[1].toLowerCase()];
+    // The friend's name must lead the message, optionally after a greeting like hey/hi/hello.
+    const match = event.message.match(/^\s*(?:(hey|hi|hello)[,!\s]+@?([a-zA-Z]+)\b|@?([a-zA-Z]+))\s*[:,]?\s*(.*)$/i);
+    const name = match && (match[2] || match[3]);
+    const friendType = name && FRIEND_NAMES[name.toLowerCase()];
     if (!friendType) return;
     const player = event.sender;
     const friend = nearestTamed(friendType, player);
@@ -342,7 +344,7 @@ try {
     event.cancel = true;
     const cfg = FRIENDS[friendType];
     const baby = friend.hasComponent('minecraft:is_baby');
-    const question = cleanText(match[2] || 'hi');
+    const question = cleanText(match[4] || 'hi');
     system.run(() => {
       if (!player.isValid) return;
       world.sendMessage(`<${player.name}> ${event.message}`);
