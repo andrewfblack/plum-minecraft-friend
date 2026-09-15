@@ -6,6 +6,7 @@ export function offlineAnswer(question) {
   const q = cleanText(question).toLowerCase();
   const topics = [
     [/\b(tree|trees|sapling|saplings|orchard|fruit)\b|where.*\bplums\b/, 'Find plum trees in newly explored plains and forests. Break their fruit-speckled leaves for a chance of plums and saplings. Plant a sapling on dirt or grass with 5 blocks of width and 6 blocks of height clear. It grows while loaded, or use bone meal. Feed the plums to two tamed adult friends to breed them!'],
+    [/\b(plant|planting|sprout|sprouted|grow.*friend|baby.*plum)\b/, 'Plant a plum fruit on tilled farmland and a tiny baby Plum will sprout from the soil! Give it another plum to tame it as your own. You can also find plum trees in new plains and forests.'],
     [/\b(breed|breeding|babies|baby|grow)\b/, 'Give a plum to each tamed adult Plum while they are close together. A little Plum will appear! Babies grow up in about 20 loaded minutes; plums speed that up. Tame your baby with a plum too.'],
     [/\b(tame|taming|follow|friend)\b/, 'Give me a plum fruit to become my owner. I will follow you! Hold a book and interact with me to talk.'],
     [/\b(heal|healing|hurt|health|help)\b/, 'Stay within 8 blocks of your tamed Plum for gentle regeneration. Ordinary damage cannot hurt me. I can also answer questions about crafting, beds, torches, mining, farming, and breeding.'],

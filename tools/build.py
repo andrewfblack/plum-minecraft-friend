@@ -131,8 +131,9 @@ This zip contains the server packs and a Python service; it is not a mobile impo
 
 ## Play
 
-1. Spawn two friends with Plum Spawn Egg in Creative, or /summon plum:friend ~ ~ ~.
-2. Give each a plum fruit to tame them. They follow their owner.
+1. To start in Survival, plant a plum fruit on tilled farmland to grow a baby friend. In Creative,
+   spawn two friends with Plum Spawn Egg instead.
+2. Give each friend a plum fruit to tame them. They follow their owner.
 3. Hold a book and interact (Talk to Plum on touch, right-click on PC).
 4. Choose Ask a question and type your message. Replies are private.
 5. Feed two nearby tamed adults a plum each to breed a half-size baby.

@@ -11,7 +11,7 @@ Plum is a smiling, animated purple cube companion for **Minecraft Bedrock**, wit
 
 ## Playing with Plum
 
-1. Get **Plum Spawn Egg** from the Creative inventory and spawn two friends. An operator can also use `/summon plum:friend ~ ~ ~`.
+1. Start by **planting a plum fruit on tilled farmland** — a tiny baby Plum sprouts from the soil. In Creative you can instead spawn two friends directly with the **Plum Spawn Egg**.
 2. Give a **plum fruit** to each Plum to tame him. One plum always works.
 3. He follows his owner, steps up blocks, and can catch up with normal pet teleporting.
 4. Hold an ordinary **book**, point at your Plum, and use **Talk to Plum** / interact. On PC, right-click; on mobile, use the interaction control for your chosen touch layout. Select **Ask a question**, type, and press **Ask**. Answers appear in a private window and your private chat. No chat commands or operator permissions are needed to talk.
@@ -19,7 +19,7 @@ Plum is a smiling, animated purple cube companion for **Minecraft Bedrock**, wit
 6. Babies are half-size and follow a parent until tamed. Give a baby a plum fruit to make it yours. Babies grow after approximately **20 minutes while loaded**; plums accelerate growth. Babies cannot breed until grown.
 7. Stay within **8 blocks** of your tamed Plum for regeneration. Having several Plums does not multiply the effect.
 
-The **cube friends** do not spawn naturally and have no Survival crafting recipe. Spawn your first pair with Creative or an operator, then switch to Survival and breed more. Their fruit is obtainable in Survival from trees.
+The **cube friends** do not spawn naturally and have no Survival crafting recipe. Plant a plum fruit on tilled farmland to grow your first baby, tame it, then breed more. Their fruit is obtainable in Survival from trees.
 
 ## Plum trees and fruit
 
@@ -27,7 +27,7 @@ The **cube friends** do not spawn naturally and have no Survival crafting recipe
 - Break **Plum Leaves** in Survival: each block has a **35% chance to drop a plum fruit** and a separate **10% chance to drop a Plum Sapling**. Leaves are harvested by breaking them and do not decay automatically in this version.
 - Plant a sapling on grass, dirt, coarse dirt, podzol, or moss. Leave a **5-block-wide area and 6 blocks of height** clear. Trees grow on random ticks while their area is loaded; there is no fixed growth time.
 - Use **bone meal** on a sapling to grow it immediately if there is space. Successful growth uses one bone meal in Survival; blocked growth consumes none. Creative uses none.
-- Feed plums to two tamed adult friends to breed them, or to babies to speed up growth. You can also eat the fruit to restore **4 hunger points (2 drumsticks)**.
+- Feed plums to two tamed adult friends to breed them, or to babies to speed up growth. Plant a plum on tilled farmland (not in your mouth!) to grow a new baby friend. You can also eat the fruit to restore **4 hunger points (2 drumsticks)**.
 
 Trees will not be added retroactively to old chunks. Explore beyond previously generated terrain, or obtain a Plum Sapling from Creative. For a quick operator test, use `/give @s plum:plum_sapling 1` and `/give @s plum:plum 16`.
 

@@ -1,4 +1,4 @@
-import { world, system } from '@minecraft/server';
+import { world, system, EquipmentSlot, GameMode } from '@minecraft/server';
 import { ActionFormData, ModalFormData } from '@minecraft/server-ui';
 import { answerQuestion, chatLabel } from './provider.js';
 import { cleanText } from './knowledge.js';
@@ -81,7 +81,36 @@ world.afterEvents.playerLeave.subscribe(({ playerId }) => {
 });
 
 world.afterEvents.playerSpawn.subscribe(({ player, initialSpawn }) => {
-  if (initialSpawn) system.runTimeout(() => tell(player, 'Find a Plum Spawn Egg in Creative. Tame me with a plum fruit, then hold a book and interact to chat.'), 60);
+  if (initialSpawn) system.runTimeout(() => tell(player, 'Plant a plum fruit on tilled farmland to grow a baby friend. Tame it with another plum, then hold a book and interact to chat.'), 60);
+});
+
+// Grow a baby friend by planting a plum on tilled farmland instead of eating it.
+world.beforeEvents.itemUse.subscribe((event) => {
+  if (event.itemStack?.typeId !== 'plum:plum') return;
+  const player = event.source;
+  const target = player.getBlockFromViewDirection({ maxDistance: 4 });
+  if (!target || target.block.typeId !== 'minecraft:farmland') return;
+  const destination = { x: Math.floor(target.block.x) + 0.5, y: target.block.y + 1, z: Math.floor(target.block.z) + 0.5 };
+  if (!target.block.dimension.getBlock(destination)?.isAir) {
+    tell(player, 'The soil is blocked; a sprout needs an empty space above the farmland.');
+    return;
+  }
+  event.cancel = true;
+  try {
+    if (player.getGameMode() !== GameMode.Creative) {
+      const equipment = player.getComponent('minecraft:equippable');
+      const held = equipment?.getEquipment(EquipmentSlot.Mainhand);
+      if (held?.typeId === 'plum:plum') {
+        if (held.amount > 1) {
+          held.amount--;
+          equipment.setEquipment(EquipmentSlot.Mainhand, held);
+        } else equipment.setEquipment(EquipmentSlot.Mainhand, undefined);
+      }
+    }
+    const baby = target.block.dimension.spawnEntity('plum:friend', destination);
+    baby.triggerEvent('minecraft:entity_born');
+    tell(player, 'A tiny Plum sprouts from the soil! Give it a plum to tame it.');
+  } catch (error) { console.warn(`[Plum] Planting failed: ${error}`); }
 });
 
 // Plum rejects ordinary damage: restore full health the instant a hit lands.
