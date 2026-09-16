@@ -141,32 +141,6 @@
         "priority": 7,
         "look_distance": 8,
         "probability": 0.08
-      },
-      "minecraft:interact": {
-        "interactions": [
-          {
-            "on_interact": {
-              "filters": {
-                "all_of": [
-                  {
-                    "test": "is_family",
-                    "subject": "other",
-                    "value": "player"
-                  },
-                  {
-                    "test": "has_equipment",
-                    "subject": "other",
-                    "domain": "hand",
-                    "value": "minecraft:book"
-                  }
-                ]
-              },
-              "event": "apple:talk",
-              "target": "self"
-            },
-            "interact_text": "action.interact.apple_talk"
-          }
-        ]
       }
     },
     "events": {
@@ -207,8 +181,7 @@
             "apple:tamed"
           ]
         }
-      },
-      "apple:talk": {}
+      }
     }
   }
 }

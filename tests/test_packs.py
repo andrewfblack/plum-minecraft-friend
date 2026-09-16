@@ -51,7 +51,8 @@ class PackTests(unittest.TestCase):
         self.assertEqual(groups['apple:baby']['minecraft:ageable']['feed_items'], ['apple:apple'])
         self.assertEqual(entity['components']['minecraft:tameable']['tame_items'], ['apple:apple'])
         self.assertEqual(entity['components']['minecraft:behavior.tempt']['items'], ['apple:apple'])
-        self.assertEqual(entity['components']['minecraft:interact']['interactions'][0]['interact_text'], 'action.interact.apple_talk')
+        self.assertNotIn('minecraft:interact', entity['components'])
+        self.assertIn('playerInteractWithEntity', (ROOT / 'packs/Plum_BP/scripts/main.js').read_text())
         self.assertTrue((ROOT / 'packs/Plum_RP/textures/entity/apple.png').exists())
 
     def test_model_and_texture_references(self):
@@ -83,6 +84,9 @@ class PackTests(unittest.TestCase):
             self.assertEqual(entity['component_groups'][f'{fruit}:adult']['minecraft:breedable']['breed_items'], [fruit_item])
             self.assertEqual(entity['component_groups'][f'{fruit}:baby']['minecraft:ageable']['feed_items'], [fruit_item])
             self.assertIn(fruit_item, entity['components']['minecraft:behavior.tempt']['items'])
+            self.assertEqual(entity['components']['minecraft:tameable']['tame_items'], [fruit_item])
+            self.assertNotIn('minecraft:interact', entity['components'], 'entity-wide interact competes with tame/feed right-clicks')
+            self.assertEqual(entity['components']['minecraft:type_family']['family'][0], f'{fruit}_friend')
             tree = read(bp / 'features' / f'{fruit}_tree.json')['minecraft:tree_feature']
             rule = read(bp / 'feature_rules' / f'{fruit}_tree_rule.json')['minecraft:feature_rules']
             self.assertEqual(rule['description']['places_feature'], tree['description']['identifier'])
@@ -98,8 +102,8 @@ class PackTests(unittest.TestCase):
             for atlas in ['item_texture.json', 'terrain_texture.json']:
                 for entry in read(rp / 'textures' / atlas)['texture_data'].values():
                     self.assertTrue((rp / (entry['textures'] + '.png')).exists())
-        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 2])
+        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 3])
         with zipfile.ZipFile(ROOT / 'dist/Fruity-Friends-Dedicated-Server.zip') as z:
-            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 2])
+            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 3])
 
 if __name__ == '__main__': unittest.main()

@@ -32,13 +32,13 @@ FRIENDS = {
     'plum': {
         'file': 'friend',
         'title': 'Plum', 'entity': 'plum:friend', 'fruit': 'plum:plum', 'family': 'plum_friend',
-        'talk': 'plum:talk', 'action': 'action.interact.plum_talk', 'egg': ('#9154DB', '#F6C1F4'),
+        'egg': ('#9154DB', '#F6C1F4'),
         'palette': ((149, 81, 221, 255), (110, 53, 182, 255), (183, 119, 247, 255), (47, 24, 77, 255), (255, 248, 255, 255), (244, 147, 214, 255)),
     },
     'apple': {
         'file': 'apple',
         'title': 'Apple', 'entity': 'apple:friend', 'fruit': 'apple:apple', 'family': 'apple_friend',
-        'talk': 'apple:talk', 'action': 'action.interact.apple_talk', 'egg': ('#C62828', '#6AB04A'),
+        'egg': ('#C62828', '#6AB04A'),
         'palette': ((215, 42, 50, 255), (150, 24, 32, 255), (255, 108, 108, 255), (96, 18, 26, 255), (255, 252, 250, 255), (255, 150, 160, 255)),
     },
 }
@@ -108,14 +108,12 @@ def build_friend(name, data):
         'minecraft:behavior.tempt': {'priority': 6, 'speed_multiplier': 1.0, 'items': [fruit]},
         'minecraft:behavior.random_stroll': {'priority': 8, 'speed_multiplier': 0.6},
         'minecraft:behavior.look_at_player': {'priority': 7, 'look_distance': 8, 'probability': 0.08},
-        'minecraft:interact': {'interactions': [{'on_interact': {'filters': {'all_of': [{'test': 'is_family', 'subject': 'other', 'value': 'player'}, {'test': 'has_equipment', 'subject': 'other', 'domain': 'hand', 'value': 'minecraft:book'}]}, 'event': data['talk'], 'target': 'self'}, 'interact_text': data['action']}]}
     }
     events = {
         'minecraft:entity_spawned': {'add': {'component_groups': [f'{name}:adult']}},
         'minecraft:entity_born': {'remove': {'component_groups': [f'{name}:adult']}, 'add': {'component_groups': [f'{name}:baby']}},
         'minecraft:ageable_grow_up': {'remove': {'component_groups': [f'{name}:baby']}, 'add': {'component_groups': [f'{name}:adult']}},
         'minecraft:on_tame': {'add': {'component_groups': [f'{name}:tamed']}},
-        data['talk']: {}
     }
     # Keep the legacy format explicitly: breeding fields changed in the 1.26 format.
     file_name = data.get('file', name)
@@ -134,7 +132,7 @@ def build_friend(name, data):
     png(ROOT / f'art/{name}-face.png', [[face[y // 16][x // 16] for x in range(256)] for y in range(256)])
 
 def build(net_version='1.0.0-beta', admin_version='1.0.0-beta'):
-    version = [1, 2, 2]
+    version = [1, 2, 3]
     for path, name, uid, modules in [
         (BP, 'Fruity Friends', BP_ID, [
             {'type': 'data', 'uuid': 'fce620e4-42ac-4477-a84b-c8113d47ba2e', 'version': version},
