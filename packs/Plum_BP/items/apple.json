@@ -23,6 +23,15 @@
           "minecraft:farmland"
         ],
         "dispense_on": []
+      },
+      "minecraft:food": {
+        "nutrition": 4,
+        "saturation_modifier": 0.3
+      },
+      "minecraft:use_animation": "eat",
+      "minecraft:use_modifiers": {
+        "use_duration": 1.6,
+        "movement_modifier": 0.35
       }
     }
   }
