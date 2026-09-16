@@ -1,6 +1,6 @@
 # Fruity Friends
 
-**Fruity Friends** is a family of smiling, animated cube companions for **Minecraft Bedrock**, with half-size baby forms. The first friend is **Plum**, a purple cube with a sweet tooth for plums; version **1.2.0** added **Apple**, a red cube friend who owns **Applezon**, a blocky parody of a giant online shop, plus edible apple fruit and naturally generated apple trees. Version **1.2.1** renamed the add-on to **Fruity Friends** and lets you greet a friend in chat (`hey Apple, ...`). Version **1.2.2** fixes the Applezon shop, chat replies, and fruit icons. Version **1.2.3** keeps taming reliable for both friends. Fruit-based friends grow from planting their fruit on tilled farmland, and each will do something different. This project includes an offline add-on and a Dedicated Server edition with typed AI conversation for mobile and Windows players.
+**Fruity Friends** is a family of smiling, animated cube companions for **Minecraft Bedrock**, with half-size baby forms. The first friend is **Plum**, a purple cube with a sweet tooth for plums; version **1.2.0** added **Apple**, a red cube friend who owns **Applezon**, a blocky parody of a giant online shop, plus apple fruit to plant and naturally generated apple trees. Version **1.2.1** renamed the add-on to **Fruity Friends** and lets you greet a friend in chat (`hey Apple, ...`). Version **1.2.2** fixes the Applezon shop, chat replies, and fruit icons. Version **1.2.3** keeps taming reliable for both friends. Version **1.2.4** turns fruit planting into a real sprout block that grows into each friend. This project includes an offline add-on and a Dedicated Server edition with typed AI conversation for mobile and Windows players.
 
 ## Downloads
 
@@ -11,7 +11,7 @@
 
 ## Playing with Plum
 
-1. Start by **planting a plum fruit on tilled farmland** — a tiny baby Plum sprouts from the soil. In Creative you can instead spawn two friends directly with the **Plum Spawn Egg**.
+1. Start by **planting a plum fruit on tilled farmland** — it becomes a sprout that grows into a tiny baby Plum. Interact with the sprout to sprout it instantly, or let it grow on its own in a minute or two. In Creative you can instead spawn two friends directly with the **Plum Spawn Egg**.
 2. Give a **plum fruit** to each Plum to tame him. One plum always works.
 3. He follows his owner, steps up blocks, and can catch up with normal pet teleporting.
 4. Talk to your friend two ways. **In chat**: while a tamed Plum is within 10 blocks, just type his name first — for example `Plum, what is redstone?`, `hey Plum, hi`, or `@plum ping`. A greeting like `hey`/`hi`/`hello` can come before his name. He answers in chat instantly (or with his knowledge base offline). **With a book**: hold an ordinary **book**, point at your Plum, and use **Talk to Plum** / interact. On PC, right-click; on mobile, use the interaction control for your chosen touch layout. Select **Ask a question**, type, and press **Ask**. Answers appear in a private window and your private chat. No chat commands or operator permissions are needed to talk.
@@ -27,7 +27,7 @@ The **cube friends** do not spawn naturally and have no Survival crafting recipe
 - Break **Plum Leaves** in Survival: each block has a **35% chance to drop a plum fruit** and a separate **10% chance to drop a Plum Sapling**. Leaves are harvested by breaking them and do not decay automatically in this version.
 - Plant a sapling on grass, dirt, coarse dirt, podzol, or moss. Leave a **5-block-wide area and 6 blocks of height** clear. Trees grow on random ticks while their area is loaded; there is no fixed growth time.
 - Use **bone meal** on a sapling to grow it immediately if there is space. Successful growth uses one bone meal in Survival; blocked growth consumes none. Creative uses none.
-- Feed plums to two tamed adult friends to breed them, or to babies to speed up growth. Plant a plum on tilled farmland (not in your mouth!) to grow a new baby friend. You can also eat the fruit to restore **4 hunger points (2 drumsticks)**.
+- Feed plums to two tamed adult friends to breed them, or to babies to speed up growth. Plant a plum on tilled farmland to grow a new baby friend — the fruit is a seed, not a snack, in this pack.
 
 Trees will not be added retroactively to old chunks. Explore beyond previously generated terrain, or obtain a Plum Sapling from Creative. For a quick operator test, use `/give @s plum:plum_sapling 1` and `/give @s plum:plum 16`.
 
@@ -79,7 +79,7 @@ Tree tests also cover complete sapling growth, blocked/unloaded destinations, ro
 - Feed the pair plums, verify a small baby, tame it, and verify growth and breeding cooldown.
 - Find plum trees in new plains/forest terrain; break leaves in Survival to verify plum and sapling drops.
 - Plant a sapling, test bone meal and natural growth, and confirm a nearby wall/chest is preserved when growth is blocked.
-- Verify fruit icons, edible fruit, and sapling rendering on mobile and PC.
+- Verify fruit icons, fruit planting, sprout growth, and sapling rendering on mobile and PC.
 - Hold a book and open the conversation on both mobile and PC. Verify cancel/reopen and private answers.
 - Ask a follow-up AI question; confirm a second player's history is separate.
 - Stop the bridge and confirm an offline answer appears instead of a stuck conversation.

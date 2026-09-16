@@ -10,10 +10,16 @@
   "plum:plum_sapling": {
     "sound": "grass"
   },
+  "plum:plum_sprout": {
+    "sound": "grass"
+  },
   "apple:apple_leaves": {
     "sound": "grass"
   },
   "apple:apple_sapling": {
+    "sound": "grass"
+  },
+  "apple:apple_sprout": {
     "sound": "grass"
   }
 }

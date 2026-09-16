@@ -96,14 +96,23 @@ class PackTests(unittest.TestCase):
             loot = read(bp / leaves['components']['minecraft:loot'])
             drops = {entry['name'] for pool in loot['pools'] for entry in pool['entries']}
             self.assertEqual(drops, {fruit_item, f'{fruit}:{fruit}_sapling'})
+            fruit_components = read(bp / 'items' / f'{fruit}.json')['minecraft:item']['components']
+            self.assertEqual(fruit_components['minecraft:block_placer']['block'], f'{fruit}:{fruit}_sprout')
+            self.assertNotIn('minecraft:food', fruit_components, 'fruit is a planting seed now, not food')
+            sprout = read(bp / 'blocks' / f'{fruit}_sprout.json')['minecraft:block']
+            self.assertIn('friend:sprout_grow', sprout['components']['minecraft:custom_components'])
+            sprout_geometry = sprout['components']['minecraft:geometry']
+            self.assertEqual(sprout_geometry.get('identifier') if isinstance(sprout_geometry, dict) else sprout_geometry, 'minecraft:geometry.cross')
+            sprout_drops = {entry['name'] for pool in read(bp / sprout['components']['minecraft:loot'])['pools'] for entry in pool['entries']}
+            self.assertEqual(sprout_drops, {fruit_item}, 'sprout drops exactly its fruit seed')
             sapling = read(bp / 'blocks' / f'{fruit}_sapling.json')['minecraft:block']
             self.assertIn(f'{fruit}:grow_tree', sapling['components']['minecraft:custom_components'])
             self.assertIn("import './orchard.js'", (bp / 'scripts/main.js').read_text())
             for atlas in ['item_texture.json', 'terrain_texture.json']:
                 for entry in read(rp / 'textures' / atlas)['texture_data'].values():
                     self.assertTrue((rp / (entry['textures'] + '.png')).exists())
-        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 3])
+        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 4])
         with zipfile.ZipFile(ROOT / 'dist/Fruity-Friends-Dedicated-Server.zip') as z:
-            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 3])
+            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 4])
 
 if __name__ == '__main__': unittest.main()

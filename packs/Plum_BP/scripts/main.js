@@ -1,4 +1,4 @@
-import { world, system, EquipmentSlot, GameMode, ItemStack, Player } from '@minecraft/server';
+import { world, system, EquipmentSlot, ItemStack, Player } from '@minecraft/server';
 import { ActionFormData, ModalFormData } from '@minecraft/server-ui';
 import { answerQuestion, chatLabelFor } from './provider.js';
 import { cleanText } from './knowledge.js';
@@ -6,7 +6,6 @@ import './orchard.js';
 
 const openForms = new Set();
 const nextQuestion = new Map();
-const lastPlant = new Map();
 const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z);
 
 const FRIENDS = {
@@ -17,7 +16,7 @@ const FRIENDS = {
     askTitle: 'Ask Plum', replyTitle: 'Plum says...',
     care: 'Tame me by giving me a plum. Breed adults with plums. Babies grow in 20 loaded minutes and can be tamed too. Talk to me in chat while I am near you, or hold a book and interact!',
     tamedMsg: 'Give me a plum fruit to tame me first. Only my owner can open my conversation.',
-    plantMsg: 'A tiny Plum sprouts from the soil! Give it a plum to tame it.',
+    plantMsg: 'A tiny fruiting sprout pokes through the soil! It will grow into a baby Plum — one plum tames it.',
   },
   'apple:friend': {
     name: 'Apple', color: '§c', fruit: 'apple:apple', shop: true,
@@ -26,12 +25,12 @@ const FRIENDS = {
     askTitle: 'Ask Apple', replyTitle: 'Apple says...',
     care: 'Tame me by giving me an apple. Breed adults with apples. Babies grow in 20 loaded minutes and can be tamed too. Grab items from my Applezon menu, or ask me about the shop in chat!',
     tamedMsg: 'Give me an apple fruit to tame me first. Only my owner can open my conversation or Applezon.',
-    plantMsg: 'A tiny Apple sprouts from the soil! Give it an apple to tame it.',
+    plantMsg: 'A tiny fruiting sprout pokes through the soil! It will grow into a baby Apple — one apple tames it.',
   },
 };
 
 const TYPES = new Set(Object.keys(FRIENDS));
-const PLANT_FRIEND = { 'plum:plum': 'plum:friend', 'apple:apple': 'apple:friend' };
+const FRUIT_FRIEND = { 'plum:plum': 'plum:friend', 'apple:apple': 'apple:friend' };
 const FRIEND_NAMES = { plum: 'plum:friend', apple: 'apple:friend' };
 
 const CATALOG = [
@@ -323,11 +322,10 @@ world.afterEvents.playerInteractWithEntity.subscribe(({ player, target, beforeIt
 world.afterEvents.playerLeave.subscribe(({ playerId }) => {
   openForms.delete(playerId);
   nextQuestion.delete(playerId);
-  lastPlant.delete(playerId);
 });
 
 world.afterEvents.playerSpawn.subscribe(({ player, initialSpawn }) => {
-  if (initialSpawn) system.runTimeout(() => friendSay(player, FRIENDS['plum:friend'], 'Plant a plum or apple fruit on tilled farmland to grow a baby friend. Tame it with another fruit, then interact with me or type my name in chat (for example: "Plum, what is redstone?" or "hey Apple, what do you sell?") to talk. Apple runs the Applezon shop!'), 60);
+  if (initialSpawn) system.runTimeout(() => friendSay(player, FRIENDS['plum:friend'], 'Use a plum or apple fruit on tilled farmland to plant a sprout; it grows into a baby friend, and one more fruit tames it. Interact with me or type my name in chat (for example: "Plum, what is redstone?" or "hey Apple, what do you sell?") to talk. Apple runs the Applezon shop!'), 60);
 });
 
 // Talk to a nearby tamed friend straight from chat: "Plum ...", "hey Apple, ...", "@plum hi", etc.
@@ -382,60 +380,14 @@ if (!chatEvents?.chatSend) {
   }
 }
 
-// Grow a baby friend by planting its fruit on tilled farmland instead of eating it.
-function plantFruit(player, farmland, fruitId) {
-  const friendType = PLANT_FRIEND[fruitId];
-  if (!friendType) return false;
-  if (system.currentTick < (lastPlant.get(player.id) ?? 0)) return false;
-  const cfg = FRIENDS[friendType];
-  const destination = { x: Math.floor(farmland.x) + 0.5, y: farmland.y + 1, z: Math.floor(farmland.z) + 0.5 };
-  if (!farmland.dimension.getBlock(destination)?.isAir) {
-    friendSay(player, cfg, 'The soil is blocked; a sprout needs an empty space above the farmland.');
-    return false;
-  }
-  lastPlant.set(player.id, system.currentTick + 20);
-  try {
-    if (player.getGameMode() !== GameMode.Creative) {
-      const equipment = player.getComponent('minecraft:equippable');
-      const held = equipment?.getEquipment(EquipmentSlot.Mainhand);
-      if (held?.typeId === fruitId) {
-        if (held.amount > 1) {
-          held.amount--;
-          equipment.setEquipment(EquipmentSlot.Mainhand, held);
-        } else equipment.setEquipment(EquipmentSlot.Mainhand, undefined);
-      }
-    }
-    farmland.dimension.spawnEntity(friendType, destination).triggerEvent('minecraft:entity_born');
-    friendSay(player, cfg, cfg.plantMsg);
-    return true;
-  } catch (error) {
-    console.warn(`[${cfg.name}] Planting failed: ${error}`);
-    return false;
-  }
-}
-
-// Route 1 (primary): the fruit item's onUseOn component fires when it is used on a block.
-system.beforeEvents.startup.subscribe(({ itemComponentRegistry }) => {
-  itemComponentRegistry.registerCustomComponent('friend:plant', {
-    /** @param {import('@minecraft/server').ItemComponentUseOnEvent} event */
-    onUseOn({ block, source, itemStack }) {
-      if (block.typeId !== 'minecraft:farmland') return;
-      if (!(source instanceof Player)) return;
-      const fruitId = itemStack?.typeId;
-      if (!PLANT_FRIEND[fruitId]) return;
-      plantFruit(source, block, fruitId);
-    },
-  });
-});
-
-// Route 2 (fallback): catch the fruit's item use and plant if aimed at farmland.
-world.beforeEvents.itemUse.subscribe((event) => {
-  const typeId = event.itemStack?.typeId;
-  if (!PLANT_FRIEND[typeId]) return;
-  const player = event.source;
-  const target = player.getBlockFromViewDirection({ maxDistance: 4 });
-  if (!target || target.block.typeId !== 'minecraft:farmland') return;
-  plantFruit(player, target.block, typeId);
+// Planting a fruit is vanilla block placement now (minecraft:block_placer places
+// the friend sprout on farmland). Just add a friendly confirmation when it lands.
+world.afterEvents.itemUseOn.subscribe(({ source, itemStack, block }) => {
+  const friendType = FRUIT_FRIEND[itemStack?.typeId];
+  if (!friendType) return;
+  if (block.typeId !== 'minecraft:farmland') return;
+  if (!(source instanceof Player)) return;
+  friendSay(source, FRIENDS[friendType], FRIENDS[friendType].plantMsg);
 });
 
 // Friends reject ordinary damage: restore full health the instant a hit lands.

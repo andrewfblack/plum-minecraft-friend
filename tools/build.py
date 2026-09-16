@@ -132,7 +132,7 @@ def build_friend(name, data):
     png(ROOT / f'art/{name}-face.png', [[face[y // 16][x // 16] for x in range(256)] for y in range(256)])
 
 def build(net_version='1.0.0-beta', admin_version='1.0.0-beta'):
-    version = [1, 2, 3]
+    version = [1, 2, 4]
     for path, name, uid, modules in [
         (BP, 'Fruity Friends', BP_ID, [
             {'type': 'data', 'uuid': 'fce620e4-42ac-4477-a84b-c8113d47ba2e', 'version': version},
@@ -174,7 +174,8 @@ This zip contains the server packs and a Python service; it is not a mobile impo
 
 ## Play
 
-1. To start in Survival, plant a plum or apple fruit on tilled farmland to grow a baby friend.
+1. To start in Survival, use a plum or apple fruit on tilled farmland: a sprout appears and
+   grows into a baby friend on its own (or interact with it to sprout it immediately).
    In Creative, spawn friends with the Plum or Apple Spawn Egg instead.
 2. Give each friend its own fruit to tame them: a plum tames Plum, an apple tames Apple.
    They follow their owner.
@@ -188,7 +189,7 @@ This zip contains the server packs and a Python service; it is not a mobile impo
 Find plum and apple trees in newly generated plains and forests. Break their fruit-speckled
 leaves in Survival for the matching fruit and sapling. Plant a sapling on soil with a clear
 5-wide, 6-high space; wait for growth or use bone meal. Leaves do not decay automatically.
-Plums replace apples for breeding Plum; Apple uses apples. You can eat both fruits.
+Plums replace apples for breeding Plum; Apple uses apples. The fruit works as a seed, not food.
 
 Updating from 1.1.0: replace both pack folders and the bridge script, update each Fruity Friends
 world-pack-list entry to [1,2,1], and restart. Keep existing credentials and UUIDs.
