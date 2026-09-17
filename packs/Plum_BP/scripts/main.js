@@ -3,11 +3,16 @@ import { ActionFormData, ModalFormData } from '@minecraft/server-ui';
 import { answerQuestion, chatLabelFor } from './provider.js';
 import { cleanText } from './knowledge.js';
 import { CHEST_SLOTS, parseChest, serializeChest, chestIsFull, chestStore, chestTake } from './chest.js';
+import {
+  MAX_FOLLOWING_FRIENDS, WORK_RADIUS, HOME_RADIUS, MODE,
+  readMode, setMode, readWorkAnchor, setWorkAnchor, defaultMode, describeMode, returnPlan,
+} from './friend_state.js';
 import './orchard.js';
 
 const openForms = new Set();
 const nextQuestion = new Map();
 const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z);
+const DIMENSIONS = ['overworld', 'nether', 'the_end'];
 
 const FRIENDS = {
   'plum:friend': {
@@ -15,7 +20,7 @@ const FRIENDS = {
     title: (baby) => baby ? 'Little Plum' : 'Plum',
     body: (baby, label) => `Hi, adventure buddy!\n${label}\n\nStay close for healing. Plant a plum on tilled farmland to grow a baby.`,
     askTitle: 'Ask Plum', replyTitle: 'Plum says...',
-    care: 'Tame me by giving me a plum. Plant a plum on tilled farmland to grow a baby. Babies grow in 20 loaded minutes and can be tamed too. Interact with an empty hand to make me sit or follow you. Craft a Fruit Basket from three sticks in the bucket shape and interact with me while holding it to carry me along. Talk to me in chat while I am near you, or hold a book and interact!',
+    care: 'Tame me by giving me a plum. Plant a plum on tilled farmland to grow a baby. Babies grow in 20 loaded minutes and can be tamed too. Once tamed I stay put; interact with me with an empty hand and choose Follow, Stay, Work, or Go Home (up to four friends may follow you at once). Work keeps me near where you tell me; Go Home sends me to your spawn point. Craft a Fruit Basket from three sticks in the bucket shape and interact with me while holding it to carry me along — I always come out of a basket staying put. Talk to me in chat while I am near you, or hold a book and interact!',
     tamedMsg: 'Give me a plum fruit to tame me first. Only my owner can open my conversation.',
     plantMsg: 'A tiny fruiting sprout pokes through the soil! It will grow into a baby Plum — one plum tames it.',
   },
@@ -24,7 +29,7 @@ const FRIENDS = {
     title: (baby) => baby ? 'Little Apple' : 'Apple',
     body: (baby, label) => `Hi, shopper buddy!\n${label}\n\nApplezon delivers one item for the price of one apple fruit. Apple does not heal; stay near Plum for that.`,
     askTitle: 'Ask Apple', replyTitle: 'Apple says...',
-    care: 'Tame me by giving me an apple. Plant an apple on tilled farmland to grow a baby. Babies grow in 20 loaded minutes and can be tamed too. Interact with an empty hand to make me sit or follow you. Craft a Fruit Basket from three sticks in the bucket shape and interact with me while holding it to carry me along. Grab items from my Applezon menu, or ask me about the shop in chat!',
+    care: 'Tame me by giving me an apple. Plant an apple on tilled farmland to grow a baby. Babies grow in 20 loaded minutes and can be tamed too. Once tamed I stay put; interact with me with an empty hand and choose Follow, Stay, Work, or Go Home. Craft a Fruit Basket from three sticks in the bucket shape and interact with me while holding it to carry me along. Grab items from my Applezon menu, or ask me about the shop in chat!',
     tamedMsg: 'Give me an apple fruit to tame me first. Only my owner can open my conversation or Applezon.',
     plantMsg: 'A tiny fruiting sprout pokes through the soil! It will grow into a baby Apple — one apple tames it.',
   },
@@ -33,7 +38,7 @@ const FRIENDS = {
     title: (baby) => baby ? 'Little Blueberry' : 'Blueberry',
     body: (baby, label) => `Hi, hauling buddy!\n${label}\n\nI am a Collector: dropped items near me go straight into my chest. Interact with me with an empty hand to open it.`,
     askTitle: 'Ask Blueberry', replyTitle: 'Blueberry says...',
-    care: 'Tame me by giving me a blueberry. Plant a blueberry on tilled farmland to grow a baby. Babies grow in 20 loaded minutes and can be tamed too. I scoop up dropped items within four blocks and keep them in my chest. Interact with me with an empty hand to open my chest: store the item you are holding, take something out, or just look. I will tell you when my chest is full. Craft a Fruit Basket from three sticks in the bucket shape and interact with me while holding it to carry me along - my chest comes too. Talk to me in chat while I am near you, or hold a book and interact!',
+    care: 'Tame me by giving me a blueberry. Plant a blueberry on tilled farmland to grow a baby. Babies grow in 20 loaded minutes and can be tamed too. I scoop up dropped items within four blocks and keep them in my chest. Interact with me with an empty hand to open my chest: store the item you are holding, take something out, just look, or pick Movement to set Follow, Stay, Work, or Go Home. I will tell you when my chest is full. Craft a Fruit Basket from three sticks in the bucket shape and interact with me while holding it to carry me along - my chest comes too. Talk to me in chat while I am near you, or hold a book and interact!',
     tamedMsg: 'Give me a blueberry fruit to tame me first. Only my owner can open my chest or conversation.',
     plantMsg: 'A tiny fruiting sprout pokes through the soil! It will grow into a baby Blueberry — one blueberry tames it.',
   },
@@ -109,7 +114,7 @@ async function openChest(player, friend) {
         .button('Store item from hand')
         .button('Take an item')
         .button('View contents')
-        .button('Sit or stand')
+        .button('Movement')
         .button('Back');
       const menu = await boxed.show(player);
       if (menu.canceled || menu.selection === 4 || !nearOwner(player, friend)) return;
@@ -117,7 +122,9 @@ async function openChest(player, friend) {
       else if (menu.selection === 1) await takeChestItem(player, friend);
       else if (menu.selection === 2) await viewChest(player, friend);
       else {
-        toggleSit(player, friend);
+        // Release the chest lock so the Movement menu can re-acquire it.
+        openForms.delete(player.id);
+        await modeMenu(player, friend);
         return;
       }
     }
@@ -369,19 +376,214 @@ function nearOwner(player, friend) {
     && friend.getComponent('minecraft:tameable')?.tamedToPlayerId === player.id;
 }
 
-// Dog-style sit/stay: a tamed owner's empty-hand right-click toggles staying put.
-function toggleSit(player, friend) {
-  if (!player.isValid || !friend.isValid) return;
-  const cfg = FRIENDS[friend.typeId];
-  if (!cfg) return;
-  const tamed = friend.getComponent('minecraft:tameable');
-  if (!tamed?.tamedToPlayerId || tamed.tamedToPlayerId !== player.id) {
-    friendSay(player, cfg, 'Give me my fruit to tame me first, then I will sit when you ask.');
+// ---- Universal movement states: FOLLOW / STAY / WORK / HOME ----
+// Every tamed friend lives in exactly one movement mode, persisted as the
+// `friend:mode` dynamic property (friend_state.js). Component-group state on the
+// entity is driven from that mode through the universal friend:mode_* events.
+// A friend in BASKET mode is not a world entity at all (it lives in a Fruit Basket
+// item snapshot), so it never reaches this code.
+
+function friendDisplayName(friend, cfg) {
+  return friend.nameTag || cfg.name;
+}
+
+// Count how many of this owner's friends are actually in FOLLOW mode right now,
+// scanning all dimensions and fruit types. No fragile counter is maintained: the
+// real per-friend state is authoritative, so changing one friend away from FOLLOW
+// frees its slot immediately.
+function countFollowing(ownerId) {
+  let count = 0;
+  for (const dimName of DIMENSIONS) {
+    const dimension = world.getDimension(dimName);
+    for (const type of TYPES) {
+      for (const friend of dimension.getEntities({ type })) {
+        try {
+          if (friend.getComponent('minecraft:tameable')?.tamedToPlayerId !== ownerId) continue;
+          if (readMode(friend) === MODE.FOLLOW) count += 1;
+        } catch { /* a stale or unloaded entity is skipped */ }
+      }
+    }
+  }
+  return count;
+}
+
+// HOME is the owner's bed. Player.getSpawnPoint() is the personal respawn point
+// (a slept-in bed / respawn anchor). There is no world-default reader we want to
+// fall back to: an owner who has not slept in a bed yet has no home, so the
+// friend stays where it is until one is set.
+function resolveHomeAnchor(owner) {
+  try {
+    const spawn = owner?.isValid ? owner.getSpawnPoint?.() : undefined;
+    if (spawn?.dimension && spawn?.location) {
+      const where = spawn.location;
+      if (Number.isFinite(where.x) && Number.isFinite(where.y) && Number.isFinite(where.z)) {
+        return { x: where.x, y: where.y, z: where.z, dim: spawn.dimension.id };
+      }
+    }
+  } catch { /* no personal respawn point recorded */ }
+  return null;
+}
+
+const WALKABLE_FLOORS = /^(minecraft:)(stone|dirt|grass_block|grass|cobblestone|deepslate|netherrack|end_stone|sand|gravel|.*_planks)$/;
+
+function isWalkableSpot(dimension, spot) {
+  try {
+    const floor = dimension.getBlock({ ...spot, y: spot.y - 1 });
+    const feet = dimension.getBlock(spot);
+    const head = dimension.getBlock({ ...spot, y: spot.y + 1 });
+    return !!floor && !!feet?.isAir && !!head?.isAir && WALKABLE_FLOORS.test(floor.typeId);
+  } catch { return false; }
+}
+
+// A safe place to stand near `base`. base.y === null (the 32767 default-spawn
+// sentinel) means "near the surface at this X/Z", so scan downward for ground.
+function findSafeSpot(dimension, base) {
+  const x = Math.floor(base.x) + 0.5;
+  const z = Math.floor(base.z) + 0.5;
+  const knownY = base.y != null && Number.isFinite(base.y);
+  const startY = knownY ? Math.floor(base.y) : 200;
+  const candidates = [];
+  if (knownY) {
+    for (const dy of [0, -1, 1]) candidates.push({ x, y: startY + dy, z });
+  } else {
+    for (let scanY = 200; scanY >= 0; scanY--) candidates.push({ x, y: scanY, z });
+  }
+  for (const [dx, dz] of [[0, 0], [2, 0], [-2, 0], [0, 2], [0, -2], [1, 1], [1, -1], [-1, 1], [-1, -1]]) {
+    candidates.push({ x: x + dx, y: (knownY ? startY : 64) + 1, z: z + dz });
+  }
+  for (const spot of candidates) {
+    if (isWalkableSpot(dimension, spot)) return spot;
+  }
+  return { x, y: (knownY ? startY : 64) + 1, z };
+}
+
+function teleportFriendTo(friend, anchor) {
+  try {
+    const dimension = world.getDimension(anchor.dim) ?? friend.dimension;
+    const spot = findSafeSpot(dimension, anchor);
+    friend.tryTeleport(spot, { dimension, checkForBlocks: false });
+  } catch { /* a boundary/chunk edge can reject the move; retried on the next upkeep tick */ }
+}
+
+// Re-apply the component groups that match a mode. Triggered on state changes and
+// once per entity per script run (seenMode), so modes survive world reloads even if
+// dynamically-added component groups did not.
+const seenMode = new Map();
+function syncModeGroups(friend, mode) {
+  if (seenMode.get(friend.id) === mode) return;
+  seenMode.set(friend.id, mode);
+  if (mode === MODE.STAY) { try { friend.triggerEvent('friend:mode_stay'); } catch { /* reconciled later */ } }
+  else if (mode === MODE.FOLLOW) { try { friend.triggerEvent('friend:mode_follow'); } catch { /* reconciled later */ } }
+}
+
+// Bring an anchored friend back inside its allowed radius. "Return" uses small
+// safe hops toward a point just inside the radius; badly stuck or too-far friends
+// are teleported straight back to the anchor. Never searches the wider world.
+const returnStuck = new Map();
+function enforceRadius(friend, anchor, radius, tooFar) {
+  if (friend.dimension.id !== anchor.dim) {
+    teleportFriendTo(friend, anchor);
     return;
   }
-  const sitting = friend.hasComponent('minecraft:is_sitting');
-  friend.triggerEvent(sitting ? 'minecraft:on_stand' : 'minecraft:on_sit');
-  friendSay(player, cfg, sitting ? 'Up I get! I will follow you again.' : 'Right! I will sit here and stay put.');
+  const plan = returnPlan(friend.location, { x: anchor.x, y: anchor.y ?? friend.location.y, z: anchor.z }, radius, tooFar);
+  if (plan.action === 'none') { returnStuck.delete(friend.id); return; }
+  const info = returnStuck.get(friend.id) ?? { fails: 0, last: JSON.stringify(friend.location) };
+  if (plan.action === 'nudge') info.fails = JSON.stringify(friend.location) === info.last ? info.fails + 1 : 0;
+  info.last = JSON.stringify(friend.location);
+  if (plan.action === 'teleport' || info.fails >= 2) {
+    returnStuck.delete(friend.id);
+    teleportFriendTo(friend, anchor);
+  } else {
+    returnStuck.set(friend.id, info);
+    teleportFriendTo(friend, { ...plan.target, dim: anchor.dim });
+  }
+}
+
+// The single entry point for every mode change. Enforces the per-owner FOLLOW cap
+// using the friends' real state, frees FOLLOW slots by replacing the mode, and
+// answers the owner with short feedback that prefers the custom name.
+function setFriendMode(player, friend, mode) {
+  if (!player.isValid || !friend.isValid) return false;
+  const cfg = FRIENDS[friend.typeId];
+  if (!cfg) return false;
+  if (!nearOwner(player, friend)) {
+    friendSay(player, cfg, cfg.tamedMsg);
+    return false;
+  }
+  const tamed = friend.getComponent('minecraft:tameable');
+  const ownerId = tamed?.tamedToPlayerId;
+  if (!ownerId || ownerId !== player.id) {
+    friendSay(player, cfg, 'Only my owner can tell me what to do.');
+    return false;
+  }
+  const name = friendDisplayName(friend, cfg);
+  if (mode === MODE.FOLLOW && readMode(friend) !== MODE.FOLLOW && countFollowing(ownerId) >= MAX_FOLLOWING_FRIENDS) {
+    friendSay(player, cfg, 'Your Fruity Friend party is full! You can have up to 4 friends following you. Set one to Stay or Work, send one Home, or put one in a Fruit Basket first.');
+    return false;
+  }
+  try {
+    if (mode === MODE.STAY) {
+      friend.triggerEvent('friend:mode_stay');
+    } else if (mode === MODE.FOLLOW) {
+      friend.triggerEvent('friend:mode_follow');
+    } else if (mode === MODE.WORK) {
+      setWorkAnchor(friend, { x: friend.location.x, y: friend.location.y, z: friend.location.z, dim: friend.dimension.id });
+      friend.triggerEvent('friend:mode_work');
+    } else if (mode === MODE.HOME) {
+      const home = resolveHomeAnchor(player);
+      if (!home) {
+        friendSay(player, cfg, 'I could not find a home to go to. Sleep in a bed (or set a respawn point) and try again.');
+        return false;
+      }
+      friend.triggerEvent('friend:mode_home');
+      teleportFriendTo(friend, home);
+    }
+    setMode(friend, mode);
+  } catch { /* a just-spawned friend can briefly reject state changes; the upkeep tick reconciles it */ }
+  const feedback = {
+    [MODE.FOLLOW]: `${name} is following you.`,
+    [MODE.STAY]: `${name} will stay here.`,
+    [MODE.WORK]: `${name} is working around this area.`,
+    [MODE.HOME]: `${name} is going home.`,
+  }[mode];
+  if (feedback) friendSay(player, cfg, feedback);
+  return true;
+}
+
+// Interaction menu: Follow, Stay, Work, Go Home. The only way an owner changes a
+// friend's movement state (Blueberry reaches it from inside his chest menu too).
+async function modeMenu(player, friend) {
+  if (openForms.has(player.id)) return;
+  const cfg = FRIENDS[friend.typeId];
+  if (!cfg) return;
+  if (!nearOwner(player, friend)) {
+    friendSay(player, cfg, cfg.tamedMsg);
+    return;
+  }
+  const tamed = friend.getComponent('minecraft:tameable');
+  if (!tamed?.tamedToPlayerId || tamed.tamedToPlayerId !== player.id) {
+    friendSay(player, cfg, 'Give me my fruit to tame me first; only my owner can change what I do.');
+    return;
+  }
+  openForms.add(player.id);
+  try {
+    const name = friendDisplayName(friend, cfg);
+    const mode = readMode(friend) ?? defaultMode(friend.hasComponent('minecraft:is_sitting'));
+    const party = countFollowing(tamed.tamedToPlayerId);
+    const menu = await new ActionFormData()
+      .title(`${name} \u00b7 Movement`)
+      .body(`I am currently ${describeMode(mode)}.\n\nChoose what you want me to do. Up to ${MAX_FOLLOWING_FRIENDS} friends may follow you (${party} following now). Hold a Fruit Basket and interact with me to carry me around instead.`)
+      .button('Follow')
+      .button('Stay')
+      .button('Work')
+      .button('Go Home')
+      .button('Goodbye')
+      .show(player);
+    if (menu.canceled || menu.selection === 4 || !nearOwner(player, friend)) return;
+    setFriendMode(player, friend, [MODE.FOLLOW, MODE.STAY, MODE.WORK, MODE.HOME][menu.selection]);
+  } finally {
+    openForms.delete(player.id);
+  }
 }
 
 // Tuck a tamed friend into the Fruit Basket held in the main hand.
@@ -456,12 +658,16 @@ function releaseFromBasket(player, block, blockFace) {
     friend.triggerEvent(contents.baby ? 'minecraft:entity_born' : 'minecraft:entity_spawned');
     if (contents.chest) writeChest(friend, parseChest(JSON.stringify(contents.chest)));
     try { friend.getComponent('minecraft:tameable')?.tame(player); } catch { /* Already owned by the snapshot's owner. */ }
-    if (contents.sitting) friend.triggerEvent('minecraft:on_sit');
+    // Out of the basket ALWAYS means STAY — never an old Follow/Work/Home mode that
+    // would make the friend run off. The owner explicitly picks a mode next.
+    friend.triggerEvent('friend:mode_stay');
+    setMode(friend, MODE.STAY);
   } catch { /* A just-spawned friend can briefly reject state changes; it still lands fine. */ }
   try {
     inv.setItem(slot, new ItemStack(BASKET, 1));
   } catch { /* The basket returns to the player's hand slot on the next successful release. */ }
-  friendSay(player, cfg, `Fresh air! I am ${contents.sitting ? 'staying right here' : 'right here'} with you again.`);
+  const name = friendDisplayName(friend, cfg);
+  friendSay(player, cfg, `${name} is staying right here until you tell me what to do. Interact with me to Follow, Work, or Go Home.`);
 }
 
 function hasFruit(player, fruit) {
@@ -648,10 +854,11 @@ world.afterEvents.playerInteractWithEntity.subscribe(({ player, target, beforeIt
     system.run(() => { void captureInBasket(player, target); });
     return;
   }
-  // Empty hand: Blueberry opens his portable chest; everyone else sits/stays like a tamed dog.
+  // Empty hand: Blueberry opens his portable chest; everyone else gets the Movement menu
+  // (Follow, Stay, Work, Go Home).
   if (!beforeItemStack || beforeItemStack.typeId === 'minecraft:air') {
     if (FRIENDS[target.typeId]?.collector) system.run(() => { void openChest(player, target); });
-    else system.run(() => { void toggleSit(player, target); });
+    else system.run(() => { void modeMenu(player, target); });
     return;
   }
   // Leave food, taming, name tags and leads to the engine. A book also gives touch players a Talk button.
@@ -671,7 +878,7 @@ world.afterEvents.playerLeave.subscribe(({ playerId }) => {
 });
 
 world.afterEvents.playerSpawn.subscribe(({ player, initialSpawn }) => {
-  if (initialSpawn) system.runTimeout(() => friendSay(player, FRIENDS['plum:friend'], 'Fruity Friends v1.2.11 is loaded. Use a plum, apple or blueberry fruit on tilled farmland to plant a sprout; it grows into a baby friend, and one more fruit tames it. Interact with a Plum or Apple with an empty hand to make them sit or follow. Blueberry is the Collector: interact with him with an empty hand to open his chest, and dropped items near him go straight inside. Craft a Fruit Basket from three sticks and interact with me while holding it to carry me around. Interact with me or type my name in chat (for example: "Plum, what is redstone?", "hey Apple, what do you sell?", or "Blueberry, my chest is full?") to talk. Apple runs the Applezon shop!'), 60);
+  if (initialSpawn) system.runTimeout(() => friendSay(player, FRIENDS['plum:friend'], 'Fruity Friends v1.2.12 is loaded. Use a plum, apple or blueberry fruit on tilled farmland to plant a sprout; it grows into a baby friend, and one more fruit tames it. Newly tamed friends stay put. Interact with an empty hand (or, for Blueberry, his chest menu) to choose Follow, Stay, Work, or Go Home - up to four friends can follow you at once. Work keeps a friend near the spot you choose; Go Home sends a friend to your spawn. Blueberry is the Collector: interact with him with an empty hand to open his chest, and dropped items near him go straight inside. Craft a Fruit Basket from three sticks and interact with me while holding it to carry me around - I always come out staying put. Interact with me or type my name in chat (for example: "Plum, what is redstone?", "hey Apple, what do you sell?", or "Blueberry, my chest is full?") to talk. Apple runs the Applezon shop!'), 60);
 });
 
 // Talk to a nearby tamed friend straight from chat: "Plum ...", "hey Apple, ...", "@plum hi", etc.
@@ -756,29 +963,55 @@ system.runInterval(() => {
   }
 }, 100);
 
-// Rescue loaded companions from below the world and catch up across dimensions.
+// Universal upkeep, once per second: keeps every loaded Fruity Friend in its
+// persisted movement state (reapplying groups after a reload), enforces the shared
+// WORK/HOME radius system, and rescues unanchored companions from below the world
+// or across dimensions. Anchored friends (WORK/HOME) are governed by their own
+// anchor rather than the owner's position, so the owner-catch-up rescue skips them.
 // This intentionally does not create duplicates when an entity unloads.
 system.runInterval(() => {
   const players = new Map(world.getAllPlayers().map(player => [player.id, player]));
-  for (const name of ['overworld', 'nether', 'the_end']) {
-    const dimension = world.getDimension(name);
+  for (const dimName of DIMENSIONS) {
+    const dimension = world.getDimension(dimName);
     for (const type of TYPES) {
       for (const friend of dimension.getEntities({ type })) {
         try {
-          const owner = players.get(friend.getComponent('minecraft:tameable')?.tamedToPlayerId);
-          if (!owner) continue;
+          if (!friend.isValid) continue;
+          const ownerId = friend.getComponent('minecraft:tameable')?.tamedToPlayerId;
+          if (!ownerId) continue;
+          const owner = players.get(ownerId);
+          let mode = readMode(friend);
+          if (!mode) {
+            // Pre-update friends: sitting ones stay put, everyone else keeps the
+            // old follow-the-owner default. Newly tamed friends already set STAY.
+            mode = defaultMode(friend.hasComponent('minecraft:is_sitting'));
+            try { setMode(friend, mode); } catch { /* retried on the next interval */ }
+          }
+          syncModeGroups(friend, mode);
+
+          if (mode === MODE.WORK) {
+            const anchor = readWorkAnchor(friend);
+            if (anchor) enforceRadius(friend, anchor, WORK_RADIUS, WORK_RADIUS * 1.5);
+            continue; // anchored friends are not owner-rescued
+          }
+          if (mode === MODE.HOME) {
+            const anchor = resolveHomeAnchor(owner);
+            if (anchor) enforceRadius(friend, anchor, HOME_RADIUS, HOME_RADIUS * 1.8);
+            continue; // anchored friends are not owner-rescued
+          }
+
+          // FOLLOW / STAY / migrating: rescue loaded companions from the void and
+          // catch them up across dimensions near their owner when safe ground exists.
           const inVoid = friend.location.y < dimension.heightRange.min;
-          if (!inVoid && friend.dimension.id === owner.dimension.id) continue;
-          const base = owner.location;
+          if (!inVoid && friend.dimension.id === owner?.dimension?.id) continue;
+          const base = owner?.location;
+          if (!base) continue;
           let moved = false;
           for (const [dx, dz] of [[2,0],[-2,0],[0,2],[0,-2],[1,1]]) {
             if (moved) break;
             for (const dy of [0,1,-1]) {
               const spot = { x: Math.floor(base.x) + dx + 0.5, y: Math.floor(base.y) + dy, z: Math.floor(base.z) + dz + 0.5 };
-              const floor = owner.dimension.getBlock({ ...spot, y: spot.y - 1 });
-              const feet = owner.dimension.getBlock(spot);
-              const head = owner.dimension.getBlock({ ...spot, y: spot.y + 1 });
-              if (!floor || !/^(minecraft:)(stone|dirt|grass_block|grass|cobblestone|deepslate|netherrack|end_stone|sand|gravel|.*_planks)$/.test(floor.typeId) || !feet?.isAir || !head?.isAir) continue;
+              if (!isWalkableSpot(owner.dimension, spot)) continue;
               moved = friend.tryTeleport(spot, { dimension: owner.dimension, checkForBlocks: true });
               if (moved) break;
             }
@@ -787,4 +1020,6 @@ system.runInterval(() => {
       }
     }
   }
+  if (seenMode.size > 512) seenMode.clear();
+  if (returnStuck.size > 512) returnStuck.clear();
 }, 20);

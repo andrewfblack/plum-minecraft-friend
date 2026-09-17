@@ -5,7 +5,7 @@ import { cleanText, offlineAnswer } from '../packs/Plum_BP/scripts/knowledge.js'
 test('typed help handles useful questions and admits unsupported topics', () => {
   assert.match(offlineAnswer('How do I make a bed?'), /three matching wool/);
   assert.match(offlineAnswer('How do I grow a baby Plum?'), /plum/);
-  assert.match(offlineAnswer('How do I make Plum sit?'), /sit/);
+  assert.match(offlineAnswer('How do I make Plum sit?'), /empty hand|Stay/);
   assert.match(offlineAnswer('How do I make Plum follow again?'), /empty hand|follow/);
   assert.match(offlineAnswer('How do I carry my friend?'), /Fruit Basket/);
   assert.match(offlineAnswer('What is a Fruit Basket for?'), /three sticks in the bucket shape/);
@@ -30,7 +30,7 @@ test('blueberry answers about collecting and his portable chest, not healing', (
   assert.match(offlineAnswer('how do I care for Blueberry?', 'blueberry'), /Tame me with a blueberry/);
   assert.match(offlineAnswer('does Blueberry heal me?', 'blueberry'), /do NOT grant healing/);
   assert.match(offlineAnswer('where can I find blueberries?', 'blueberry'), /trees/);
-  assert.match(offlineAnswer('How do I make Blueberry sit?', 'blueberry'), /Sit or stand/);
+  assert.match(offlineAnswer('How do I make Blueberry sit?', 'blueberry'), /Movement/);
   assert.match(offlineAnswer('How do I make a bed?', 'blueberry'), /three matching wool/);
 });
 

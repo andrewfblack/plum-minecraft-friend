@@ -2,12 +2,12 @@
   "format_version": 2,
   "header": {
     "name": "Fruity Friends Resources",
-    "description": "Smiling cube companions with babies, healing, shopping, and a portable chest. Apple runs the Applezon shop; Blueberry collects drops.",
+    "description": "Smiling cube companions with babies, healing, shopping, and a portable chest. Friends use a universal Follow/Stay/Work/Go Home system; Apple runs the Applezon shop; Blueberry collects drops.",
     "uuid": "834d72cc-8c7f-498f-adfa-269e215f86e8",
     "version": [
       1,
       2,
-      11
+      12
     ],
     "min_engine_version": [
       1,
@@ -22,7 +22,7 @@
       "version": [
         1,
         2,
-        11
+        12
       ]
     }
   ]

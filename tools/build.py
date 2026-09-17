@@ -109,12 +109,21 @@ def build_friend(name, data):
         },
         f'{name}:tamed': {
             'minecraft:is_tamed': {},
-            'minecraft:behavior.follow_owner': {'priority': 4, 'speed_multiplier': 1.15, 'start_distance': 4, 'stop_distance': 2, 'can_teleport': True}
         },
         f'{name}:sit': {
             'minecraft:is_sitting': {},
             'minecraft:behavior.sit': {'priority': 0},
-        }
+        },
+        # Universal movement groups (shared verbatim by every future fruit):
+        # FOLLOW uses the engine's tamed follow_owner; STAY uses sit. WORK and HOME
+        # keep only is_tamed and roam via the base random_stroll; the script enforces
+        # their radius. Keeping follow_owner out of {name}:tamed means a freshly tamed
+        # friend never auto-follows — main.js drives mode transitions through the
+        # friend:mode_* events below.
+        'friend:follow': {
+            'minecraft:is_tamed': {},
+            'minecraft:behavior.follow_owner': {'priority': 4, 'speed_multiplier': 1.15, 'start_distance': 4, 'stop_distance': 2, 'can_teleport': True}
+        },
     }
     components = {
         'minecraft:type_family': {'family': [data['family'], 'mob']},
@@ -137,9 +146,16 @@ def build_friend(name, data):
         'minecraft:entity_spawned': {'add': {'component_groups': [f'{name}:adult']}},
         'minecraft:entity_born': {'remove': {'component_groups': [f'{name}:adult']}, 'add': {'component_groups': [f'{name}:baby']}},
         'minecraft:ageable_grow_up': {'remove': {'component_groups': [f'{name}:baby']}, 'add': {'component_groups': [f'{name}:adult']}},
-        'minecraft:on_tame': {'add': {'component_groups': [f'{name}:tamed']}},
+        # A freshly tamed friend starts in STAY, never following automatically.
+        'minecraft:on_tame': {'add': {'component_groups': [f'{name}:tamed', f'{name}:sit']}},
         'minecraft:on_sit': {'add': {'component_groups': [f'{name}:sit']}},
         'minecraft:on_stand': {'remove': {'component_groups': [f'{name}:sit']}},
+        # Universal mode events, shared verbatim by every future fruit. main.js fires
+        # these to build a component-group state that matches the persisted mode.
+        'friend:mode_follow': {'remove': {'component_groups': [f'{name}:sit']}, 'add': {'component_groups': ['friend:follow']}},
+        'friend:mode_stay': {'remove': {'component_groups': ['friend:follow']}, 'add': {'component_groups': [f'{name}:sit']}},
+        'friend:mode_work': {'remove': {'component_groups': [f'{name}:sit', 'friend:follow']}},
+        'friend:mode_home': {'remove': {'component_groups': [f'{name}:sit', 'friend:follow']}},
     }
     # Babies come only from planting fruit (orchard.js fires minecraft:entity_born).
     file_name = data.get('file', name)
@@ -215,14 +231,14 @@ def build_basket(bp, rp, write, png):
         stream.write('item.friend:fruit_basket.name=Fruit Basket\n')
 
 def build(net_version='1.0.0-beta', admin_version='1.0.0-beta'):
-    version = [1, 2, 11]
+    version = [1, 2, 12]
     for path, name, uid, modules in [
         (BP, 'Fruity Friends', BP_ID, [
             {'type': 'data', 'uuid': 'fce620e4-42ac-4477-a84b-c8113d47ba2e', 'version': version},
             {'type': 'script', 'language': 'javascript', 'entry': 'scripts/main.js', 'uuid': 'a91c511c-d9d5-48e5-82c9-25cc48706cbb', 'version': version}]),
         (RP, 'Fruity Friends Resources', RP_ID, [
             {'type': 'resources', 'uuid': '6b250c6d-d093-4cb1-b16b-a42cd137d4bb', 'version': version}])]:
-        manifest = {'format_version': 2, 'header': {'name': name, 'description': 'Smiling cube companions with babies, healing, shopping, and a portable chest. Apple runs the Applezon shop; Blueberry collects drops.', 'uuid': uid, 'version': version, 'min_engine_version': [1, 21, 90]}, 'modules': modules}
+        manifest = {'format_version': 2, 'header': {'name': name, 'description': 'Smiling cube companions with babies, healing, shopping, and a portable chest. Friends use a universal Follow/Stay/Work/Go Home system; Apple runs the Applezon shop; Blueberry collects drops.', 'uuid': uid, 'version': version, 'min_engine_version': [1, 21, 90]}, 'modules': modules}
         if path == BP:
             manifest['dependencies'] = [{'uuid': RP_ID, 'version': version}, {'module_name': '@minecraft/server', 'version': '2.0.0'}, {'module_name': '@minecraft/server-ui', 'version': '2.0.0'}]
         write(path / 'manifest.json', manifest)
@@ -263,18 +279,19 @@ This zip contains the server packs and a Python service; it is not a mobile impo
    In Creative, spawn friends with the matching Spawn Egg instead.
 2. Give each friend its own fruit to tame them: a plum tames Plum, an apple tames Apple, and a
    blueberry tames Blueberry.
-   They follow their owner. Interact with an empty hand to make a tamed Plum or Apple sit and stay put,
-   like a dog; do it again to make them follow. Blueberry's empty-hand interact opens his portable chest.
+   A newly tamed friend stays put where it is. Interact with an empty hand (or, for Blueberry,
+   choose Movement in his chest menu) to open the Movement menu: Follow, Stay, Work, or Go Home.
+   Up to four friends can follow you at once. Work keeps a friend within 20 blocks of where you
+   set it; Go Home sends a friend to your spawn point, where it roams within 10 blocks.
 3. Hold a book and interact (Talk to Plum / Talk to Apple / Talk to Blueberry on touch, right-click on PC).
 4. Choose Ask a question and type your message. Replies are private.
 5. Plant a fruit on tilled farmland to grow a baby friend; it sprouts and grows in 20 loaded minutes.
 6. Tame the baby with its fruit. Fruit also speeds growth. Stay within 8 blocks of your tamed Plum for regeneration. Apple does not heal you;
    instead she owns Applezon and delivers a surprise or a search result for one apple fruit.
 7. Blueberry is the Collector: dropped items within four blocks go straight into his chest. Interact with
-   him with an empty hand to open it, store what you are holding, or take something out. He will tell you
-   when his chest is full.
+   him with an empty hand to open it, store what you are holding, take something out, or choose Movement.
 8. Craft a Fruit Basket from three sticks in the bucket shape, then hold it and interact with a tamed
-   friend to tuck them inside (Blueberry keeps his chest contents). Carry them in your inventory and interact with a block to let them out again.
+   friend to tuck them inside (Blueberry keeps his chest contents). Carry them in your inventory and interact with a block to let them out again — they always come out in Stay mode, waiting for your next order.
 
 Find plum, apple and blueberry trees in newly generated plains and forests. Break their fruit-speckled
 leaves in Survival for the matching fruit and sapling. Plant a sapling on soil with a clear
@@ -282,7 +299,7 @@ leaves in Survival for the matching fruit and sapling. Plant a sapling on soil w
 The fruit works as a seed and snack: plant it on farmland to grow a baby friend.
 
 Updating from 1.1.0: replace both pack folders and the bridge script, update each Fruity Friends
-world-pack-list entry to [1,2,11], and restart. Keep existing credentials and UUIDs.
+world-pack-list entry to [1,2,12], and restart. Keep existing credentials and UUIDs.
 
 Friends resist ordinary damage and do not naturally despawn. Administrative removal,
 /kill, and engine edge cases are outside this protection. Unloaded companions cannot

@@ -45,7 +45,9 @@ class PackTests(unittest.TestCase):
             self.assertNotIn('minecraft:behavior.breed', adult)
             apply('minecraft:on_tame')
             apply('minecraft:ageable_grow_up')
-            self.assertEqual(active, {f'{entity["description"]["identifier"].split(":")[0]}:adult', f'{entity["description"]["identifier"].split(":")[0]}:tamed'})
+            # A freshly tamed friend starts in STAY (sit group), so tame + grow leaves
+            # the friend sitting-but-grown: adult, tamed, sit.
+            self.assertEqual(active, {f'{entity["description"]["identifier"].split(":")[0]}:adult', f'{entity["description"]["identifier"].split(":")[0]}:tamed', f'{entity["description"]["identifier"].split(":")[0]}:sit'})
             sit_group = groups[list(filter(lambda k: k.endswith(':sit'), groups))[0]]
             self.assertIn('minecraft:is_sitting', sit_group, 'sit group must contain the is_sitting flag')
             self.assertIn('minecraft:on_sit', entity['events'])
@@ -54,6 +56,35 @@ class PackTests(unittest.TestCase):
                           entity['events']['minecraft:on_sit'].get('add', {}).get('component_groups', []))
             self.assertIn(f'{entity["description"]["identifier"].split(":")[0]}:sit',
                           entity['events']['minecraft:on_stand'].get('remove', {}).get('component_groups', []))
+
+    def test_universal_movement_modes(self):
+        for file in ['friend.json', 'apple.json', 'blueberry.json']:
+            entity = json.loads((ROOT / 'packs/Plum_BP/entities' / file).read_text())['minecraft:entity']
+            groups = entity['component_groups']
+            prefix = entity['description']['identifier'].split(':')[0]
+            # The tamed group must never auto-follow: a freshly tamed friend starts in STAY.
+            self.assertNotIn('minecraft:behavior.follow_owner', groups[f'{prefix}:tamed'],
+                             f'{file}: the tamed group must not contain follow_owner (new tames start in STAY)')
+            self.assertIn('minecraft:is_tamed', groups['friend:follow'])
+            self.assertIn('minecraft:behavior.follow_owner', groups['friend:follow'],
+                          f'{file}: FOLLOW mode is powered by the universal friend:follow group')
+            self.assertIn('minecraft:is_sitting', groups[f'{prefix}:sit'])
+            # on_tame lands in STAY (tamed + sit), never auto-following.
+            tame_groups = entity['events']['minecraft:on_tame'].get('add', {}).get('component_groups', [])
+            self.assertIn(f'{prefix}:tamed', tame_groups)
+            self.assertIn(f'{prefix}:sit', tame_groups)
+            # Universal mode events drive follow/stay/work/home and keep the mode groups legal.
+            for event, adds in [('friend:mode_follow', ['friend:follow']), ('friend:mode_stay', [f'{prefix}:sit'])]:
+                self.assertIn(event, entity['events'])
+                self.assertIn(adds[0], entity['events'][event].get('add', {}).get('component_groups', []))
+            for event in ['friend:mode_follow', 'friend:mode_stay', 'friend:mode_work', 'friend:mode_home']:
+                self.assertIn(event, entity['events'])
+                for action in ('add', 'remove'):
+                    for group in entity['events'][event].get(action, {}).get('component_groups', []):
+                        self.assertIn(group, groups, f'{file}: {event} {action} references missing group {group}')
+            self.assertIn("from './friend_state.js'", (ROOT / 'packs/Plum_BP/scripts/main.js').read_text())
+            self.assertIn('friend:mode_stay', (ROOT / 'packs/Plum_BP/scripts/main.js').read_text(),
+                          'basket release should always restore a friend to Stay')
 
     def test_apple_tames_and_grows(self):
         entity = json.loads((ROOT / 'packs/Plum_BP/entities/apple.json').read_text())['minecraft:entity']
@@ -152,9 +183,9 @@ class PackTests(unittest.TestCase):
             for atlas in ['item_texture.json', 'terrain_texture.json']:
                 for entry in read(rp / 'textures' / atlas)['texture_data'].values():
                     self.assertTrue((rp / (entry['textures'] + '.png')).exists())
-        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 11])
+        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 12])
         with zipfile.ZipFile(ROOT / 'dist/Fruity-Friends-Dedicated-Server.zip') as z:
-            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 11])
+            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 12])
 
     def test_fruit_basket_item_recipe_and_script(self):
         bp, rp = ROOT / 'packs/Plum_BP', ROOT / 'packs/Plum_RP'

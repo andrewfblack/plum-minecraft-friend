@@ -34,6 +34,15 @@
         }
       },
       "plum:tamed": {
+        "minecraft:is_tamed": {}
+      },
+      "plum:sit": {
+        "minecraft:is_sitting": {},
+        "minecraft:behavior.sit": {
+          "priority": 0
+        }
+      },
+      "friend:follow": {
         "minecraft:is_tamed": {},
         "minecraft:behavior.follow_owner": {
           "priority": 4,
@@ -41,12 +50,6 @@
           "start_distance": 4,
           "stop_distance": 2,
           "can_teleport": true
-        }
-      },
-      "plum:sit": {
-        "minecraft:is_sitting": {},
-        "minecraft:behavior.sit": {
-          "priority": 0
         }
       }
     },
@@ -163,7 +166,8 @@
       "minecraft:on_tame": {
         "add": {
           "component_groups": [
-            "plum:tamed"
+            "plum:tamed",
+            "plum:sit"
           ]
         }
       },
@@ -178,6 +182,46 @@
         "remove": {
           "component_groups": [
             "plum:sit"
+          ]
+        }
+      },
+      "friend:mode_follow": {
+        "remove": {
+          "component_groups": [
+            "plum:sit"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "friend:follow"
+          ]
+        }
+      },
+      "friend:mode_stay": {
+        "remove": {
+          "component_groups": [
+            "friend:follow"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "plum:sit"
+          ]
+        }
+      },
+      "friend:mode_work": {
+        "remove": {
+          "component_groups": [
+            "plum:sit",
+            "friend:follow"
+          ]
+        }
+      },
+      "friend:mode_home": {
+        "remove": {
+          "component_groups": [
+            "plum:sit",
+            "friend:follow"
           ]
         }
       }
