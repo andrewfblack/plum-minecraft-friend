@@ -126,8 +126,45 @@ class PackTests(unittest.TestCase):
             for atlas in ['item_texture.json', 'terrain_texture.json']:
                 for entry in read(rp / 'textures' / atlas)['texture_data'].values():
                     self.assertTrue((rp / (entry['textures'] + '.png')).exists())
-        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 7])
+        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 8])
         with zipfile.ZipFile(ROOT / 'dist/Fruity-Friends-Dedicated-Server.zip') as z:
-            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 7])
+            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 8])
+
+    def test_fruit_basket_item_recipe_and_script(self):
+        bp, rp = ROOT / 'packs/Plum_BP', ROOT / 'packs/Plum_RP'
+        def read(path): return json.loads(path.read_text())
+        item = read(bp / 'items/fruit_basket.json')['minecraft:item']
+        self.assertEqual(item['description']['identifier'], 'friend:fruit_basket')
+        components = item['components']
+        icon_key = components['minecraft:icon']['textures']['default']
+        self.assertEqual(components['minecraft:display_name']['value'], 'item.friend:fruit_basket.name')
+        recipe = read(bp / 'recipes/fruit_basket.json')['minecraft:recipe_shaped']
+        self.assertEqual(recipe['description']['identifier'], 'fruit_basket')
+        self.assertEqual(recipe['result'], {'item': 'friend:fruit_basket', 'count': 1})
+        pattern = recipe['pattern']
+        self.assertEqual(pattern, ['X X', ' X '], 'bucket-shaped stick recipe: two on top, one in the middle')
+        sticks = pattern[0].count('X') + pattern[1].count('X')
+        self.assertEqual(sticks, 3, 'the basket costs exactly three sticks')
+        self.assertEqual(recipe['key']['X']['item'], 'minecraft:stick')
+        atlas = read(rp / 'textures/item_texture.json')['texture_data']
+        self.assertIn(icon_key, atlas)
+        self.assertTrue((rp / (atlas[icon_key]['textures'] + '.png')).exists())
+        lang = (rp / 'texts/en_US.lang').read_text()
+        self.assertIn('item.friend:fruit_basket.name=Fruid Basket', lang)
+        script = (bp / 'scripts/main.js').read_text()
+        self.assertIn("typeId === BASKET", script, 'entity interact with a basket should capture a friend')
+        self.assertIn('playerInteractWithBlock', script, 'interacting with a block should release a friend')
+        self.assertIn('spawnEntity(contents.type', script)
+        self.assertIn('getComponent(\'minecraft:tameable\')?.tame(player)', script, 'release restores ownership')
+        self.assertIn('setDynamicProperty(BASKET_STORE', script, 'the friend travels as an item snapshot')
+        for arm in ['Fruity-Friends.mcaddon', 'Fruity-Friends-Dedicated-Server.zip']:
+            with zipfile.ZipFile(ROOT / 'dist' / arm) as z:
+                bp_prefix = 'Plum_BP/' if arm.endswith('.mcaddon') else 'behavior_packs/Plum_BP/'
+                rp_prefix = 'Plum_RP/' if arm.endswith('.mcaddon') else 'resource_packs/Plum_RP/'
+                for name in ['items/fruit_basket.json', 'recipes/fruit_basket.json',
+                             'scripts/main.js']:
+                    self.assertIn(bp_prefix + name, z.namelist())
+                for name in ['textures/items/basket.png', 'textures/item_texture.json']:
+                    self.assertIn(rp_prefix + name, z.namelist())
 
 if __name__ == '__main__': unittest.main()

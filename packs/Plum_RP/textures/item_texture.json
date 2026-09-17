@@ -7,6 +7,9 @@
     },
     "apple_fruit": {
       "textures": "textures/items/apple"
+    },
+    "fruit_basket": {
+      "textures": "textures/items/basket"
     }
   }
 }

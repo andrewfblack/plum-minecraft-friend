@@ -14,7 +14,7 @@ const FRIENDS = {
     title: (baby) => baby ? 'Little Plum' : 'Plum',
     body: (baby, label) => `Hi, adventure buddy!\n${label}\n\nStay close for healing. Plant a plum on tilled farmland to grow a baby.`,
     askTitle: 'Ask Plum', replyTitle: 'Plum says...',
-    care: 'Tame me by giving me a plum. Plant a plum on tilled farmland to grow a baby. Babies grow in 20 loaded minutes and can be tamed too. Interact with an empty hand to make me sit or follow you. Talk to me in chat while I am near you, or hold a book and interact!',
+    care: 'Tame me by giving me a plum. Plant a plum on tilled farmland to grow a baby. Babies grow in 20 loaded minutes and can be tamed too. Interact with an empty hand to make me sit or follow you. Craft a Fruid Basket from three sticks in the bucket shape and interact with me while holding it to carry me along. Talk to me in chat while I am near you, or hold a book and interact!',
     tamedMsg: 'Give me a plum fruit to tame me first. Only my owner can open my conversation.',
     plantMsg: 'A tiny fruiting sprout pokes through the soil! It will grow into a baby Plum — one plum tames it.',
   },
@@ -23,7 +23,7 @@ const FRIENDS = {
     title: (baby) => baby ? 'Little Apple' : 'Apple',
     body: (baby, label) => `Hi, shopper buddy!\n${label}\n\nApplezon delivers one item for the price of one apple fruit. Apple does not heal; stay near Plum for that.`,
     askTitle: 'Ask Apple', replyTitle: 'Apple says...',
-    care: 'Tame me by giving me an apple. Plant an apple on tilled farmland to grow a baby. Babies grow in 20 loaded minutes and can be tamed too. Interact with an empty hand to make me sit or follow you. Grab items from my Applezon menu, or ask me about the shop in chat!',
+    care: 'Tame me by giving me an apple. Plant an apple on tilled farmland to grow a baby. Babies grow in 20 loaded minutes and can be tamed too. Interact with an empty hand to make me sit or follow you. Craft a Fruid Basket from three sticks in the bucket shape and interact with me while holding it to carry me along. Grab items from my Applezon menu, or ask me about the shop in chat!',
     tamedMsg: 'Give me an apple fruit to tame me first. Only my owner can open my conversation or Applezon.',
     plantMsg: 'A tiny fruiting sprout pokes through the soil! It will grow into a baby Apple — one apple tames it.',
   },
@@ -32,6 +32,16 @@ const FRIENDS = {
 const TYPES = new Set(Object.keys(FRIENDS));
 const FRUIT_FRIEND = { 'plum:plum': 'plum:friend', 'apple:apple': 'apple:friend' };
 const FRIEND_NAMES = { plum: 'plum:friend', apple: 'apple:friend' };
+
+const BASKET = 'friend:fruit_basket';
+const BASKET_STORE = 'basket:friend';
+
+// A Fruid Basket carries one tamed friend as a snapshot stored on the item stack.
+function basketContents(stack) {
+  const raw = stack.getDynamicProperty(BASKET_STORE);
+  if (!raw) return null;
+  try { return JSON.parse(/** @type {string} */ (raw)); } catch { return null; }
+}
 
 const CATALOG = [
   { item: 'minecraft:diamond_pickaxe', label: 'Diamond Pickaxe', tags: ['pickaxe', 'tool', 'diamond', 'mine', 'ore'] },
@@ -150,6 +160,84 @@ function toggleSit(player, friend) {
   const sitting = friend.hasComponent('minecraft:is_sitting');
   friend.triggerEvent(sitting ? 'minecraft:on_stand' : 'minecraft:on_sit');
   friendSay(player, cfg, sitting ? 'Up I get! I will follow you again.' : 'Right! I will sit here and stay put.');
+}
+
+// Tuck a tamed friend into the Fruid Basket held in the main hand.
+function captureInBasket(player, friend) {
+  if (!player.isValid || !friend.isValid) return;
+  const cfg = FRIENDS[friend.typeId];
+  if (!cfg) return;
+  const tamed = friend.getComponent('minecraft:tameable');
+  if (!tamed?.tamedToPlayerId || tamed.tamedToPlayerId !== player.id) {
+    friendSay(player, cfg, 'Give me my fruit to tame me first; only my owner can put me in a basket.');
+    return;
+  }
+  const inv = player.getComponent('minecraft:inventory')?.container;
+  if (!inv) return;
+  const slot = player.selectedSlotIndex;
+  const held = inv.getItem(slot);
+  if (!held || held.typeId !== BASKET || basketContents(held)) return;
+  const snapshot = JSON.stringify({
+    type: friend.typeId,
+    name: friend.nameTag || '',
+    baby: friend.hasComponent('minecraft:is_baby'),
+    sitting: friend.hasComponent('minecraft:is_sitting'),
+    owner: player.id,
+  });
+  const filled = new ItemStack(BASKET, 1);
+  filled.setDynamicProperty(BASKET_STORE, snapshot);
+  filled.setLore([`Holding a tamed ${cfg.name}${friend.nameTag ? ` named ${friend.nameTag}` : ''}. Interact with a block to let them out.`]);
+  try {
+    if (held.amount > 1) {
+      held.amount--;
+      inv.setItem(slot, held);
+      const leftover = inv.addItem(filled);
+      if (leftover && leftover.amount > 0) player.dimension.spawnItem(leftover, player.location);
+    } else {
+      inv.setItem(slot, filled);
+    }
+  } catch {
+    friendSay(player, cfg, 'I could not climb in - free up a hand slot first.');
+    return;
+  }
+  try { friend.remove(); } catch { /* The friend is already gone; the snapshot is stored anyway. */ }
+  friendSay(player, cfg, 'Off we go! I am tucked into your basket now. Interact with a block to let me out.');
+}
+
+// Let a carried friend out onto the block the player is pointing at.
+function releaseFromBasket(player, block, blockFace) {
+  if (!player.isValid) return;
+  const inv = player.getComponent('minecraft:inventory')?.container;
+  if (!inv) return;
+  const slot = player.selectedSlotIndex;
+  const held = inv.getItem(slot);
+  if (!held || held.typeId !== BASKET) return;
+  const contents = basketContents(held);
+  const cfg = contents && FRIENDS[contents.type];
+  if (!cfg) return; // an empty basket does nothing on a block
+  if (contents.owner && contents.owner !== player.id) {
+    friendSay(player, cfg, 'Only my owner can let me out of this basket.');
+    return;
+  }
+  const offsets = { up: [0, 1, 0], down: [0, -1, 0], north: [0, 0, -1], south: [0, 0, 1], east: [1, 0, 0], west: [-1, 0, 0] };
+  const [dx, dy, dz] = offsets[blockFace] ?? [0, 1, 0];
+  let friend;
+  try {
+    friend = block.dimension.spawnEntity(contents.type, { x: block.x + 0.5 + dx, y: block.y + 0.5 + dy, z: block.z + 0.5 + dz });
+  } catch {
+    friendSay(player, cfg, 'There is no room for me there. Try pointing at open ground.');
+    return;
+  }
+  try {
+    if (contents.name) friend.nameTag = contents.name;
+    friend.triggerEvent(contents.baby ? 'minecraft:entity_born' : 'minecraft:entity_spawned');
+    try { friend.getComponent('minecraft:tameable')?.tame(player); } catch { /* Already owned by the snapshot's owner. */ }
+    if (contents.sitting) friend.triggerEvent('minecraft:on_sit');
+  } catch { /* A just-spawned friend can briefly reject state changes; it still lands fine. */ }
+  try {
+    inv.setItem(slot, new ItemStack(BASKET, 1));
+  } catch { /* The basket returns to the player's hand slot on the next successful release. */ }
+  friendSay(player, cfg, `Fresh air! I am ${contents.sitting ? 'staying right here' : 'right here'} with you again.`);
 }
 
 function hasFruit(player, fruit) {
@@ -329,6 +417,11 @@ async function talk(player, friend) {
 
 world.afterEvents.playerInteractWithEntity.subscribe(({ player, target, beforeItemStack }) => {
   if (!TYPES.has(target.typeId)) return;
+  // A Fruid Basket tucks a tamed friend away for carrying.
+  if (beforeItemStack && beforeItemStack.typeId === BASKET) {
+    system.run(() => { void captureInBasket(player, target); });
+    return;
+  }
   // Empty hand: sit/stay like a tamed dog (toggle on/off).
   if (!beforeItemStack || beforeItemStack.typeId === 'minecraft:air') {
     system.run(() => { void toggleSit(player, target); });
@@ -339,13 +432,19 @@ world.afterEvents.playerInteractWithEntity.subscribe(({ player, target, beforeIt
   system.run(() => { void talk(player, target); });
 });
 
+// Pointing a basket full of a friend at any block lets them out again.
+world.afterEvents.playerInteractWithBlock.subscribe(({ player, block, blockFace, beforeItemStack }) => {
+  if (!beforeItemStack || beforeItemStack.typeId !== BASKET) return;
+  system.run(() => { void releaseFromBasket(player, block, blockFace); });
+});
+
 world.afterEvents.playerLeave.subscribe(({ playerId }) => {
   openForms.delete(playerId);
   nextQuestion.delete(playerId);
 });
 
 world.afterEvents.playerSpawn.subscribe(({ player, initialSpawn }) => {
-  if (initialSpawn) system.runTimeout(() => friendSay(player, FRIENDS['plum:friend'], 'Use a plum or apple fruit on tilled farmland to plant a sprout; it grows into a baby friend, and one more fruit tames it. Interact with an empty hand to make me sit or follow. Interact with me or type my name in chat (for example: "Plum, what is redstone?" or "hey Apple, what do you sell?") to talk. Apple runs the Applezon shop!'), 60);
+  if (initialSpawn) system.runTimeout(() => friendSay(player, FRIENDS['plum:friend'], 'Use a plum or apple fruit on tilled farmland to plant a sprout; it grows into a baby friend, and one more fruit tames it. Interact with an empty hand to make me sit or follow. Craft a Fruid Basket from three sticks and interact with me while holding it to carry me around. Interact with me or type my name in chat (for example: "Plum, what is redstone?" or "hey Apple, what do you sell?") to talk. Apple runs the Applezon shop!'), 60);
 });
 
 // Talk to a nearby tamed friend straight from chat: "Plum ...", "hey Apple, ...", "@plum hi", etc.
@@ -402,12 +501,12 @@ if (!chatEvents?.chatSend) {
 
 // Planting a fruit is vanilla block placement now (minecraft:block_placer places
 // the friend sprout on farmland). Just add a friendly confirmation when it lands.
-world.afterEvents.itemUseOn.subscribe(({ source, itemStack, block }) => {
-  const friendType = FRUIT_FRIEND[itemStack?.typeId];
+world.afterEvents.playerInteractWithBlock.subscribe(({ player, block, beforeItemStack }) => {
+  const friendType = FRUIT_FRIEND[beforeItemStack?.typeId];
   if (!friendType) return;
   if (block.typeId !== 'minecraft:farmland') return;
-  if (!(source instanceof Player)) return;
-  friendSay(source, FRIENDS[friendType], FRIENDS[friendType].plantMsg);
+  if (!(player instanceof Player)) return;
+  friendSay(player, FRIENDS[friendType], FRIENDS[friendType].plantMsg);
 });
 
 // Friends reject ordinary damage: restore full health the instant a hit lands.

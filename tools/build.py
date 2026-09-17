@@ -137,8 +137,62 @@ def build_friend(name, data):
     face = friend_texture(name)[:16]
     png(ROOT / f'art/{name}-face.png', [[face[y // 16][x // 16] for x in range(256)] for y in range(256)])
 
+def basket_texture():
+    """Original 16x16 wicker basket icon for the Fruid Basket item."""
+    clear = (0, 0, 0, 0)
+    handle = (104, 62, 28, 255)
+    rim_a = (184, 120, 58, 255)
+    rim_b = (146, 92, 44, 255)
+    weave_a = (206, 142, 74, 255)
+    weave_b = (120, 70, 32, 255)
+    grid = [[clear for _ in range(16)] for _ in range(16)]
+    for x, y in [(4, 0), (11, 0), (3, 1), (12, 1)]:
+        grid[y][x] = handle
+    for x in range(3, 13):
+        grid[2][x] = rim_a if x % 3 else rim_b
+        grid[3][x] = rim_b if x % 3 else rim_a
+    for y in range(4, 14):
+        inset = 1 + (y - 4) // 2
+        for x in range(inset, 16 - inset):
+            grid[y][x] = weave_a if (x + y) % 4 in (0, 1) else weave_b
+    for x in range(4, 12):
+        grid[14][x] = weave_b
+        grid[15][x] = handle
+    return grid
+
+BASKET = 'friend:fruit_basket'
+
+def build_basket(bp, rp, write, png):
+    """Fruid Basket: craft three sticks in the bucket shape, hold it and interact
+    with a tamed friend to tuck them inside; interact with a block to let them out."""
+    write(bp / 'items/fruit_basket.json', {
+        'format_version': '1.21.90', 'minecraft:item': {
+            'description': {'identifier': BASKET, 'menu_category': {'category': 'equipment'}},
+            'components': {
+                'minecraft:display_name': {'value': 'item.friend:fruit_basket.name'},
+                'minecraft:icon': {'textures': {'default': 'fruit_basket'}},
+                'minecraft:max_stack_size': 16,
+            },
+        },
+    })
+    write(bp / 'recipes/fruit_basket.json', {
+        'format_version': '1.20.10', 'minecraft:recipe_shaped': {
+            'description': {'identifier': 'fruit_basket'},
+            'tags': ['crafting_table'],
+            'pattern': ['X X', ' X '],
+            'key': {'X': {'item': 'minecraft:stick'}},
+            'result': {'item': BASKET, 'count': 1},
+        },
+    })
+    png(rp / 'textures/items/basket.png', basket_texture())
+    atlas = json.loads((rp / 'textures/item_texture.json').read_text(encoding='utf-8'))
+    atlas['texture_data']['fruit_basket'] = {'textures': 'textures/items/basket'}
+    write(rp / 'textures/item_texture.json', atlas)
+    with (rp / 'texts/en_US.lang').open('a', encoding='utf-8') as stream:
+        stream.write('item.friend:fruit_basket.name=Fruid Basket\n')
+
 def build(net_version='1.0.0-beta', admin_version='1.0.0-beta'):
-    version = [1, 2, 7]
+    version = [1, 2, 8]
     for path, name, uid, modules in [
         (BP, 'Fruity Friends', BP_ID, [
             {'type': 'data', 'uuid': 'fce620e4-42ac-4477-a84b-c8113d47ba2e', 'version': version},
@@ -160,6 +214,7 @@ def build(net_version='1.0.0-beta', admin_version='1.0.0-beta'):
     icon = [[friend_texture('plum')[:16][y // 8][x // 8] for x in range(128)] for y in range(128)]
     for pack in (BP, RP): png(pack / 'pack_icon.png', icon)
     build_orchard(BP, RP, ROOT, write, png)
+    build_basket(BP, RP, write, png)
     out = ROOT / 'dist/Fruity-Friends.mcaddon'
     out.parent.mkdir(exist_ok=True)
     with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as archive:
@@ -190,6 +245,8 @@ This zip contains the server packs and a Python service; it is not a mobile impo
 5. Plant a fruit on tilled farmland to grow a baby friend; it sprouts and grows in 20 loaded minutes.
 6. Tame the baby with its fruit. Fruit also speeds growth. Stay within 8 blocks of your tamed Plum for regeneration. Apple does not heal you;
    instead she owns Applezon and delivers a surprise or a search result for one apple fruit.
+7. Craft a Fruid Basket from three sticks in the bucket shape, then hold it and interact with a tamed
+   friend to tuck them inside. Carry them in your inventory and interact with a block to let them out again.
 
 Find plum and apple trees in newly generated plains and forests. Break their fruit-speckled
 leaves in Survival for the matching fruit and sapling. Plant a sapling on soil with a clear
