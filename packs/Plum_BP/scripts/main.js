@@ -14,7 +14,7 @@ const FRIENDS = {
     title: (baby) => baby ? 'Little Plum' : 'Plum',
     body: (baby, label) => `Hi, adventure buddy!\n${label}\n\nStay close for healing. Plant a plum on tilled farmland to grow a baby.`,
     askTitle: 'Ask Plum', replyTitle: 'Plum says...',
-    care: 'Tame me by giving me a plum. Plant a plum on tilled farmland to grow a baby. Babies grow in 20 loaded minutes and can be tamed too. Talk to me in chat while I am near you, or hold a book and interact!',
+    care: 'Tame me by giving me a plum. Plant a plum on tilled farmland to grow a baby. Babies grow in 20 loaded minutes and can be tamed too. Interact with an empty hand to make me sit or follow you. Talk to me in chat while I am near you, or hold a book and interact!',
     tamedMsg: 'Give me a plum fruit to tame me first. Only my owner can open my conversation.',
     plantMsg: 'A tiny fruiting sprout pokes through the soil! It will grow into a baby Plum — one plum tames it.',
   },
@@ -23,7 +23,7 @@ const FRIENDS = {
     title: (baby) => baby ? 'Little Apple' : 'Apple',
     body: (baby, label) => `Hi, shopper buddy!\n${label}\n\nApplezon delivers one item for the price of one apple fruit. Apple does not heal; stay near Plum for that.`,
     askTitle: 'Ask Apple', replyTitle: 'Apple says...',
-    care: 'Tame me by giving me an apple. Plant an apple on tilled farmland to grow a baby. Babies grow in 20 loaded minutes and can be tamed too. Grab items from my Applezon menu, or ask me about the shop in chat!',
+    care: 'Tame me by giving me an apple. Plant an apple on tilled farmland to grow a baby. Babies grow in 20 loaded minutes and can be tamed too. Interact with an empty hand to make me sit or follow you. Grab items from my Applezon menu, or ask me about the shop in chat!',
     tamedMsg: 'Give me an apple fruit to tame me first. Only my owner can open my conversation or Applezon.',
     plantMsg: 'A tiny fruiting sprout pokes through the soil! It will grow into a baby Apple — one apple tames it.',
   },
@@ -135,6 +135,21 @@ function nearOwner(player, friend) {
   return player.isValid && friend.isValid && friend.dimension.id === player.dimension.id
     && distance(player.location, friend.location) <= 10
     && friend.getComponent('minecraft:tameable')?.tamedToPlayerId === player.id;
+}
+
+// Dog-style sit/stay: a tamed owner's empty-hand right-click toggles staying put.
+function toggleSit(player, friend) {
+  if (!player.isValid || !friend.isValid) return;
+  const cfg = FRIENDS[friend.typeId];
+  if (!cfg) return;
+  const tamed = friend.getComponent('minecraft:tameable');
+  if (!tamed?.tamedToPlayerId || tamed.tamedToPlayerId !== player.id) {
+    friendSay(player, cfg, 'Give me my fruit to tame me first, then I will sit when you ask.');
+    return;
+  }
+  const sitting = friend.hasComponent('minecraft:is_sitting');
+  friend.triggerEvent(sitting ? 'minecraft:on_stand' : 'minecraft:on_sit');
+  friendSay(player, cfg, sitting ? 'Up I get! I will follow you again.' : 'Right! I will sit here and stay put.');
 }
 
 function hasFruit(player, fruit) {
@@ -314,8 +329,13 @@ async function talk(player, friend) {
 
 world.afterEvents.playerInteractWithEntity.subscribe(({ player, target, beforeItemStack }) => {
   if (!TYPES.has(target.typeId)) return;
+  // Empty hand: sit/stay like a tamed dog (toggle on/off).
+  if (!beforeItemStack || beforeItemStack.typeId === 'minecraft:air') {
+    system.run(() => { void toggleSit(player, target); });
+    return;
+  }
   // Leave food, taming, name tags and leads to the engine. A book also gives touch players a Talk button.
-  if (beforeItemStack && beforeItemStack.typeId !== 'minecraft:book') return;
+  if (beforeItemStack.typeId !== 'minecraft:book') return;
   system.run(() => { void talk(player, target); });
 });
 
@@ -325,7 +345,7 @@ world.afterEvents.playerLeave.subscribe(({ playerId }) => {
 });
 
 world.afterEvents.playerSpawn.subscribe(({ player, initialSpawn }) => {
-  if (initialSpawn) system.runTimeout(() => friendSay(player, FRIENDS['plum:friend'], 'Use a plum or apple fruit on tilled farmland to plant a sprout; it grows into a baby friend, and one more fruit tames it. Interact with me or type my name in chat (for example: "Plum, what is redstone?" or "hey Apple, what do you sell?") to talk. Apple runs the Applezon shop!'), 60);
+  if (initialSpawn) system.runTimeout(() => friendSay(player, FRIENDS['plum:friend'], 'Use a plum or apple fruit on tilled farmland to plant a sprout; it grows into a baby friend, and one more fruit tames it. Interact with an empty hand to make me sit or follow. Interact with me or type my name in chat (for example: "Plum, what is redstone?" or "hey Apple, what do you sell?") to talk. Apple runs the Applezon shop!'), 60);
 });
 
 // Talk to a nearby tamed friend straight from chat: "Plum ...", "hey Apple, ...", "@plum hi", etc.

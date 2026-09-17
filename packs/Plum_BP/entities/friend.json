@@ -42,6 +42,9 @@
           "stop_distance": 2,
           "can_teleport": true
         }
+      },
+      "plum:sit": {
+        "minecraft:is_sitting": {}
       }
     },
     "components": {
@@ -158,6 +161,20 @@
         "add": {
           "component_groups": [
             "plum:tamed"
+          ]
+        }
+      },
+      "minecraft:on_sit": {
+        "add": {
+          "component_groups": [
+            "plum:sit"
+          ]
+        }
+      },
+      "minecraft:on_stand": {
+        "remove": {
+          "component_groups": [
+            "plum:sit"
           ]
         }
       }

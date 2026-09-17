@@ -27,18 +27,18 @@ Copy the two JSON files from `world-pack-lists` into `worlds/YOUR_WORLD/`. **If 
 Behavior pack:
 
 ```json
-[{"pack_id":"01d84fd1-31dd-4b92-a942-c8e59ce38191","version":[1,2,6]}]
+[{"pack_id":"01d84fd1-31dd-4b92-a942-c8e59ce38191","version":[1,2,7]}]
 ```
 
 Resource pack:
 
 ```json
-[{"pack_id":"834d72cc-8c7f-498f-adfa-269e215f86e8","version":[1,2,6]}]
+[{"pack_id":"834d72cc-8c7f-498f-adfa-269e215f86e8","version":[1,2,7]}]
 ```
 
 Set `texturepack-required=true` in `server.properties` so players receive Plum's appearance. Do not enable the offline pack alongside the AI pack; they are two editions of the same add-on.
 
-**Updating an existing Fruity Friends installation:** replace the pack folders and `plum-service/bridge.py`, change both existing world-pack entries to `[1,2,6]`, and restart both processes. Preserve your current credentials/configuration. New plum and apple trees appear only in newly generated terrain; explore new plains/forests or plant a Creative sapling in an old area.
+**Updating an existing Fruity Friends installation:** replace the pack folders and `plum-service/bridge.py`, change both existing world-pack entries to `[1,2,7]`, and restart both processes. Preserve your current credentials/configuration. New plum and apple trees appear only in newly generated terrain; explore new plains/forests or plant a Creative sapling in an old area.
 
 ## 3. Allow the scripts to reach their local service
 
@@ -98,7 +98,7 @@ The service prints a listening message. `http://127.0.0.1:8787/health` reports p
 
 ## 5. Join and talk
 
-On mobile or Windows Bedrock, add the server address and configured Bedrock port, join, and accept the resources. Spawn and tame Plum as described in the main README, hold a **book**, and interact. Choose **Ask a question**.
+On mobile or Windows Bedrock, add the server address and configured Bedrock port, join, and accept the resources. Spawn and tame Plum as described in the main README, hold a **book**, and interact. Choose **Ask a question**. Interact with an empty hand to make a tamed friend sit and stay put, like a dog; do it again to make it follow.
 
 Try “How do I make a bed?” followed by “What materials do I need?” The conversation title identifies AI chat. If the AI connection fails, Plum explicitly switches to a built-in offline answer. Turning off the bridge does not disable following or healing.
 

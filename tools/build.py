@@ -88,6 +88,9 @@ def build_friend(name, data):
         f'{name}:tamed': {
             'minecraft:is_tamed': {},
             'minecraft:behavior.follow_owner': {'priority': 4, 'speed_multiplier': 1.15, 'start_distance': 4, 'stop_distance': 2, 'can_teleport': True}
+        },
+        f'{name}:sit': {
+            'minecraft:is_sitting': {},
         }
     }
     components = {
@@ -112,6 +115,8 @@ def build_friend(name, data):
         'minecraft:entity_born': {'remove': {'component_groups': [f'{name}:adult']}, 'add': {'component_groups': [f'{name}:baby']}},
         'minecraft:ageable_grow_up': {'remove': {'component_groups': [f'{name}:baby']}, 'add': {'component_groups': [f'{name}:adult']}},
         'minecraft:on_tame': {'add': {'component_groups': [f'{name}:tamed']}},
+        'minecraft:on_sit': {'add': {'component_groups': [f'{name}:sit']}},
+        'minecraft:on_stand': {'remove': {'component_groups': [f'{name}:sit']}},
     }
     # Babies come only from planting fruit (orchard.js fires minecraft:entity_born).
     file_name = data.get('file', name)
@@ -119,18 +124,21 @@ def build_friend(name, data):
     write(RP / f'entity/{file_name}.entity.json', {'format_version': '1.10.0', 'minecraft:client_entity': {'description': {
         'identifier': entity, 'materials': {'default': 'entity_alphatest'}, 'textures': {'default': f'textures/entity/{name}'},
         'geometry': {'default': f'geometry.{name}'}, 'render_controllers': [f'controller.render.{name}'],
-        'animations': {'bob': f'animation.{name}.bob'}, 'scripts': {'animate': ['bob']},
+        'animations': {'bob': f'animation.{name}.bob', 'sit': f'animation.{name}.sit'}, 'scripts': {'animate': ['bob', {'sit': 'query.is_sitting'}]},
         'spawn_egg': {'base_color': data['egg'][0], 'overlay_color': data['egg'][1]}
     }}})
     write(RP / f'models/entity/{name}.geo.json', friend_geometry(name))
     write(RP / f'render_controllers/{name}.render_controllers.json', {'format_version': '1.8.0', 'render_controllers': {f'controller.render.{name}': {'geometry': 'Geometry.default', 'materials': [{'*': 'Material.default'}], 'textures': ['Texture.default']}}})
-    write(RP / f'animations/{name}.animation.json', {'format_version': '1.8.0', 'animations': {f'animation.{name}.bob': {'loop': True, 'bones': {'body': {'position': [0, 'math.abs(math.sin(query.anim_time * 180)) * 0.7', 0], 'rotation': [0, 0, 'math.sin(query.modified_distance_moved * 70) * 3']}}}}})
+    write(RP / f'animations/{name}.animation.json', {'format_version': '1.8.0', 'animations': {
+        f'animation.{name}.bob': {'loop': True, 'bones': {'body': {'position': [0, 'math.abs(math.sin(query.anim_time * 180)) * 0.7', 0], 'rotation': [0, 0, 'math.sin(query.modified_distance_moved * 70) * 3']}}},
+        f'animation.{name}.sit': {'loop': True, 'bones': {'body': {'position': [0, -1.8, 0], 'scale': [1.25, 0.7, 1.25]}}}
+    }})
     png(RP / f'textures/entity/{name}.png', friend_texture(name))
     face = friend_texture(name)[:16]
     png(ROOT / f'art/{name}-face.png', [[face[y // 16][x // 16] for x in range(256)] for y in range(256)])
 
 def build(net_version='1.0.0-beta', admin_version='1.0.0-beta'):
-    version = [1, 2, 6]
+    version = [1, 2, 7]
     for path, name, uid, modules in [
         (BP, 'Fruity Friends', BP_ID, [
             {'type': 'data', 'uuid': 'fce620e4-42ac-4477-a84b-c8113d47ba2e', 'version': version},
@@ -176,7 +184,7 @@ This zip contains the server packs and a Python service; it is not a mobile impo
    grows into a baby friend on its own (or interact with it to sprout it immediately).
    In Creative, spawn friends with the Plum or Apple Spawn Egg instead.
 2. Give each friend its own fruit to tame them: a plum tames Plum, an apple tames Apple.
-   They follow their owner.
+   They follow their owner. Interact with an empty hand to make a tamed friend sit and stay put, like a dog; do it again to make them follow.
 3. Hold a book and interact (Talk to Plum / Talk to Apple on touch, right-click on PC).
 4. Choose Ask a question and type your message. Replies are private.
 5. Plant a fruit on tilled farmland to grow a baby friend; it sprouts and grows in 20 loaded minutes.

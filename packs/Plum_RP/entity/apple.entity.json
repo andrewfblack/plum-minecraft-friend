@@ -16,11 +16,15 @@
         "controller.render.apple"
       ],
       "animations": {
-        "bob": "animation.apple.bob"
+        "bob": "animation.apple.bob",
+        "sit": "animation.apple.sit"
       },
       "scripts": {
         "animate": [
-          "bob"
+          "bob",
+          {
+            "sit": "query.is_sitting"
+          }
         ]
       },
       "spawn_egg": {

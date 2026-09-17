@@ -46,6 +46,14 @@ class PackTests(unittest.TestCase):
             apply('minecraft:on_tame')
             apply('minecraft:ageable_grow_up')
             self.assertEqual(active, {f'{entity["description"]["identifier"].split(":")[0]}:adult', f'{entity["description"]["identifier"].split(":")[0]}:tamed'})
+            sit_group = groups[list(filter(lambda k: k.endswith(':sit'), groups))[0]]
+            self.assertIn('minecraft:is_sitting', sit_group, 'sit group must contain the is_sitting flag')
+            self.assertIn('minecraft:on_sit', entity['events'])
+            self.assertIn('minecraft:on_stand', entity['events'])
+            self.assertIn(f'{entity["description"]["identifier"].split(":")[0]}:sit',
+                          entity['events']['minecraft:on_sit'].get('add', {}).get('component_groups', []))
+            self.assertIn(f'{entity["description"]["identifier"].split(":")[0]}:sit',
+                          entity['events']['minecraft:on_stand'].get('remove', {}).get('component_groups', []))
 
     def test_apple_tames_and_grows(self):
         entity = json.loads((ROOT / 'packs/Plum_BP/entities/apple.json').read_text())['minecraft:entity']
@@ -65,6 +73,10 @@ class PackTests(unittest.TestCase):
             client = json.loads((rp / client_file).read_text())['minecraft:client_entity']['description']
             self.assertEqual(client['identifier'], f'{name}:friend')
             self.assertTrue((rp / (client['textures']['default'] + '.png')).exists())
+            ani = json.loads((rp / 'animations' / f'{name}.animation.json').read_text())['animations']
+            for ref, path in client['animations'].items():
+                self.assertIn(path, ani)
+            self.assertIn('query.is_sitting', json.dumps(client['scripts']['animate']), 'client should play the sit pose when sitting')
             geo = json.loads((rp / 'models/entity' / f'{name}.geo.json').read_text())['minecraft:geometry'][0]
             self.assertEqual(geo['description']['identifier'], client['geometry']['default'])
             for cube in geo['bones'][0]['cubes']:
@@ -114,8 +126,8 @@ class PackTests(unittest.TestCase):
             for atlas in ['item_texture.json', 'terrain_texture.json']:
                 for entry in read(rp / 'textures' / atlas)['texture_data'].values():
                     self.assertTrue((rp / (entry['textures'] + '.png')).exists())
-        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 6])
+        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 7])
         with zipfile.ZipFile(ROOT / 'dist/Fruity-Friends-Dedicated-Server.zip') as z:
-            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 6])
+            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 7])
 
 if __name__ == '__main__': unittest.main()

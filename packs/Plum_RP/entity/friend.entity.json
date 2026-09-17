@@ -16,11 +16,15 @@
         "controller.render.plum"
       ],
       "animations": {
-        "bob": "animation.plum.bob"
+        "bob": "animation.plum.bob",
+        "sit": "animation.plum.sit"
       },
       "scripts": {
         "animate": [
-          "bob"
+          "bob",
+          {
+            "sit": "query.is_sitting"
+          }
         ]
       },
       "spawn_egg": {
