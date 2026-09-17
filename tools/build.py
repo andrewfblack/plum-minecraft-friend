@@ -192,7 +192,7 @@ def build_basket(bp, rp, write, png):
         stream.write('item.friend:fruit_basket.name=Fruit Basket\n')
 
 def build(net_version='1.0.0-beta', admin_version='1.0.0-beta'):
-    version = [1, 2, 9]
+    version = [1, 2, 10]
     for path, name, uid, modules in [
         (BP, 'Fruity Friends', BP_ID, [
             {'type': 'data', 'uuid': 'fce620e4-42ac-4477-a84b-c8113d47ba2e', 'version': version},
@@ -254,7 +254,7 @@ leaves in Survival for the matching fruit and sapling. Plant a sapling on soil w
 The fruit works as a seed and snack: plant it on farmland to grow a baby friend.
 
 Updating from 1.1.0: replace both pack folders and the bridge script, update each Fruity Friends
-world-pack-list entry to [1,2,1], and restart. Keep existing credentials and UUIDs.
+world-pack-list entry to [1,2,10], and restart. Keep existing credentials and UUIDs.
 
 Friends resist ordinary damage and do not naturally despawn. Administrative removal,
 /kill, and engine edge cases are outside this protection. Unloaded companions cannot

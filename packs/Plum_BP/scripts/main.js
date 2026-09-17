@@ -444,7 +444,7 @@ world.afterEvents.playerLeave.subscribe(({ playerId }) => {
 });
 
 world.afterEvents.playerSpawn.subscribe(({ player, initialSpawn }) => {
-  if (initialSpawn) system.runTimeout(() => friendSay(player, FRIENDS['plum:friend'], 'Use a plum or apple fruit on tilled farmland to plant a sprout; it grows into a baby friend, and one more fruit tames it. Interact with an empty hand to make me sit or follow. Craft a Fruit Basket from three sticks and interact with me while holding it to carry me around. Interact with me or type my name in chat (for example: "Plum, what is redstone?" or "hey Apple, what do you sell?") to talk. Apple runs the Applezon shop!'), 60);
+  if (initialSpawn) system.runTimeout(() => friendSay(player, FRIENDS['plum:friend'], 'Fruity Friends v1.2.10 is loaded. Use a plum or apple fruit on tilled farmland to plant a sprout; it grows into a baby friend, and one more fruit tames it. Interact with an empty hand to make me sit or follow. Craft a Fruit Basket from three sticks and interact with me while holding it to carry me around. Interact with me or type my name in chat (for example: "Plum, what is redstone?" or "hey Apple, what do you sell?") to talk. Apple runs the Applezon shop!'), 60);
 });
 
 // Talk to a nearby tamed friend straight from chat: "Plum ...", "hey Apple, ...", "@plum hi", etc.
