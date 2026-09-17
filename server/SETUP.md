@@ -98,7 +98,7 @@ The service prints a listening message. `http://127.0.0.1:8787/health` reports p
 
 ## 5. Join and talk
 
-On mobile or Windows Bedrock, add the server address and configured Bedrock port, join, and accept the resources. Spawn and tame Plum as described in the main README, hold a **book**, and interact. Choose **Ask a question**. Interact with an empty hand to make a tamed friend sit and stay put, like a dog; do it again to make it follow. Craft a **Fruid Basket** from three sticks in the bucket shape, hold it while interacting with a tamed friend to carry it around, and interact with a block to let it out again.
+On mobile or Windows Bedrock, add the server address and configured Bedrock port, join, and accept the resources. Spawn and tame Plum as described in the main README, hold a **book**, and interact. Choose **Ask a question**. Interact with an empty hand to make a tamed friend sit and stay put, like a dog; do it again to make it follow. Craft a **Fruit Basket** from three sticks in the bucket shape, hold it while interacting with a tamed friend to carry it around, and interact with a block to let it out again.
 
 Try “How do I make a bed?” followed by “What materials do I need?” The conversation title identifies AI chat. If the AI connection fails, Plum explicitly switches to a built-in offline answer. Turning off the bridge does not disable following or healing.
 

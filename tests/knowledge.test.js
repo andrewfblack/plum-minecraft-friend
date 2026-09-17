@@ -7,8 +7,8 @@ test('typed help handles useful questions and admits unsupported topics', () => 
   assert.match(offlineAnswer('How do I grow a baby Plum?'), /plum/);
   assert.match(offlineAnswer('How do I make Plum sit?'), /sit/);
   assert.match(offlineAnswer('How do I make Plum follow again?'), /empty hand|follow/);
-  assert.match(offlineAnswer('How do I carry my friend?'), /Fruid Basket/);
-  assert.match(offlineAnswer('What is a Fruid Basket for?'), /three sticks in the bucket shape/);
+  assert.match(offlineAnswer('How do I carry my friend?'), /Fruit Basket/);
+  assert.match(offlineAnswer('What is a Fruit Basket for?'), /three sticks in the bucket shape/);
   assert.match(offlineAnswer('Where can I find plums?'), /trees/);
   assert.match(offlineAnswer('How do I grow a tree?'), /sapling/);
   assert.match(offlineAnswer('Explain quantum mechanics'), /does not know/);
@@ -18,7 +18,7 @@ test('apple answers about Applezon and friend care, not healing', () => {
   assert.match(offlineAnswer('how do I shop at applezon?', 'apple'), /one apple fruit pays for one delivery/);
   assert.match(offlineAnswer('can Apple heal me?', 'apple'), /do NOT grant healing/);
   assert.match(offlineAnswer('how do I care for Apple?', 'apple'), /Tame me with an apple/);
-  assert.match(offlineAnswer('carry me in a basket?', 'apple'), /Fruid Basket/);
+  assert.match(offlineAnswer('carry me in a basket?', 'apple'), /Fruit Basket/);
   assert.match(offlineAnswer('where can I find apples?', 'apple'), /trees/);
   assert.match(offlineAnswer('How do I make a bed?', 'apple'), /three matching wool/);
 });

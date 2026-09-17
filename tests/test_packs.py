@@ -126,9 +126,9 @@ class PackTests(unittest.TestCase):
             for atlas in ['item_texture.json', 'terrain_texture.json']:
                 for entry in read(rp / 'textures' / atlas)['texture_data'].values():
                     self.assertTrue((rp / (entry['textures'] + '.png')).exists())
-        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 8])
+        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 9])
         with zipfile.ZipFile(ROOT / 'dist/Fruity-Friends-Dedicated-Server.zip') as z:
-            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 8])
+            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 9])
 
     def test_fruit_basket_item_recipe_and_script(self):
         bp, rp = ROOT / 'packs/Plum_BP', ROOT / 'packs/Plum_RP'
@@ -150,7 +150,7 @@ class PackTests(unittest.TestCase):
         self.assertIn(icon_key, atlas)
         self.assertTrue((rp / (atlas[icon_key]['textures'] + '.png')).exists())
         lang = (rp / 'texts/en_US.lang').read_text()
-        self.assertIn('item.friend:fruit_basket.name=Fruid Basket', lang)
+        self.assertIn('item.friend:fruit_basket.name=Fruit Basket', lang)
         script = (bp / 'scripts/main.js').read_text()
         self.assertIn("typeId === BASKET", script, 'entity interact with a basket should capture a friend')
         self.assertIn('playerInteractWithBlock', script, 'interacting with a block should release a friend')

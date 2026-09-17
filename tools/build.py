@@ -138,7 +138,7 @@ def build_friend(name, data):
     png(ROOT / f'art/{name}-face.png', [[face[y // 16][x // 16] for x in range(256)] for y in range(256)])
 
 def basket_texture():
-    """Original 16x16 wicker basket icon for the Fruid Basket item."""
+    """Original 16x16 wicker basket icon for the Fruit Basket item."""
     clear = (0, 0, 0, 0)
     handle = (104, 62, 28, 255)
     rim_a = (184, 120, 58, 255)
@@ -163,7 +163,7 @@ def basket_texture():
 BASKET = 'friend:fruit_basket'
 
 def build_basket(bp, rp, write, png):
-    """Fruid Basket: craft three sticks in the bucket shape, hold it and interact
+    """Fruit Basket: craft three sticks in the bucket shape, hold it and interact
     with a tamed friend to tuck them inside; interact with a block to let them out."""
     write(bp / 'items/fruit_basket.json', {
         'format_version': '1.21.90', 'minecraft:item': {
@@ -189,10 +189,10 @@ def build_basket(bp, rp, write, png):
     atlas['texture_data']['fruit_basket'] = {'textures': 'textures/items/basket'}
     write(rp / 'textures/item_texture.json', atlas)
     with (rp / 'texts/en_US.lang').open('a', encoding='utf-8') as stream:
-        stream.write('item.friend:fruit_basket.name=Fruid Basket\n')
+        stream.write('item.friend:fruit_basket.name=Fruit Basket\n')
 
 def build(net_version='1.0.0-beta', admin_version='1.0.0-beta'):
-    version = [1, 2, 8]
+    version = [1, 2, 9]
     for path, name, uid, modules in [
         (BP, 'Fruity Friends', BP_ID, [
             {'type': 'data', 'uuid': 'fce620e4-42ac-4477-a84b-c8113d47ba2e', 'version': version},
@@ -245,7 +245,7 @@ This zip contains the server packs and a Python service; it is not a mobile impo
 5. Plant a fruit on tilled farmland to grow a baby friend; it sprouts and grows in 20 loaded minutes.
 6. Tame the baby with its fruit. Fruit also speeds growth. Stay within 8 blocks of your tamed Plum for regeneration. Apple does not heal you;
    instead she owns Applezon and delivers a surprise or a search result for one apple fruit.
-7. Craft a Fruid Basket from three sticks in the bucket shape, then hold it and interact with a tamed
+7. Craft a Fruit Basket from three sticks in the bucket shape, then hold it and interact with a tamed
    friend to tuck them inside. Carry them in your inventory and interact with a block to let them out again.
 
 Find plum and apple trees in newly generated plains and forests. Break their fruit-speckled

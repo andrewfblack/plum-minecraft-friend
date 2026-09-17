@@ -14,7 +14,7 @@ const FRIENDS = {
     title: (baby) => baby ? 'Little Plum' : 'Plum',
     body: (baby, label) => `Hi, adventure buddy!\n${label}\n\nStay close for healing. Plant a plum on tilled farmland to grow a baby.`,
     askTitle: 'Ask Plum', replyTitle: 'Plum says...',
-    care: 'Tame me by giving me a plum. Plant a plum on tilled farmland to grow a baby. Babies grow in 20 loaded minutes and can be tamed too. Interact with an empty hand to make me sit or follow you. Craft a Fruid Basket from three sticks in the bucket shape and interact with me while holding it to carry me along. Talk to me in chat while I am near you, or hold a book and interact!',
+    care: 'Tame me by giving me a plum. Plant a plum on tilled farmland to grow a baby. Babies grow in 20 loaded minutes and can be tamed too. Interact with an empty hand to make me sit or follow you. Craft a Fruit Basket from three sticks in the bucket shape and interact with me while holding it to carry me along. Talk to me in chat while I am near you, or hold a book and interact!',
     tamedMsg: 'Give me a plum fruit to tame me first. Only my owner can open my conversation.',
     plantMsg: 'A tiny fruiting sprout pokes through the soil! It will grow into a baby Plum — one plum tames it.',
   },
@@ -23,7 +23,7 @@ const FRIENDS = {
     title: (baby) => baby ? 'Little Apple' : 'Apple',
     body: (baby, label) => `Hi, shopper buddy!\n${label}\n\nApplezon delivers one item for the price of one apple fruit. Apple does not heal; stay near Plum for that.`,
     askTitle: 'Ask Apple', replyTitle: 'Apple says...',
-    care: 'Tame me by giving me an apple. Plant an apple on tilled farmland to grow a baby. Babies grow in 20 loaded minutes and can be tamed too. Interact with an empty hand to make me sit or follow you. Craft a Fruid Basket from three sticks in the bucket shape and interact with me while holding it to carry me along. Grab items from my Applezon menu, or ask me about the shop in chat!',
+    care: 'Tame me by giving me an apple. Plant an apple on tilled farmland to grow a baby. Babies grow in 20 loaded minutes and can be tamed too. Interact with an empty hand to make me sit or follow you. Craft a Fruit Basket from three sticks in the bucket shape and interact with me while holding it to carry me along. Grab items from my Applezon menu, or ask me about the shop in chat!',
     tamedMsg: 'Give me an apple fruit to tame me first. Only my owner can open my conversation or Applezon.',
     plantMsg: 'A tiny fruiting sprout pokes through the soil! It will grow into a baby Apple — one apple tames it.',
   },
@@ -36,7 +36,7 @@ const FRIEND_NAMES = { plum: 'plum:friend', apple: 'apple:friend' };
 const BASKET = 'friend:fruit_basket';
 const BASKET_STORE = 'basket:friend';
 
-// A Fruid Basket carries one tamed friend as a snapshot stored on the item stack.
+// A Fruit Basket carries one tamed friend as a snapshot stored on the item stack.
 function basketContents(stack) {
   const raw = stack.getDynamicProperty(BASKET_STORE);
   if (!raw) return null;
@@ -162,7 +162,7 @@ function toggleSit(player, friend) {
   friendSay(player, cfg, sitting ? 'Up I get! I will follow you again.' : 'Right! I will sit here and stay put.');
 }
 
-// Tuck a tamed friend into the Fruid Basket held in the main hand.
+// Tuck a tamed friend into the Fruit Basket held in the main hand.
 function captureInBasket(player, friend) {
   if (!player.isValid || !friend.isValid) return;
   const cfg = FRIENDS[friend.typeId];
@@ -417,7 +417,7 @@ async function talk(player, friend) {
 
 world.afterEvents.playerInteractWithEntity.subscribe(({ player, target, beforeItemStack }) => {
   if (!TYPES.has(target.typeId)) return;
-  // A Fruid Basket tucks a tamed friend away for carrying.
+  // A Fruit Basket tucks a tamed friend away for carrying.
   if (beforeItemStack && beforeItemStack.typeId === BASKET) {
     system.run(() => { void captureInBasket(player, target); });
     return;
@@ -444,7 +444,7 @@ world.afterEvents.playerLeave.subscribe(({ playerId }) => {
 });
 
 world.afterEvents.playerSpawn.subscribe(({ player, initialSpawn }) => {
-  if (initialSpawn) system.runTimeout(() => friendSay(player, FRIENDS['plum:friend'], 'Use a plum or apple fruit on tilled farmland to plant a sprout; it grows into a baby friend, and one more fruit tames it. Interact with an empty hand to make me sit or follow. Craft a Fruid Basket from three sticks and interact with me while holding it to carry me around. Interact with me or type my name in chat (for example: "Plum, what is redstone?" or "hey Apple, what do you sell?") to talk. Apple runs the Applezon shop!'), 60);
+  if (initialSpawn) system.runTimeout(() => friendSay(player, FRIENDS['plum:friend'], 'Use a plum or apple fruit on tilled farmland to plant a sprout; it grows into a baby friend, and one more fruit tames it. Interact with an empty hand to make me sit or follow. Craft a Fruit Basket from three sticks and interact with me while holding it to carry me around. Interact with me or type my name in chat (for example: "Plum, what is redstone?" or "hey Apple, what do you sell?") to talk. Apple runs the Applezon shop!'), 60);
 });
 
 // Talk to a nearby tamed friend straight from chat: "Plum ...", "hey Apple, ...", "@plum hi", etc.
