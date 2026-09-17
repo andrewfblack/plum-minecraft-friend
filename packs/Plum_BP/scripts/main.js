@@ -12,9 +12,9 @@ const FRIENDS = {
   'plum:friend': {
     name: 'Plum', color: '§d', fruit: 'plum:plum',
     title: (baby) => baby ? 'Little Plum' : 'Plum',
-    body: (baby, label) => `Hi, adventure buddy!\n${label}\n\nStay close for healing. Feed two tamed adults plums to make a baby.`,
+    body: (baby, label) => `Hi, adventure buddy!\n${label}\n\nStay close for healing. Plant a plum on tilled farmland to grow a baby.`,
     askTitle: 'Ask Plum', replyTitle: 'Plum says...',
-    care: 'Tame me by giving me a plum. Breed adults with plums. Babies grow in 20 loaded minutes and can be tamed too. Talk to me in chat while I am near you, or hold a book and interact!',
+    care: 'Tame me by giving me a plum. Plant a plum on tilled farmland to grow a baby. Babies grow in 20 loaded minutes and can be tamed too. Talk to me in chat while I am near you, or hold a book and interact!',
     tamedMsg: 'Give me a plum fruit to tame me first. Only my owner can open my conversation.',
     plantMsg: 'A tiny fruiting sprout pokes through the soil! It will grow into a baby Plum — one plum tames it.',
   },
@@ -23,7 +23,7 @@ const FRIENDS = {
     title: (baby) => baby ? 'Little Apple' : 'Apple',
     body: (baby, label) => `Hi, shopper buddy!\n${label}\n\nApplezon delivers one item for the price of one apple fruit. Apple does not heal; stay near Plum for that.`,
     askTitle: 'Ask Apple', replyTitle: 'Apple says...',
-    care: 'Tame me by giving me an apple. Breed adults with apples. Babies grow in 20 loaded minutes and can be tamed too. Grab items from my Applezon menu, or ask me about the shop in chat!',
+    care: 'Tame me by giving me an apple. Plant an apple on tilled farmland to grow a baby. Babies grow in 20 loaded minutes and can be tamed too. Grab items from my Applezon menu, or ask me about the shop in chat!',
     tamedMsg: 'Give me an apple fruit to tame me first. Only my owner can open my conversation or Applezon.',
     plantMsg: 'A tiny fruiting sprout pokes through the soil! It will grow into a baby Apple — one apple tames it.',
   },
@@ -398,7 +398,7 @@ world.afterEvents.entityHurt.subscribe(({ hurtEntity }) => {
   } catch { /* The event fires for hits that finish the entity in the same tick. */ }
 });
 
-// One healing effect per Plum owner, regardless of how many friends they breed. Apple never heals.
+// One healing effect per Plum owner, regardless of how many friends they tame. Apple never heals.
 system.runInterval(() => {
   for (const player of world.getAllPlayers()) {
     try {

@@ -11,27 +11,6 @@
       "apple:adult": {
         "minecraft:scale": {
           "value": 1
-        },
-        "minecraft:breedable": {
-          "require_tame": true,
-          "require_full_health": false,
-          "breed_cooldown": 60,
-          "inherit_tamed": false,
-          "breed_items": [
-            "apple:apple"
-          ],
-          "breeds_with": {
-            "mate_type": "apple:friend",
-            "baby_type": "apple:friend",
-            "breed_event": {
-              "event": "minecraft:entity_born",
-              "target": "baby"
-            }
-          }
-        },
-        "minecraft:behavior.breed": {
-          "priority": 2,
-          "speed_multiplier": 1.0
         }
       },
       "apple:baby": {

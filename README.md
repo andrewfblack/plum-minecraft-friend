@@ -1,6 +1,6 @@
 # Fruity Friends
 
-**Fruity Friends** is a family of smiling, animated cube companions for **Minecraft Bedrock**, with half-size baby forms. The first friend is **Plum**, a purple cube with a sweet tooth for plums; version **1.2.0** added **Apple**, a red cube friend who owns **Applezon**, a blocky parody of a giant online shop, plus apple fruit to plant and naturally generated apple trees. Version **1.2.1** renamed the add-on to **Fruity Friends** and lets you greet a friend in chat (`hey Apple, ...`). Version **1.2.2** fixes the Applezon shop, chat replies, and fruit icons. Version **1.2.3** keeps taming reliable for both friends. Version **1.2.4** turns fruit planting into a real sprout block that grows into each friend. Version **1.2.5** makes the fruit carrot-style: plant it on tilled farmland to grow a sprout, or eat it to restore 4 hunger points. This project includes an offline add-on and a Dedicated Server edition with typed AI conversation for mobile and Windows players.
+**Fruity Friends** is a family of smiling, animated cube companions for **Minecraft Bedrock**, with half-size baby forms. The first friend is **Plum**, a purple cube with a sweet tooth for plums; version **1.2.0** added **Apple**, a red cube friend who owns **Applezon**, a blocky parody of a giant online shop, plus apple fruit to plant and naturally generated apple trees. Version **1.2.1** renamed the add-on to **Fruity Friends** and lets you greet a friend in chat (`hey Apple, ...`). Version **1.2.2** fixes the Applezon shop, chat replies, and fruit icons. Version **1.2.3** keeps taming reliable for both friends. Version **1.2.4** turns fruit planting into a real sprout block that grows into each friend. Version **1.2.5** makes the fruit carrot-style: plant it on tilled farmland to grow a sprout, or eat it to restore 4 hunger points. Version **1.2.6** removes breeding entirely: the only way to get a baby is to plant a fruit on tilled farmland. This project includes an offline add-on and a Dedicated Server edition with typed AI conversation for mobile and Windows players.
 
 ## Downloads
 
@@ -15,11 +15,11 @@
 2. Give a **plum fruit** to each Plum to tame him. One plum always works.
 3. He follows his owner, steps up blocks, and can catch up with normal pet teleporting.
 4. Talk to your friend two ways. **In chat**: while a tamed Plum is within 10 blocks, just type his name first — for example `Plum, what is redstone?`, `hey Plum, hi`, or `@plum ping`. A greeting like `hey`/`hi`/`hello` can come before his name. He answers in chat instantly (or with his knowledge base offline). **With a book**: hold an ordinary **book**, point at your Plum, and use **Talk to Plum** / interact. On PC, right-click; on mobile, use the interaction control for your chosen touch layout. Select **Ask a question**, type, and press **Ask**. Answers appear in a private window and your private chat. No chat commands or operator permissions are needed to talk.
-5. Give a **plum fruit to each of two nearby tamed adult Plums** to breed them. The cooldown is one minute. Apple breeds with apple fruit; vanilla minecraft apples don't breed either friend.
-6. Babies are half-size and follow a parent until tamed. Give a baby a plum fruit to make it yours. Babies grow after approximately **20 minutes while loaded**; plums accelerate growth. Babies cannot breed until grown.
+5. Plant a **fruit on tilled farmland** to grow a baby friend. Only planting makes babies — breeding was removed. A sprout appears, then the baby sprouts from it.
+6. Babies are half-size and follow a parent until they grow. Give a baby a plum fruit to make it yours. Babies grow after approximately **20 minutes while loaded**; plums accelerate growth.
 7. Stay within **8 blocks** of your tamed Plum for regeneration. Having several Plums does not multiply the effect.
 
-The **cube friends** do not spawn naturally and have no Survival crafting recipe. Plant a plum fruit on tilled farmland to grow your first baby, tame it, then breed more. Their fruit is obtainable in Survival from trees.
+The **cube friends** do not spawn naturally and have no Survival crafting recipe. Plant a plum fruit on tilled farmland to grow your first baby, then tame it. Their fruit is obtainable in Survival from trees.
 
 ## Plum trees and fruit
 
@@ -27,7 +27,7 @@ The **cube friends** do not spawn naturally and have no Survival crafting recipe
 - Break **Plum Leaves** in Survival: each block has a **35% chance to drop a plum fruit** and a separate **10% chance to drop a Plum Sapling**. Leaves are harvested by breaking them and do not decay automatically in this version.
 - Plant a sapling on grass, dirt, coarse dirt, podzol, or moss. Leave a **5-block-wide area and 6 blocks of height** clear. Trees grow on random ticks while their area is loaded; there is no fixed growth time.
 - Use **bone meal** on a sapling to grow it immediately if there is space. Successful growth uses one bone meal in Survival; blocked growth consumes none. Creative uses none.
-- Feed plums to two tamed adult friends to breed them, or to babies to speed up growth. Plant a plum on tilled farmland to grow a new baby friend — the fruit is a seed, not a snack, in this pack.
+- Plant a plum on tilled farmland to grow a new baby friend, or feed plums to babies to speed up growth — the fruit is a seed in this pack.
 
 Trees will not be added retroactively to old chunks. Explore beyond previously generated terrain, or obtain a Plum Sapling from Creative. For a quick operator test, use `/give @s plum:plum_sapling 1` and `/give @s plum:plum 16`.
 
@@ -35,7 +35,7 @@ Trees will not be added retroactively to old chunks. Explore beyond previously g
 
 ## Apple and the Applezon shop
 
-Apple is a smiling red cube box with a green leaf and his own Applezon brand. He works just like Plum — plant an **apple fruit** on tilled farmland to grow a baby Apple, tame him with an **apple**, breed two adults with apples, and talk to him with a book. His baby grows in the same 20 loaded minutes.
+Apple is a smiling red cube box with a green leaf and his own Applezon brand. He works just like Plum — plant an **apple fruit** on tilled farmland to grow a baby Apple, tame him with an **apple** (planting made the baby, not breeding), and talk to him with a book. His baby grows in the same 20 loaded minutes.
 
 The differences:
 
@@ -67,7 +67,7 @@ For AI conversation, follow **[the Dedicated Server setup guide](server/SETUP.md
 
 Automated checks cover JavaScript API types, offline answers, input sanitization, local HTTP authentication, malformed requests, per-player history separation, history limits, throttling, AI failures, Responses API output parsing, and pack references/lifecycle definitions.
 
-Tree tests also cover complete sapling growth, blocked/unloaded destinations, rollback after a placement failure, and the world-generation → leaves → fruit/sapling → breeding chain.
+Tree tests also cover complete sapling growth, blocked/unloaded destinations, rollback after a placement failure, and the world-generation → leaves → fruit/sapling → planting/feeding chain.
 
 **Not yet tested in a running Minecraft client or Bedrock Dedicated Server.** No live OpenAI request has been made. Treat the packages as a first playable build pending the in-game checklist below; static checks cannot prove mob behavior or touch UI behavior.
 
@@ -76,7 +76,7 @@ Tree tests also cover complete sapling growth, blocked/unloaded destinations, ro
 - Import/load without Content Log errors; spawn an adult and verify purple smiling front and gentle bobbing.
 - Tame two Plums, walk away, and confirm the correct player is followed in a two-player session.
 - Test melee, arrows, fall, fire, lava, drowning, and explosion damage in a disposable world.
-- Feed the pair plums, verify a small baby, tame it, and verify growth and breeding cooldown.
+- Plant a fruit, verify a sprout and a baby, tame it, and verify growth to adult.
 - Find plum trees in new plains/forest terrain; break leaves in Survival to verify plum and sapling drops.
 - Plant a sapling, test bone meal and natural growth, and confirm a nearby wall/chest is preserved when growth is blocked.
 - Verify fruit icons, fruit planting, sprout growth, and sapling rendering on mobile and PC.
@@ -101,4 +101,4 @@ python3 -m unittest discover -s tests -p 'test_*.py' -v
 
 On Windows, use `py` instead of `python3` if appropriate. Keep pack UUIDs stable when updating an existing world. Both editions share UUIDs: use **one edition at a time**, not both together.
 
-The entity intentionally keeps `format_version: 1.21.0` for the older breeding schema. Do not change it to 1.26 without migrating breeding to the newer `offspring_data` component. See [Microsoft's breedable reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_breedable?view=minecraft-bedrock-stable).
+The entity intentionally keeps `format_version: 1.21.0`. Babies come only from planting a fruit on tilled farmland (see [orchard.js](packs/Plum_BP/scripts/orchard.js) and the `minecraft:entity_born` event); the `breedable` component is intentionally absent.

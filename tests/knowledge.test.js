@@ -4,7 +4,7 @@ import { cleanText, offlineAnswer } from '../packs/Plum_BP/scripts/knowledge.js'
 
 test('typed help handles useful questions and admits unsupported topics', () => {
   assert.match(offlineAnswer('How do I make a bed?'), /three matching wool/);
-  assert.match(offlineAnswer('Can I breed babies?'), /plum/);
+  assert.match(offlineAnswer('How do I grow a baby Plum?'), /plum/);
   assert.match(offlineAnswer('Where can I find plums?'), /trees/);
   assert.match(offlineAnswer('How do I grow a tree?'), /sapling/);
   assert.match(offlineAnswer('Explain quantum mechanics'), /does not know/);

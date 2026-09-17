@@ -79,8 +79,6 @@ def build_friend(name, data):
     groups = {
         f'{name}:adult': {
             'minecraft:scale': {'value': 1},
-            'minecraft:breedable': {'require_tame': True, 'require_full_health': False, 'breed_cooldown': 60, 'inherit_tamed': False, 'breed_items': [fruit], 'breeds_with': {'mate_type': entity, 'baby_type': entity, 'breed_event': {'event': 'minecraft:entity_born', 'target': 'baby'}}},
-            'minecraft:behavior.breed': {'priority': 2, 'speed_multiplier': 1.0}
         },
         f'{name}:baby': {
             'minecraft:is_baby': {}, 'minecraft:scale': {'value': 0.5},
@@ -115,7 +113,7 @@ def build_friend(name, data):
         'minecraft:ageable_grow_up': {'remove': {'component_groups': [f'{name}:baby']}, 'add': {'component_groups': [f'{name}:adult']}},
         'minecraft:on_tame': {'add': {'component_groups': [f'{name}:tamed']}},
     }
-    # Keep the legacy format explicitly: breeding fields changed in the 1.26 format.
+    # Babies come only from planting fruit (orchard.js fires minecraft:entity_born).
     file_name = data.get('file', name)
     write(BP / f'entities/{file_name}.json', {'format_version': '1.21.0', 'minecraft:entity': {'description': {'identifier': entity, 'is_spawnable': True, 'is_summonable': True, 'is_experimental': False}, 'component_groups': groups, 'components': components, 'events': events}})
     write(RP / f'entity/{file_name}.entity.json', {'format_version': '1.10.0', 'minecraft:client_entity': {'description': {
@@ -132,7 +130,7 @@ def build_friend(name, data):
     png(ROOT / f'art/{name}-face.png', [[face[y // 16][x // 16] for x in range(256)] for y in range(256)])
 
 def build(net_version='1.0.0-beta', admin_version='1.0.0-beta'):
-    version = [1, 2, 5]
+    version = [1, 2, 6]
     for path, name, uid, modules in [
         (BP, 'Fruity Friends', BP_ID, [
             {'type': 'data', 'uuid': 'fce620e4-42ac-4477-a84b-c8113d47ba2e', 'version': version},
@@ -181,15 +179,14 @@ This zip contains the server packs and a Python service; it is not a mobile impo
    They follow their owner.
 3. Hold a book and interact (Talk to Plum / Talk to Apple on touch, right-click on PC).
 4. Choose Ask a question and type your message. Replies are private.
-5. Feed two nearby tamed adults of the same kind their fruit to breed a half-size baby.
-6. Tame the baby with its fruit too. Babies grow in 20 loaded minutes; fruit helps.
-7. Stay within 8 blocks of your tamed Plum for regeneration. Apple does not heal you;
+5. Plant a fruit on tilled farmland to grow a baby friend; it sprouts and grows in 20 loaded minutes.
+6. Tame the baby with its fruit. Fruit also speeds growth. Stay within 8 blocks of your tamed Plum for regeneration. Apple does not heal you;
    instead she owns Applezon and delivers a surprise or a search result for one apple fruit.
 
 Find plum and apple trees in newly generated plains and forests. Break their fruit-speckled
 leaves in Survival for the matching fruit and sapling. Plant a sapling on soil with a clear
 5-wide, 6-high space; wait for growth or use bone meal. Leaves do not decay automatically.
-Plums replace apples for breeding Plum; Apple uses apples. The fruit works as a seed, not food.
+The fruit works as a seed and snack: plant it on farmland to grow a baby friend.
 
 Updating from 1.1.0: replace both pack folders and the bridge script, update each Fruity Friends
 world-pack-list entry to [1,2,1], and restart. Keep existing credentials and UUIDs.

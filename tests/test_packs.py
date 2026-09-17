@@ -24,7 +24,7 @@ class PackTests(unittest.TestCase):
                     self.assertIn('server-net', provider)
                     self.assertTrue(any(d.get('module_name') == '@minecraft/server-net' for d in manifest['dependencies']))
 
-    def test_lifecycle_references_and_baby_breeding(self):
+    def test_lifecycle_references_and_baby_growth(self):
         for file in ['friend.json', 'apple.json']:
             entity = json.loads((ROOT / 'packs/Plum_BP/entities' / file).read_text())['minecraft:entity']
             groups = entity['component_groups']
@@ -40,14 +40,17 @@ class PackTests(unittest.TestCase):
             apply('minecraft:entity_born')
             self.assertEqual(active, {f'{entity["description"]["identifier"].split(":")[0]}:baby'})
             self.assertNotIn('minecraft:breedable', groups[list(filter(lambda k: k.endswith(':baby'), groups))[0]])
+            adult = groups[list(filter(lambda k: k.endswith(':adult'), groups))[0]]
+            self.assertNotIn('minecraft:breedable', adult, 'breeding was removed; babies come only from planting fruit')
+            self.assertNotIn('minecraft:behavior.breed', adult)
             apply('minecraft:on_tame')
             apply('minecraft:ageable_grow_up')
-            self.assertEqual(groups[list(filter(lambda k: k.endswith(':adult'), groups))[0]]['minecraft:breedable']['breeds_with']['baby_type'], entity['description']['identifier'])
+            self.assertEqual(active, {f'{entity["description"]["identifier"].split(":")[0]}:adult', f'{entity["description"]["identifier"].split(":")[0]}:tamed'})
 
-    def test_apple_tames_and_breeds_with_apples(self):
+    def test_apple_tames_and_grows(self):
         entity = json.loads((ROOT / 'packs/Plum_BP/entities/apple.json').read_text())['minecraft:entity']
         groups = entity['component_groups']
-        self.assertEqual(groups['apple:adult']['minecraft:breedable']['breed_items'], ['apple:apple'])
+        self.assertNotIn('minecraft:breedable', groups['apple:adult'], 'planting fruit grows a baby, not breeding')
         self.assertEqual(groups['apple:baby']['minecraft:ageable']['feed_items'], ['apple:apple'])
         self.assertEqual(entity['components']['minecraft:tameable']['tame_items'], ['apple:apple'])
         self.assertEqual(entity['components']['minecraft:behavior.tempt']['items'], ['apple:apple'])
@@ -81,7 +84,7 @@ class PackTests(unittest.TestCase):
             self.assertIn(icon_key, atlas)
             self.assertTrue((rp / (atlas[icon_key]['textures'] + '.png')).exists())
             entity = read(bp / 'entities' / entity_file)['minecraft:entity']
-            self.assertEqual(entity['component_groups'][f'{fruit}:adult']['minecraft:breedable']['breed_items'], [fruit_item])
+            self.assertNotIn('minecraft:breedable', entity['component_groups'][f'{fruit}:adult'], 'planting fruit grows a baby, not breeding')
             self.assertEqual(entity['component_groups'][f'{fruit}:baby']['minecraft:ageable']['feed_items'], [fruit_item])
             self.assertIn(fruit_item, entity['components']['minecraft:behavior.tempt']['items'])
             self.assertEqual(entity['components']['minecraft:tameable']['tame_items'], [fruit_item])
@@ -111,8 +114,8 @@ class PackTests(unittest.TestCase):
             for atlas in ['item_texture.json', 'terrain_texture.json']:
                 for entry in read(rp / 'textures' / atlas)['texture_data'].values():
                     self.assertTrue((rp / (entry['textures'] + '.png')).exists())
-        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 5])
+        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 6])
         with zipfile.ZipFile(ROOT / 'dist/Fruity-Friends-Dedicated-Server.zip') as z:
-            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 5])
+            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 6])
 
 if __name__ == '__main__': unittest.main()
