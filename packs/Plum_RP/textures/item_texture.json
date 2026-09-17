@@ -8,6 +8,9 @@
     "apple_fruit": {
       "textures": "textures/items/apple"
     },
+    "blueberry_fruit": {
+      "textures": "textures/items/blueberry"
+    },
     "fruit_basket": {
       "textures": "textures/items/basket"
     }

@@ -21,8 +21,10 @@ class BridgeTests(unittest.TestCase):
             return 'Hello adventurer!'
         self.state = bridge.State('test-token-' * 4, 'fake-key', 'test-model', reply)
 
-    def body(self, player='one', question='How do I build a bed?'):
-        return {'playerId': player, 'question': question, 'dimension': 'minecraft:overworld'}
+    def body(self, player='one', question='How do I build a bed?', friend=None):
+        body = {'playerId': player, 'question': question, 'dimension': 'minecraft:overworld'}
+        if friend: body['friend'] = friend
+        return body
 
     def test_histories_are_separate_and_bounded(self):
         for n in range(7):
@@ -89,5 +91,14 @@ class BridgeTests(unittest.TestCase):
             sent = json.loads(mocked.call_args.args[0].data)
             self.assertIn('Applezon', sent['instructions'])
             self.assertIn('Apple is a baby', sent['input'][-1]['content'])
+
+    def test_blueberry_friend_selects_collector_instructions(self):
+        payload = {'output': [{'type': 'message', 'content': [{'type': 'output_text', 'text': 'Item stored!'}]}]}
+        with patch('urllib.request.urlopen', return_value=io.BytesIO(json.dumps(payload).encode())) as mocked:
+            self.assertEqual(bridge.ask_openai('store it?', [], 'minecraft:overworld', False, 'fake-key', 'test-model', friend='blueberry'), 'Item stored!')
+            sent = json.loads(mocked.call_args.args[0].data)
+            self.assertIn('Collector', sent['instructions'])
+            self.assertIn('Blueberry is an adult', sent['input'][-1]['content'])
+        self.assertEqual(self.state.answer(self.body(friend='blueberry'))[0], 200)
 
 if __name__ == '__main__': unittest.main()

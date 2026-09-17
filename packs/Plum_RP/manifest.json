@@ -2,12 +2,12 @@
   "format_version": 2,
   "header": {
     "name": "Fruity Friends Resources",
-    "description": "Smiling cube companions with babies, healing, and offline typed Minecraft help. Apple runs the Applezon shop.",
+    "description": "Smiling cube companions with babies, healing, shopping, and a portable chest. Apple runs the Applezon shop; Blueberry collects drops.",
     "uuid": "834d72cc-8c7f-498f-adfa-269e215f86e8",
     "version": [
       1,
       2,
-      10
+      11
     ],
     "min_engine_version": [
       1,
@@ -22,7 +22,7 @@
       "version": [
         1,
         2,
-        10
+        11
       ]
     }
   ]

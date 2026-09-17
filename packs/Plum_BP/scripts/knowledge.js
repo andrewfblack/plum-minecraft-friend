@@ -41,12 +41,29 @@ const APPLE_TOPICS = [
   [/\b(hello|hi|hey|name)\b/, 'Hi! I am Apple, owner of Applezon, your pocket-sized supershop. One apple fruit buys one delivery. Ready to order?'],
 ];
 
+const BLUEBERRY_TOPICS = [
+  [/\b(chest|chests|inventory|storage|stor|portable chest|full)\b/, 'I am a Collector! Dropped items within four blocks of me go straight into my chest - up to 27 stacks. Interact with me with an empty hand to open it. Store the item you are holding, take a stack out, or just peek inside. When my chest is full I will tell you so you can clear room.'],
+  [/\b(collect|collector|pick.?up|pickup|grab|gather|scoop)\b/, 'Collecting is my job! Dropped items within four blocks of me are scooped into my chest so they stay safe for you. Interact with me with an empty hand to open the chest and take them back out.'],
+  [/\b(care|care for|take care|keep)\b/, 'Tame me with a blueberry, plant fruit on farmland to grow a baby, and let me scoop up your drops. Interact with me with an empty hand to open my chest. Talk to me in chat while I am nearby, or hold a book and interact. Craft a Fruit Basket from three sticks in the bucket shape and interact with me while holding it to carry me along - my chest travels with me.'],
+  [/\b(basket|baskets|carry|carried|store|travel)\b/, 'Craft a Fruit Basket from three sticks in the bucket shape (two on top, one below in the middle). Hold it and interact with your tamed friend to tuck them inside. Carry the basket in your inventory, then interact with a block to let your friend out again. When I travel in a basket, everything in my chest comes along.'],
+  [/\b(tree|trees|sapling|saplings|orchard|fruit)\b|where.*\bblueberries?\b/, 'Find blueberry trees in newly explored plains and forests. Break their deep-blue-speckled leaves for a chance of blueberries and saplings. Plant a sapling on dirt or grass with 5 blocks of width and 6 blocks of height clear. It grows while loaded, or use bone meal. Plant a blueberry fruit on tilled farmland to grow a tiny new friend!'],
+  [/\b(plant|planting|sprout|sprouted|grow.*friend|baby.*blueberry)\b/, 'Plant a blueberry fruit on tilled farmland and a tiny baby Blueberry will sprout from the soil! Give it another blueberry to tame it as your own. You can also find blueberry trees in new plains and forests.'],
+  [/\b(breed|breeding|babies|baby|grow)\b/, 'Plant a blueberry fruit on tilled farmland and a baby Blueberry will sprout from the soil! Babies grow up in about 20 loaded minutes; blueberries speed that up. Tame your baby with a blueberry too. Breeding is not how new friends appear.'],
+  [/\b(tame|taming|follow|friend)\b/, 'Give me a blueberry fruit to become my owner. I will follow you and collect your drops! Type my name in chat when I am near, or hold a book and interact with me to talk or open my chest. Interact with an empty hand and I will open my chest for you.'],
+  [/\b(sit|sit down|stay|standing|follow.*off|stop.*follow)\b/, 'Open my chest with an empty hand and choose "Sit or stand" to make me stay put like a tamed dog. Choose it again to make me follow you. Sitting collectors stay put while you build or explore.'],
+  [/\b(heal|healing|hurt|health|help)\b/, 'I am Blueberry, the Collector, and I do NOT grant healing. Stay near your tamed Plum for gentle regeneration, or keep a bed and good food handy. I keep your dropped items safe instead!'],
+  [/\b(die|dead|damage|immortal|invincible)\b/, 'Like all cube friends, ordinary survival damage cannot hurt me! Administrative removal, /kill, and some engine edge cases are outside my protection. Keep me near you on adventures.'],
+  [/\b(hello|hi|hey|name)\b/, 'Hi! I am Blueberry, the Collector cub. Drops near me vanish into my chest - interact with me with an empty hand to open it. Ready to haul?'],
+];
+
 const PLUM_GUIDE = [...PLUM_TOPICS, ...BASE_TOPICS];
 const APPLE_GUIDE = [...APPLE_TOPICS, ...BASE_TOPICS];
+const BLUEBERRY_GUIDE = [...BLUEBERRY_TOPICS, ...BASE_TOPICS];
+const GUIDES = { plum: PLUM_GUIDE, apple: APPLE_GUIDE, blueberry: BLUEBERRY_GUIDE };
 
 export function offlineAnswer(question, friend = 'plum') {
   const q = cleanText(question).toLowerCase();
-  const topics = friend === 'apple' ? APPLE_GUIDE : PLUM_GUIDE;
+  const topics = GUIDES[friend] ?? PLUM_GUIDE;
   return topics.find(([pattern]) => /** @type {RegExp} */ (pattern).test(q))?.[1]?.toString()
     ?? 'My offline guide does not know that one yet. Try asking about crafting, torches, beds, mining, farming, or how to care for your cube friends. The server AI version can answer more questions.';
 }

@@ -2,17 +2,21 @@
   "format_version": "1.21.80",
   "minecraft:block": {
     "description": {
-      "identifier": "plum:plum_sprout",
+      "identifier": "blueberry:blueberry_sapling",
       "menu_category": {
         "category": "nature"
       }
     },
     "components": {
-      "minecraft:display_name": "tile.plum:plum_sprout.name",
-      "minecraft:geometry": "minecraft:geometry.cross",
+      "minecraft:display_name": "tile.blueberry:blueberry_sapling.name",
+      "minecraft:geometry": "geometry.blueberry_sapling",
       "minecraft:material_instances": {
         "*": {
-          "texture": "plum_sprout",
+          "texture": "blueberry_sapling_leaf",
+          "render_method": "alpha_test"
+        },
+        "stem": {
+          "texture": "blueberry_bark",
           "render_method": "alpha_test"
         }
       },
@@ -25,7 +29,7 @@
         ],
         "size": [
           8,
-          8,
+          12,
           8
         ]
       },
@@ -44,14 +48,18 @@
               "up"
             ],
             "block_filter": [
-              "minecraft:farmland"
+              "minecraft:grass_block",
+              "minecraft:dirt",
+              "minecraft:coarse_dirt",
+              "minecraft:podzol",
+              "minecraft:moss_block"
             ]
           }
         ]
       },
-      "minecraft:loot": "loot_tables/blocks/plum_sprout.json",
+      "minecraft:loot": "loot_tables/blocks/blueberry_sapling.json",
       "minecraft:custom_components": [
-        "friend:sprout_grow"
+        "blueberry:grow_tree"
       ]
     }
   }

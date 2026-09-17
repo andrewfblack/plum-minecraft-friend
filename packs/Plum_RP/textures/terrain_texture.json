@@ -10,6 +10,9 @@
     "plum_sapling_leaf": {
       "textures": "textures/blocks/plum_sapling_leaf"
     },
+    "plum_sprout": {
+      "textures": "textures/blocks/plum_sprout"
+    },
     "plum_bark": {
       "textures": "textures/blocks/plum_bark"
     },
@@ -19,8 +22,23 @@
     "apple_sapling_leaf": {
       "textures": "textures/blocks/apple_sapling_leaf"
     },
+    "apple_sprout": {
+      "textures": "textures/blocks/apple_sprout"
+    },
     "apple_bark": {
       "textures": "textures/blocks/apple_bark"
+    },
+    "blueberry_leaves": {
+      "textures": "textures/blocks/blueberry_leaves"
+    },
+    "blueberry_sapling_leaf": {
+      "textures": "textures/blocks/blueberry_sapling_leaf"
+    },
+    "blueberry_sprout": {
+      "textures": "textures/blocks/blueberry_sprout"
+    },
+    "blueberry_bark": {
+      "textures": "textures/blocks/blueberry_bark"
     }
   }
 }

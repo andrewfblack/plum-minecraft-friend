@@ -1,0 +1,36 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "blueberry:friend",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/blueberry"
+      },
+      "geometry": {
+        "default": "geometry.blueberry"
+      },
+      "render_controllers": [
+        "controller.render.blueberry"
+      ],
+      "animations": {
+        "bob": "animation.blueberry.bob",
+        "sit": "animation.blueberry.sit"
+      },
+      "scripts": {
+        "animate": [
+          "bob",
+          {
+            "sit": "query.is_sitting"
+          }
+        ]
+      },
+      "spawn_egg": {
+        "base_color": "#1F4FD8",
+        "overlay_color": "#A7E0F2"
+      }
+    }
+  }
+}

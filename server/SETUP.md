@@ -27,18 +27,18 @@ Copy the two JSON files from `world-pack-lists` into `worlds/YOUR_WORLD/`. **If 
 Behavior pack:
 
 ```json
-[{"pack_id":"01d84fd1-31dd-4b92-a942-c8e59ce38191","version":[1,2,10]}]
+[{"pack_id":"01d84fd1-31dd-4b92-a942-c8e59ce38191","version":[1,2,11]}]
 ```
 
 Resource pack:
 
 ```json
-[{"pack_id":"834d72cc-8c7f-498f-adfa-269e215f86e8","version":[1,2,10]}]
+[{"pack_id":"834d72cc-8c7f-498f-adfa-269e215f86e8","version":[1,2,11]}]
 ```
 
 Set `texturepack-required=true` in `server.properties` so players receive Plum's appearance. Do not enable the offline pack alongside the AI pack; they are two editions of the same add-on.
 
-**Updating an existing Fruity Friends installation:** replace the pack folders and `plum-service/bridge.py`, change both existing world-pack entries to `[1,2,10]`, and restart both processes. Preserve your current credentials/configuration. New plum and apple trees appear only in newly generated terrain; explore new plains/forests or plant a Creative sapling in an old area.
+**Updating an existing Fruity Friends installation:** replace the pack folders and `plum-service/bridge.py`, change both existing world-pack entries to `[1,2,11]`, and restart both processes. Preserve your current credentials/configuration. New plum, apple and blueberry trees appear only in newly generated terrain; explore new plains/forests or plant a Creative sapling in an old area.
 
 ## 3. Allow the scripts to reach their local service
 
@@ -98,11 +98,11 @@ The service prints a listening message. `http://127.0.0.1:8787/health` reports p
 
 ## 5. Join and talk
 
-On mobile or Windows Bedrock, add the server address and configured Bedrock port, join, and accept the resources. Spawn and tame Plum as described in the main README, hold a **book**, and interact. Choose **Ask a question**. Interact with an empty hand to make a tamed friend sit and stay put, like a dog; do it again to make it follow. Craft a **Fruit Basket** from three sticks in the bucket shape, hold it while interacting with a tamed friend to carry it around, and interact with a block to let it out again.
+On mobile or Windows Bedrock, add the server address and configured Bedrock port, join, and accept the resources. Spawn and tame Plum as described in the main README, hold a **book**, and interact. Choose **Ask a question**. Interact with a Plum or Apple with an empty hand to make a tamed friend sit and stay put, like a dog; do it again to make it follow. **Blueberry** is the Collector: interact with him with an empty hand to open his portable chest, and dropped items within four blocks go straight inside; he tells his owner when the chest is full. Craft a **Fruit Basket** from three sticks in the bucket shape, hold it while interacting with a tamed friend to carry it around, and interact with a block to let it out again.
 
-Try “How do I make a bed?” followed by “What materials do I need?” The conversation title identifies AI chat. If the AI connection fails, Plum explicitly switches to a built-in offline answer. Turning off the bridge does not disable following or healing.
+Try “How do I make a bed?” followed by “What materials do I need?” The conversation title identifies AI chat. If the AI connection fails, Plum explicitly switches to a built-in offline answer. Turning off the bridge does not disable following, collecting, or healing.
 
-To grow babies, plant a plum fruit on tilled farmland: a sprout appears and grows into a baby friend. Find plum trees in new plains/forest terrain and break their fruit-speckled leaves in Survival. Each leaf has a 35% fruit-drop chance and a separate 10% sapling-drop chance. Plant saplings on soil with a clear 5-wide, 6-high space; wait for random growth or use bone meal. Apples do not grow Plums. Leaves do not automatically decay.
+To grow babies, plant a plum, apple or blueberry fruit on tilled farmland: a sprout appears and grows into a baby friend. Find the matching trees in new plains/forest terrain and break their fruit-speckled leaves in Survival. Each leaf has a 35% fruit-drop chance and a separate 10% sapling-drop chance. Plant saplings on soil with a clear 5-wide, 6-high space; wait for random growth or use bone meal. Apples do not grow Plums. Leaves do not automatically decay.
 
 ## Data and limits
 

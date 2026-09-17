@@ -2,18 +2,18 @@
   "format_version": "1.21.0",
   "minecraft:entity": {
     "description": {
-      "identifier": "plum:friend",
+      "identifier": "blueberry:friend",
       "is_spawnable": true,
       "is_summonable": true,
       "is_experimental": false
     },
     "component_groups": {
-      "plum:adult": {
+      "blueberry:adult": {
         "minecraft:scale": {
           "value": 1
         }
       },
-      "plum:baby": {
+      "blueberry:baby": {
         "minecraft:is_baby": {},
         "minecraft:scale": {
           "value": 0.5
@@ -21,7 +21,7 @@
         "minecraft:ageable": {
           "duration": 1200,
           "feed_items": [
-            "plum:plum"
+            "blueberry:blueberry"
           ],
           "grow_up": {
             "event": "minecraft:ageable_grow_up",
@@ -33,7 +33,7 @@
           "speed_multiplier": 1.15
         }
       },
-      "plum:tamed": {
+      "blueberry:tamed": {
         "minecraft:is_tamed": {},
         "minecraft:behavior.follow_owner": {
           "priority": 4,
@@ -43,7 +43,7 @@
           "can_teleport": true
         }
       },
-      "plum:sit": {
+      "blueberry:sit": {
         "minecraft:is_sitting": {},
         "minecraft:behavior.sit": {
           "priority": 0
@@ -53,7 +53,7 @@
     "components": {
       "minecraft:type_family": {
         "family": [
-          "plum_friend",
+          "blueberry_friend",
           "mob"
         ]
       },
@@ -101,7 +101,7 @@
       "minecraft:tameable": {
         "probability": 1,
         "tame_items": [
-          "plum:plum"
+          "blueberry:blueberry"
         ],
         "tame_event": {
           "event": "minecraft:on_tame",
@@ -115,7 +115,7 @@
         "priority": 6,
         "speed_multiplier": 1.0,
         "items": [
-          "plum:plum"
+          "blueberry:blueberry"
         ]
       },
       "minecraft:behavior.random_stroll": {
@@ -132,52 +132,52 @@
       "minecraft:entity_spawned": {
         "add": {
           "component_groups": [
-            "plum:adult"
+            "blueberry:adult"
           ]
         }
       },
       "minecraft:entity_born": {
         "remove": {
           "component_groups": [
-            "plum:adult"
+            "blueberry:adult"
           ]
         },
         "add": {
           "component_groups": [
-            "plum:baby"
+            "blueberry:baby"
           ]
         }
       },
       "minecraft:ageable_grow_up": {
         "remove": {
           "component_groups": [
-            "plum:baby"
+            "blueberry:baby"
           ]
         },
         "add": {
           "component_groups": [
-            "plum:adult"
+            "blueberry:adult"
           ]
         }
       },
       "minecraft:on_tame": {
         "add": {
           "component_groups": [
-            "plum:tamed"
+            "blueberry:tamed"
           ]
         }
       },
       "minecraft:on_sit": {
         "add": {
           "component_groups": [
-            "plum:sit"
+            "blueberry:sit"
           ]
         }
       },
       "minecraft:on_stand": {
         "remove": {
           "component_groups": [
-            "plum:sit"
+            "blueberry:sit"
           ]
         }
       }

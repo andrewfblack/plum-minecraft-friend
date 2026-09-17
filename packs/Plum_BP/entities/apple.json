@@ -44,7 +44,10 @@
         }
       },
       "apple:sit": {
-        "minecraft:is_sitting": {}
+        "minecraft:is_sitting": {},
+        "minecraft:behavior.sit": {
+          "priority": 0
+        }
       }
     },
     "components": {

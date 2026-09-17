@@ -12,7 +12,7 @@
       "minecraft:geometry": "minecraft:geometry.cross",
       "minecraft:material_instances": {
         "*": {
-          "texture": "apple_sapling_leaf",
+          "texture": "apple_sprout",
           "render_method": "alpha_test"
         }
       },

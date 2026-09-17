@@ -1,6 +1,7 @@
 """Generate Survival fruit/tree assets for both cube friends alongside the companion packs."""
 
 SOIL = ['minecraft:grass_block', 'minecraft:dirt', 'minecraft:coarse_dirt', 'minecraft:podzol', 'minecraft:moss_block']
+FRUIT_LABELS = {'plum': 'Plum', 'apple': 'Apple', 'blueberry': 'Blueberry'}
 
 def _pool(item, chance=1):
     result = {'rolls': 1, 'entries': [{'type': 'item', 'name': item, 'weight': 1}]}
@@ -8,13 +9,46 @@ def _pool(item, chance=1):
         result['conditions'] = [{'condition': 'random_chance', 'chance': chance}]
     return result
 
+def _sprout_pixels(colors, fruit):
+    """A freshly planted fruit: the fruit sits in a soil mound, stem and leaf up, on farmland."""
+    clear = (0, 0, 0, 0)
+    dark, mid, light, leaf = colors
+    soil, soil_dark = (92, 65, 43, 255), (63, 44, 31, 255)
+    mound, mound_dark = (104, 76, 53, 255), (75, 54, 39, 255)
+    if fruit == 'apple':
+        stem, green, highlight = (110, 70, 40, 255), (86, 158, 44, 255), leaf
+    elif fruit == 'blueberry':
+        stem, green, highlight = (46, 96, 40, 255), (56, 118, 38, 255), (160, 200, 255, 255)
+    else:
+        stem, green, highlight = (100, 69, 37, 255), (99, 168, 65, 255), (212, 147, 239, 255)
+    sprout = [[clear for _ in range(16)] for _ in range(16)]
+    for y in range(13, 16):
+        for x in range(16):
+            sprout[y][x] = soil_dark if (x + y) % 2 else soil
+    for y in range(12, 14):
+        for x in range(2, 14):
+            sprout[y][x] = mound_dark if (x * 3 + y) % 3 else mound
+    for y in range(5, 13):
+        for x in range(2, 14):
+            d = ((x - 7.5) / 5.0) ** 2 + ((y - 9) / 3.8) ** 2
+            if d <= 1:
+                sprout[y][x] = dark if d > 0.72 else (light if x < 8 else mid)
+    for x, y in [(5, 6), (6, 6), (5, 7)]: sprout[y][x] = highlight
+    for x, y in [(8, 4), (8, 3), (9, 2)]: sprout[y][x] = stem
+    for x, y in [(10, 2), (11, 2), (10, 3), (12, 1)]: sprout[y][x] = green
+    if fruit == 'blueberry':
+        for x, y in [(9, 4)]: sprout[y][x] = green
+    return sprout
+
 def _fruit_textures(bp, rp, png, fruit):
     """Original pixel sprites: one fruit, one leaf/sapling tile and one bark per friend."""
     clear = (0, 0, 0, 0)
     if fruit == 'plum':
         colors = [(74, 30, 109, 255), (118, 46, 166, 255), (159, 74, 202, 255), (212, 147, 239, 255)]
-    else:
+    elif fruit == 'apple':
         colors = [(146, 22, 30, 255), (206, 36, 44, 255), (232, 96, 92, 255), (56, 118, 38, 255)]
+    else:
+        colors = [(22, 44, 148, 255), (37, 66, 205, 255), (84, 126, 240, 255), (160, 200, 255, 255)]
     fruit_pixels = [[clear for _ in range(16)] for _ in range(16)]
     for y in range(4, 15):
         for x in range(2, 14):
@@ -25,14 +59,24 @@ def _fruit_textures(bp, rp, png, fruit):
     if fruit == 'plum':
         for x, y in [(8, 4), (8, 3), (9, 2)]: fruit_pixels[y][x] = (100, 69, 37, 255)
         for x, y in [(10, 2), (11, 2), (10, 3), (12, 1)]: fruit_pixels[y][x] = (99, 168, 65, 255)
-    else:
+    elif fruit == 'apple':
         for x, y in [(8, 4), (8, 3), (9, 2)]: fruit_pixels[y][x] = (110, 70, 40, 255)
         for x, y in [(10, 2), (11, 2), (10, 3), (12, 1)]: fruit_pixels[y][x] = (86, 158, 44, 255)
+    else:
+        # Blueberry wears a tiny green calyx crown like a real berry.
+        for x, y in [(8, 3), (8, 4), (7, 4), (9, 4), (8, 2)]: fruit_pixels[y][x] = (46, 96, 40, 255)
+        fruit_pixels[8][3] = (84, 150, 54, 255)
     png(rp / f'textures/items/{fruit}.png', fruit_pixels)
 
     greens = [(50, 88, 40, 255), (69, 118, 49, 255), (88, 142, 60, 255), (110, 160, 75, 255)]
     sapling = [[greens[(x * 7 + y * 11 + (x // 3) * (y // 2)) % 4] if (x * 3 + y * 7) % 17 else clear for x in range(16)] for y in range(16)]
+    for cx, cy in ([(6, 6), (11, 9)] if fruit in ('plum', 'blueberry') else [(6, 7), (11, 5)]):
+        for dx, dy in [(0, 0), (1, 0), (-1, 1), (0, 1), (1, 1)]:
+            if 0 <= cx + dx < 16 and 0 <= cy + dy < 16 and sapling[cy + dy][cx + dx] != clear:
+                sapling[cy + dy][cx + dx] = colors[1]
+        sapling[cy][cx] = colors[3]
     png(rp / f'textures/blocks/{fruit}_sapling_leaf.png', sapling)
+    png(rp / f'textures/blocks/{fruit}_sprout.png', _sprout_pixels(colors, fruit))
     leaves = [r[:] for r in sapling]
     for cx, cy in [(3, 5), (11, 11), (12, 3)]:
         for dx, dy in [(0, 0), (1, 0), (-1, 1), (0, 1), (1, 1), (0, 2)]:
@@ -40,6 +84,10 @@ def _fruit_textures(bp, rp, png, fruit):
         leaves[cy][cx] = colors[3]
     if fruit == 'apple':
         for x, y in [(2, 10), (1, 11), (13, 6), (14, 8), (10, 2), (5, 13)]: leaves[y][x] = (206, 36, 44, 255)
+    elif fruit == 'blueberry':
+        for x, y in [(2, 9), (13, 11), (4, 3), (11, 13)]:
+            leaves[y][x] = colors[1]
+            leaves[y + 1][x] = colors[0]
     png(rp / f'textures/blocks/{fruit}_leaves.png', leaves)
     bark = [[(93 + ((x * 3 + y // 5) % 3) * 12, 66 + (x % 3) * 9, 44, 255) for x in range(16)] for y in range(16)]
     png(rp / f'textures/blocks/{fruit}_bark.png', bark)
@@ -68,7 +116,7 @@ def build_fruit(bp, rp, root, write, png, fruit, accumulate):
             'components': {
                 'minecraft:display_name': f'tile.{sprout}.name',
                 'minecraft:geometry': 'minecraft:geometry.cross',
-                'minecraft:material_instances': {'*': {'texture': f'{fruit}_sapling_leaf', 'render_method': 'alpha_test'}},
+                'minecraft:material_instances': {'*': {'texture': f'{fruit}_sprout', 'render_method': 'alpha_test'}},
                 'minecraft:collision_box': False,
                 'minecraft:selection_box': {'origin': [-4, 0, -4], 'size': [8, 8, 8]},
                 'minecraft:destructible_by_mining': {'seconds_to_destroy': 0},
@@ -162,18 +210,22 @@ def build_fruit(bp, rp, root, write, png, fruit, accumulate):
     accumulate['textures'][f'{fruit}_fruit'] = {'textures': f'textures/items/{fruit}'}
     accumulate['terrain'][f'{fruit}_leaves'] = {'textures': f'textures/blocks/{fruit}_leaves'}
     accumulate['terrain'][f'{fruit}_sapling_leaf'] = {'textures': f'textures/blocks/{fruit}_sapling_leaf'}
+    accumulate['terrain'][f'{fruit}_sprout'] = {'textures': f'textures/blocks/{fruit}_sprout'}
     accumulate['terrain'][f'{fruit}_bark'] = {'textures': f'textures/blocks/{fruit}_bark'}
     accumulate['sounds'][leaf] = {'sound': 'grass'}
     accumulate['sounds'][sapling_block] = {'sound': 'grass'}
     accumulate['sounds'][sprout] = {'sound': 'grass'}
-    accumulate['lines'].append(f'item.{item}.name={"Apple Fruit" if fruit == "apple" else "Plum Fruit"}\ntile.{leaf}.name={"Apple Leaves" if fruit == "apple" else "Plum Leaves"}\ntile.{sapling_block}.name={"Apple Sapling" if fruit == "apple" else "Plum Sapling"}\ntile.{sprout}.name={"Apple Sprout" if fruit == "apple" else "Plum Sprout"}\n')
+    accumulate['lines'].append(f'item.{item}.name={FRUIT_LABELS[fruit]} Fruit\ntile.{leaf}.name={FRUIT_LABELS[fruit]} Leaves\ntile.{sapling_block}.name={FRUIT_LABELS[fruit]} Sapling\ntile.{sprout}.name={FRUIT_LABELS[fruit]} Sprout\n')
 
 def build_orchard(bp, rp, root, write, png):
     accumulate = {'textures': {}, 'terrain': {}, 'sounds': {}, 'lines': []}
-    for fruit in ('plum', 'apple'):
+    for fruit in ('plum', 'apple', 'blueberry'):
         pixels = _fruit_textures(bp, rp, png, fruit)
         build_fruit(bp, rp, root, write, png, fruit, accumulate)
         png(root / f'art/{fruit}-fruit.png', [[pixels[y // 16][x // 16] for x in range(256)] for y in range(256)])
+        sprout_colors = [(74, 30, 109, 255), (118, 46, 166, 255), (159, 74, 202, 255), (212, 147, 239, 255)] if fruit == 'plum' else ([(146, 22, 30, 255), (206, 36, 44, 255), (232, 96, 92, 255), (56, 118, 38, 255)] if fruit == 'apple' else [(22, 44, 148, 255), (37, 66, 205, 255), (84, 126, 240, 255), (160, 200, 255, 255)])
+        sprout = _sprout_pixels(sprout_colors, fruit)
+        png(root / f'art/{fruit}-sprout.png', [[sprout[y // 16][x // 16] for x in range(256)] for y in range(256)])
     write(rp / 'textures/item_texture.json', {'resource_pack_name': 'plum_friend', 'texture_name': 'atlas.items', 'texture_data': accumulate['textures']})
     write(rp / 'textures/terrain_texture.json', {'resource_pack_name': 'plum_friend', 'texture_name': 'atlas.terrain', 'padding': 8, 'num_mip_levels': 4, 'texture_data': accumulate['terrain']})
     write(rp / 'blocks.json', {'format_version': [1, 1, 0], **accumulate['sounds']})

@@ -21,5 +21,14 @@
   },
   "apple:apple_sprout": {
     "sound": "grass"
+  },
+  "blueberry:blueberry_leaves": {
+    "sound": "grass"
+  },
+  "blueberry:blueberry_sapling": {
+    "sound": "grass"
+  },
+  "blueberry:blueberry_sprout": {
+    "sound": "grass"
   }
 }

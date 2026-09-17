@@ -41,19 +41,32 @@ FRIENDS = {
         'egg': ('#C62828', '#6AB04A'),
         'palette': ((215, 42, 50, 255), (150, 24, 32, 255), (255, 108, 108, 255), (96, 18, 26, 255), (255, 252, 250, 255), (255, 150, 160, 255)),
     },
+    'blueberry': {
+        'file': 'blueberry',
+        'title': 'Blueberry', 'entity': 'blueberry:friend', 'fruit': 'blueberry:blueberry', 'family': 'blueberry_friend',
+        'egg': ('#1F4FD8', '#A7E0F2'),
+        'palette': ((37, 66, 205, 255), (23, 45, 148, 255), (84, 126, 240, 255), (14, 27, 88, 255), (251, 252, 255, 255), (232, 150, 200, 255)),
+    },
 }
 
 def friend_geometry(name):
     uv = {face: {'uv': [0 if face == 'north' else 16, 0], 'uv_size': [16, 16]} for face in ['north', 'south', 'east', 'west', 'up', 'down']}
-    if name == 'apple':
+    if name in ('apple', 'blueberry'):
+        # Apple and Blueberry wear a topper: a dedicated top sheet and a plain bottom sheet.
         uv['up'] = {'uv': [0, 16], 'uv_size': [16, 16]}
         uv['down'] = {'uv': [16, 16], 'uv_size': [16, 16]}
     return {'format_version': '1.12.0', 'minecraft:geometry': [{'description': {'identifier': f'geometry.{name}', 'texture_width': 32, 'texture_height': 16 if name == 'plum' else 32, 'visible_bounds_width': 2, 'visible_bounds_height': 2, 'visible_bounds_offset': [0, 0.5, 0]}, 'bones': [{'name': 'body', 'pivot': [0, 6, 0], 'cubes': [{'origin': [-6, 0, -6], 'size': [12, 12, 12], 'uv': uv}]}]}]}
 
 def friend_texture(name):
-    """Purple Plum keeps the classic 32x16 sheet; red Apple adds a leaf-bearing top sheet."""
-    purple, edge, light, dark, white, pink = FRIENDS[name]['palette']
-    tile = [[edge if x in (0, 15) or y in (0, 15) else light if y == 1 else purple for x in range(16)] for y in range(16)]
+    """Purple Plum keeps the classic 32x16 sheet; Apple and Blueberry add a 32x32 two-sheet top."""
+    main, edge, light, dark, white, pink = FRIENDS[name]['palette']
+    tile = [[edge if x in (0, 15) or y in (0, 15) else light if y == 1 else main for x in range(16)] for y in range(16)]
+    if name == 'blueberry':
+        # A frosted berry bloom: pale-blue speckle rows beneath the top highlight.
+        bloom = (120, 156, 247, 255)
+        for y in (2, 3):
+            for x in range(1, 15):
+                tile[y][x] = bloom if (x + y) % 3 else main
     face = [r[:] for r in tile]
     for x in (4, 10):
         for y in range(4, 8):
@@ -63,15 +76,24 @@ def friend_texture(name):
     for x in (2, 3, 12, 13): face[9][x] = pink
     if name == 'plum':
         return [face[y] + tile[y] for y in range(16)]
-    # Apple: leaf sprouting from the top face (up = region [0,16]); bottom stays plain red.
+    # Apple and Blueberry: a topper on the top face (up = region [0,16]); bottom stays plain.
     top = [r[:] for r in tile]
-    for x, y in [(8, 2), (8, 3), (9, 2)]: top[y][x] = (108, 70, 40, 255)
-    for y in range(4, 9):
-        for x in range(5, 11):
-            top[y][x] = (86, 158, 44, 255)
-    for y in range(4, 8): top[y][7] = top[y][8] = (150, 208, 76, 255)
-    top[4][7] = top[4][8] = (56, 118, 38, 255)
     bottom = [r[:] for r in tile]
+    if name == 'apple':
+        for x, y in [(8, 2), (8, 3), (9, 2)]: top[y][x] = (108, 70, 40, 255)
+        for y in range(4, 9):
+            for x in range(5, 11):
+                top[y][x] = (86, 158, 44, 255)
+        for y in range(4, 8): top[y][7] = top[y][8] = (150, 208, 76, 255)
+        top[4][7] = top[4][8] = (56, 118, 38, 255)
+    else:
+        # Blueberry: a tiny green calyx crown like a real berry, ringed by pale frost.
+        calyx_dark, calyx_mid, calyx_light = (46, 96, 40, 255), (84, 150, 54, 255), (130, 186, 64, 255)
+        bloom = (120, 156, 247, 255)
+        for x, y in [(8, 2), (8, 3), (8, 4), (7, 3), (9, 3), (7, 4), (9, 4)]: top[y][x] = calyx_mid
+        top[8][3] = calyx_light
+        for x, y in [(6, 4), (10, 4), (8, 5)]: top[y][x] = calyx_dark
+        for x, y in [(3, 7), (12, 9), (4, 12), (11, 6), (2, 10), (13, 12)]: top[y][x] = bloom
     return [face[y] + tile[y] for y in range(16)] + [top[y] + bottom[y] for y in range(16)]
 
 def build_friend(name, data):
@@ -91,6 +113,7 @@ def build_friend(name, data):
         },
         f'{name}:sit': {
             'minecraft:is_sitting': {},
+            'minecraft:behavior.sit': {'priority': 0},
         }
     }
     components = {
@@ -192,14 +215,14 @@ def build_basket(bp, rp, write, png):
         stream.write('item.friend:fruit_basket.name=Fruit Basket\n')
 
 def build(net_version='1.0.0-beta', admin_version='1.0.0-beta'):
-    version = [1, 2, 10]
+    version = [1, 2, 11]
     for path, name, uid, modules in [
         (BP, 'Fruity Friends', BP_ID, [
             {'type': 'data', 'uuid': 'fce620e4-42ac-4477-a84b-c8113d47ba2e', 'version': version},
             {'type': 'script', 'language': 'javascript', 'entry': 'scripts/main.js', 'uuid': 'a91c511c-d9d5-48e5-82c9-25cc48706cbb', 'version': version}]),
         (RP, 'Fruity Friends Resources', RP_ID, [
             {'type': 'resources', 'uuid': '6b250c6d-d093-4cb1-b16b-a42cd137d4bb', 'version': version}])]:
-        manifest = {'format_version': 2, 'header': {'name': name, 'description': 'Smiling cube companions with babies, healing, and offline typed Minecraft help. Apple runs the Applezon shop.', 'uuid': uid, 'version': version, 'min_engine_version': [1, 21, 90]}, 'modules': modules}
+        manifest = {'format_version': 2, 'header': {'name': name, 'description': 'Smiling cube companions with babies, healing, shopping, and a portable chest. Apple runs the Applezon shop; Blueberry collects drops.', 'uuid': uid, 'version': version, 'min_engine_version': [1, 21, 90]}, 'modules': modules}
         if path == BP:
             manifest['dependencies'] = [{'uuid': RP_ID, 'version': version}, {'module_name': '@minecraft/server', 'version': '2.0.0'}, {'module_name': '@minecraft/server-ui', 'version': '2.0.0'}]
         write(path / 'manifest.json', manifest)
@@ -235,26 +258,31 @@ This zip contains the server packs and a Python service; it is not a mobile impo
 
 ## Play
 
-1. To start in Survival, use a plum or apple fruit on tilled farmland: a sprout appears and
-   grows into a baby friend on its own (or interact with it to sprout it immediately).
-   In Creative, spawn friends with the Plum or Apple Spawn Egg instead.
-2. Give each friend its own fruit to tame them: a plum tames Plum, an apple tames Apple.
-   They follow their owner. Interact with an empty hand to make a tamed friend sit and stay put, like a dog; do it again to make them follow.
-3. Hold a book and interact (Talk to Plum / Talk to Apple on touch, right-click on PC).
+1. To start in Survival, use a plum, apple or blueberry fruit on tilled farmland: a sprout appears
+   and grows into a baby friend on its own (or interact with it to sprout it immediately).
+   In Creative, spawn friends with the matching Spawn Egg instead.
+2. Give each friend its own fruit to tame them: a plum tames Plum, an apple tames Apple, and a
+   blueberry tames Blueberry.
+   They follow their owner. Interact with an empty hand to make a tamed Plum or Apple sit and stay put,
+   like a dog; do it again to make them follow. Blueberry's empty-hand interact opens his portable chest.
+3. Hold a book and interact (Talk to Plum / Talk to Apple / Talk to Blueberry on touch, right-click on PC).
 4. Choose Ask a question and type your message. Replies are private.
 5. Plant a fruit on tilled farmland to grow a baby friend; it sprouts and grows in 20 loaded minutes.
 6. Tame the baby with its fruit. Fruit also speeds growth. Stay within 8 blocks of your tamed Plum for regeneration. Apple does not heal you;
    instead she owns Applezon and delivers a surprise or a search result for one apple fruit.
-7. Craft a Fruit Basket from three sticks in the bucket shape, then hold it and interact with a tamed
-   friend to tuck them inside. Carry them in your inventory and interact with a block to let them out again.
+7. Blueberry is the Collector: dropped items within four blocks go straight into his chest. Interact with
+   him with an empty hand to open it, store what you are holding, or take something out. He will tell you
+   when his chest is full.
+8. Craft a Fruit Basket from three sticks in the bucket shape, then hold it and interact with a tamed
+   friend to tuck them inside (Blueberry keeps his chest contents). Carry them in your inventory and interact with a block to let them out again.
 
-Find plum and apple trees in newly generated plains and forests. Break their fruit-speckled
+Find plum, apple and blueberry trees in newly generated plains and forests. Break their fruit-speckled
 leaves in Survival for the matching fruit and sapling. Plant a sapling on soil with a clear
 5-wide, 6-high space; wait for growth or use bone meal. Leaves do not decay automatically.
 The fruit works as a seed and snack: plant it on farmland to grow a baby friend.
 
 Updating from 1.1.0: replace both pack folders and the bridge script, update each Fruity Friends
-world-pack-list entry to [1,2,10], and restart. Keep existing credentials and UUIDs.
+world-pack-list entry to [1,2,11], and restart. Keep existing credentials and UUIDs.
 
 Friends resist ordinary damage and do not naturally despawn. Administrative removal,
 /kill, and engine edge cases are outside this protection. Unloaded companions cannot

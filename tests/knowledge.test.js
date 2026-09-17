@@ -23,6 +23,17 @@ test('apple answers about Applezon and friend care, not healing', () => {
   assert.match(offlineAnswer('How do I make a bed?', 'apple'), /three matching wool/);
 });
 
+test('blueberry answers about collecting and his portable chest, not healing', () => {
+  assert.match(offlineAnswer('how do I open your chest?', 'blueberry'), /empty hand/);
+  assert.match(offlineAnswer('my chest is full?', 'blueberry'), /full/);
+  assert.match(offlineAnswer('can you pick up my drops?', 'blueberry'), /Dropped items within four blocks/);
+  assert.match(offlineAnswer('how do I care for Blueberry?', 'blueberry'), /Tame me with a blueberry/);
+  assert.match(offlineAnswer('does Blueberry heal me?', 'blueberry'), /do NOT grant healing/);
+  assert.match(offlineAnswer('where can I find blueberries?', 'blueberry'), /trees/);
+  assert.match(offlineAnswer('How do I make Blueberry sit?', 'blueberry'), /Sit or stand/);
+  assert.match(offlineAnswer('How do I make a bed?', 'blueberry'), /three matching wool/);
+});
+
 test('input bounds and formatting cannot inject chat colors or control characters', () => {
   assert.equal(cleanText('§cHello\nfriend'), 'Hello friend');
   assert.equal(cleanText('a'.repeat(1000)).length, 400);

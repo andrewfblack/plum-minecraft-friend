@@ -2,6 +2,7 @@ import { world, system, EquipmentSlot, ItemStack, Player } from '@minecraft/serv
 import { ActionFormData, ModalFormData } from '@minecraft/server-ui';
 import { answerQuestion, chatLabelFor } from './provider.js';
 import { cleanText } from './knowledge.js';
+import { CHEST_SLOTS, parseChest, serializeChest, chestIsFull, chestStore, chestTake } from './chest.js';
 import './orchard.js';
 
 const openForms = new Set();
@@ -27,11 +28,20 @@ const FRIENDS = {
     tamedMsg: 'Give me an apple fruit to tame me first. Only my owner can open my conversation or Applezon.',
     plantMsg: 'A tiny fruiting sprout pokes through the soil! It will grow into a baby Apple — one apple tames it.',
   },
+  'blueberry:friend': {
+    name: 'Blueberry', color: '§9', fruit: 'blueberry:blueberry', collector: true,
+    title: (baby) => baby ? 'Little Blueberry' : 'Blueberry',
+    body: (baby, label) => `Hi, hauling buddy!\n${label}\n\nI am a Collector: dropped items near me go straight into my chest. Interact with me with an empty hand to open it.`,
+    askTitle: 'Ask Blueberry', replyTitle: 'Blueberry says...',
+    care: 'Tame me by giving me a blueberry. Plant a blueberry on tilled farmland to grow a baby. Babies grow in 20 loaded minutes and can be tamed too. I scoop up dropped items within four blocks and keep them in my chest. Interact with me with an empty hand to open my chest: store the item you are holding, take something out, or just look. I will tell you when my chest is full. Craft a Fruit Basket from three sticks in the bucket shape and interact with me while holding it to carry me along - my chest comes too. Talk to me in chat while I am near you, or hold a book and interact!',
+    tamedMsg: 'Give me a blueberry fruit to tame me first. Only my owner can open my chest or conversation.',
+    plantMsg: 'A tiny fruiting sprout pokes through the soil! It will grow into a baby Blueberry — one blueberry tames it.',
+  },
 };
 
 const TYPES = new Set(Object.keys(FRIENDS));
-const FRUIT_FRIEND = { 'plum:plum': 'plum:friend', 'apple:apple': 'apple:friend' };
-const FRIEND_NAMES = { plum: 'plum:friend', apple: 'apple:friend' };
+const FRUIT_FRIEND = { 'plum:plum': 'plum:friend', 'apple:apple': 'apple:friend', 'blueberry:blueberry': 'blueberry:friend' };
+const FRIEND_NAMES = { plum: 'plum:friend', apple: 'apple:friend', blueberry: 'blueberry:friend' };
 
 const BASKET = 'friend:fruit_basket';
 const BASKET_STORE = 'basket:friend';
@@ -42,6 +52,218 @@ function basketContents(stack) {
   if (!raw) return null;
   try { return JSON.parse(/** @type {string} */ (raw)); } catch { return null; }
 }
+
+// Blueberry is a Collector: his own portable chest rides on the entity as a
+// serialized dynamic property (kept through the Fruit Basket snapshot too).
+// The slot math lives in chest.js so it can be tested without a live world.
+const CHEST_KEY = 'blueberry:chest';
+const chestMax = (id) => new ItemStack(id, 1).maxAmount;
+
+function readChest(friend) {
+  return parseChest(friend.getDynamicProperty(CHEST_KEY));
+}
+
+function writeChest(friend, slots) {
+  friend.setDynamicProperty(CHEST_KEY, serializeChest(slots));
+}
+
+// Spawn a raw count safely, splitting it across stacks that respect the cap.
+function spawnStacks(dimension, typeId, count, where) {
+  const cap = Math.max(1, chestMax(typeId));
+  for (let left = count; left > 0; left -= cap) {
+    try { dimension.spawnItem(new ItemStack(typeId, Math.min(left, cap)), where); } catch { return; }
+  }
+}
+
+const chestNotices = new Map();
+
+function notifyOwner(ownerId, text) {
+  const now = system.currentTick;
+  if (now < (chestNotices.get(ownerId) ?? 0)) return;
+  chestNotices.set(ownerId, now + 60);
+  const owner = world.getAllPlayers().find((player) => player.id === ownerId);
+  if (!owner?.isValid) return;
+  owner.onScreenDisplay.setActionBar(`§9Blueberry§r: ${text}`);
+}
+
+async function openChest(player, friend) {
+  if (openForms.has(player.id)) return;
+  const cfg = FRIENDS[friend.typeId];
+  if (!cfg?.collector || !player.isValid || !friend.isValid) return;
+  const tamed = friend.getComponent('minecraft:tameable');
+  if (!tamed?.tamedToPlayerId || tamed.tamedToPlayerId !== player.id) {
+    friendSay(player, cfg, 'Give me a blueberry fruit to tame me first; only my owner can open my chest.');
+    return;
+  }
+  if (!nearOwner(player, friend)) {
+    friendSay(player, cfg, cfg.tamedMsg);
+    return;
+  }
+  openForms.add(player.id);
+  try {
+    while (nearOwner(player, friend)) {
+      const slots = readChest(friend);
+      const used = slots.filter(Boolean).length;
+      const boxed = new ActionFormData().title('Blueberry\u2019s chest')
+        .body(`I scoop up dropped items for you!\n\n${used} of ${CHEST_SLOTS} slots used. Store the stack in your hand, take one out, or just peek inside.`)
+        .button('Store item from hand')
+        .button('Take an item')
+        .button('View contents')
+        .button('Sit or stand')
+        .button('Back');
+      const menu = await boxed.show(player);
+      if (menu.canceled || menu.selection === 4 || !nearOwner(player, friend)) return;
+      if (menu.selection === 0) await storeHeldItem(player, friend);
+      else if (menu.selection === 1) await takeChestItem(player, friend);
+      else if (menu.selection === 2) await viewChest(player, friend);
+      else {
+        toggleSit(player, friend);
+        return;
+      }
+    }
+  } catch (error) {
+    console.warn(`[Blueberry] Chest unavailable: ${error}`);
+  } finally {
+    openForms.delete(player.id);
+  }
+}
+
+async function storeHeldItem(player, friend) {
+  if (!player.isValid || !friend.isValid) return;
+  const cfg = FRIENDS[friend.typeId];
+  const inv = player.getComponent('minecraft:inventory')?.container;
+  if (!inv) return;
+  const slotIndex = player.selectedSlotIndex;
+  const held = inv.getItem(slotIndex);
+  if (!held) {
+    friendSay(player, cfg, 'Hold an item in your hand and interact with me to store it, or tick Take an item.');
+    return;
+  }
+  const typeId = held.typeId;
+  const amount = held.amount;
+  const result = chestStore(readChest(friend), typeId, amount, chestMax);
+  if (result.stored <= 0) {
+    friendSay(player, cfg, chestIsFull(result.slots)
+      ? 'My chest is full - take something out to make room.'
+      : `I could not fit ${typeId.replace(/^minecraft:/, '')}.`);
+    return;
+  }
+  // Hand back whatever did not fit, then commit the chest. Roll the hand back
+  // if the chest cannot be saved so nothing is duplicated or lost.
+  const leftover = result.leftover > 0 ? new ItemStack(typeId, result.leftover) : undefined;
+  try {
+    inv.setItem(slotIndex, leftover);
+  } catch {
+    friendSay(player, cfg, 'I could not take that from your hand - try again.');
+    return;
+  }
+  try {
+    writeChest(friend, result.slots);
+  } catch {
+    try { inv.setItem(slotIndex, new ItemStack(typeId, amount)); } catch { /* Hand refreshes next tick. */ }
+    friendSay(player, cfg, 'My chest would not open - nothing was stored.');
+    return;
+  }
+  if (result.leftover > 0) {
+    if (chestIsFull(result.slots)) friendSay(player, cfg, `Stored ${result.stored}, but my chest is now full.`);
+    else friendSay(player, cfg, `Stored ${result.stored}; the rest did not fit. My chest is nearly full!`);
+  } else {
+    friendSay(player, cfg, `Stored ${result.stored} in my chest.`);
+  }
+}
+
+async function takeChestItem(player, friend) {
+  if (!player.isValid || !friend.isValid) return;
+  const cfg = FRIENDS[friend.typeId];
+  const items = readChest(friend).map((slot, i) => ({ slot, i })).filter((entry) => entry.slot);
+  if (!items.length) {
+    friendSay(player, cfg, 'My chest is empty - nothing to take.');
+    return;
+  }
+  const list = new ActionFormData().title('Blueberry\u2019s chest')
+    .body('Pick a stack to take out.');
+  for (const { slot } of items) list.button(`${slot.count} \u00d7 ${slot.id.replace(/^minecraft:/, '')}`);
+  list.button('Back');
+  const pick = await list.show(player);
+  if (pick.canceled || pick.selection === items.length || !nearOwner(player, friend)) return;
+  const { i } = items[pick.selection];
+  const before = readChest(friend);
+  const result = chestTake(before, i);
+  if (!result.taken) return;
+  const stack = new ItemStack(result.taken.id, result.taken.count);
+  try {
+    writeChest(friend, result.slots);
+  } catch {
+    friendSay(player, cfg, 'My chest would not open - nothing was taken.');
+    return;
+  }
+  const inv = player.getComponent('minecraft:inventory')?.container;
+  let leftover;
+  try {
+    leftover = inv ? inv.addItem(stack) : stack;
+  } catch {
+    leftover = stack;
+  }
+  if (leftover && leftover.amount === result.taken.count) {
+    // No room: put the stack straight back so it is never dropped or lost.
+    try { writeChest(friend, before); } catch { player.dimension.spawnItem(stack, player.location); }
+    friendSay(player, cfg, 'Your inventory is full - clear room first.');
+    return;
+  }
+  if (leftover && leftover.amount > 0) player.dimension.spawnItem(leftover, player.location);
+  friendSay(player, cfg, `Here you go - took ${result.taken.count} ${result.taken.id.replace(/^minecraft:/, '')} from my chest.`);
+}
+
+async function viewChest(player, friend) {
+  if (!player.isValid || !friend.isValid) return;
+  const slots = readChest(friend);
+  const used = slots.filter(Boolean).length;
+  const lines = slots.map((slot, i) => slot ? `${i + 1}. ${slot.count} \u00d7 ${slot.id.replace(/^minecraft:/, '')}` : null).filter(Boolean);
+  const view = new ActionFormData().title('Blueberry\u2019s chest')
+    .body(lines.length ? `${used} of ${CHEST_SLOTS} slots used:\n${lines.join('\n')}` : 'Empty! I will scoop up dropped items as we adventure.')
+    .button('Back');
+  await view.show(player);
+}
+
+// Collector: a tamed Blueberry vacuums nearby dropped items into his chest.
+system.runInterval(() => {
+  for (const name of ['overworld', 'nether', 'the_end']) {
+    const dimension = world.getDimension(name);
+    for (const friend of dimension.getEntities({ type: 'blueberry:friend' })) {
+      try {
+        if (!friend.isValid) continue;
+        const tamed = friend.getComponent('minecraft:tameable');
+        if (!tamed?.tamedToPlayerId) continue;
+        const drops = dimension.getEntities({ type: 'minecraft:item', location: friend.location, maxDistance: 4 });
+        for (const drop of drops) {
+          if (!drop.isValid) continue;
+          const stack = drop.getComponent('minecraft:item')?.itemStack;
+          if (!stack) continue;
+          const typeId = stack.typeId;
+          const amount = stack.amount;
+          const where = drop.location;
+          // Remove the drop before storing so a failed save can never duplicate it.
+          try { drop.remove(); } catch { continue; }
+          let result;
+          try {
+            result = chestStore(readChest(friend), typeId, amount, chestMax);
+            writeChest(friend, result.slots);
+          } catch (error) {
+            console.warn(`[Blueberry] Collector skipped: ${error}`);
+            spawnStacks(dimension, typeId, amount, where);
+            continue;
+          }
+          spawnStacks(dimension, typeId, result.leftover, where);
+          if (result.stored <= 0) {
+            if (chestIsFull(result.slots)) notifyOwner(tamed.tamedToPlayerId, 'My chest is full! Interact with me to empty it.');
+          } else if (result.leftover > 0) {
+            notifyOwner(tamed.tamedToPlayerId, `Picked up ${result.stored}, but my chest is nearly full!`);
+          }
+        }
+      } catch (error) { console.warn(`[Blueberry] Collector skipped: ${error}`); }
+    }
+  }
+}, 10);
 
 const CATALOG = [
   { item: 'minecraft:diamond_pickaxe', label: 'Diamond Pickaxe', tags: ['pickaxe', 'tool', 'diamond', 'mine', 'ore'] },
@@ -183,6 +405,7 @@ function captureInBasket(player, friend) {
     baby: friend.hasComponent('minecraft:is_baby'),
     sitting: friend.hasComponent('minecraft:is_sitting'),
     owner: player.id,
+    chest: cfg.collector ? readChest(friend) : undefined,
   });
   const filled = new ItemStack(BASKET, 1);
   filled.setDynamicProperty(BASKET_STORE, snapshot);
@@ -231,6 +454,7 @@ function releaseFromBasket(player, block, blockFace) {
   try {
     if (contents.name) friend.nameTag = contents.name;
     friend.triggerEvent(contents.baby ? 'minecraft:entity_born' : 'minecraft:entity_spawned');
+    if (contents.chest) writeChest(friend, parseChest(JSON.stringify(contents.chest)));
     try { friend.getComponent('minecraft:tameable')?.tame(player); } catch { /* Already owned by the snapshot's owner. */ }
     if (contents.sitting) friend.triggerEvent('minecraft:on_sit');
   } catch { /* A just-spawned friend can briefly reject state changes; it still lands fine. */ }
@@ -365,20 +589,22 @@ async function talk(player, friend) {
   try {
     const baby = friend.hasComponent('minecraft:is_baby');
     const action = new ActionFormData().title(cfg.title(baby)).body(cfg.body(baby, chatLabelFor(cfg.name.toLowerCase())));
+    const jobButton = cfg.shop ? 'Shop at Applezon' : cfg.collector ? 'Open my chest' : undefined;
     action.button('Ask a question');
-    if (cfg.shop) action.button('Shop at Applezon');
+    if (jobButton) action.button(jobButton);
     action.button('How do I care for you?');
     action.button('Goodbye');
     const menu = await action.show(player);
-    const goodbye = cfg.shop ? 3 : 2;
+    const goodbye = jobButton ? 3 : 2;
     if (menu.canceled || menu.selection === goodbye || !nearOwner(player, friend)) return;
-    if (cfg.shop && menu.selection === 1) {
-      // Release the talk lock before entering the shop so shop() can re-acquire it.
+    if (jobButton && menu.selection === 1) {
+      // Release the talk lock before entering the job's own loop so it can re-acquire the lock.
       openForms.delete(player.id);
-      await shop(player, friend);
+      if (cfg.shop) await shop(player, friend);
+      else await openChest(player, friend);
       return;
     }
-    if (menu.selection === (cfg.shop ? 2 : 1)) {
+    if (menu.selection === (jobButton ? 2 : 1)) {
       friendSay(player, cfg, cfg.care);
       return;
     }
@@ -422,9 +648,10 @@ world.afterEvents.playerInteractWithEntity.subscribe(({ player, target, beforeIt
     system.run(() => { void captureInBasket(player, target); });
     return;
   }
-  // Empty hand: sit/stay like a tamed dog (toggle on/off).
+  // Empty hand: Blueberry opens his portable chest; everyone else sits/stays like a tamed dog.
   if (!beforeItemStack || beforeItemStack.typeId === 'minecraft:air') {
-    system.run(() => { void toggleSit(player, target); });
+    if (FRIENDS[target.typeId]?.collector) system.run(() => { void openChest(player, target); });
+    else system.run(() => { void toggleSit(player, target); });
     return;
   }
   // Leave food, taming, name tags and leads to the engine. A book also gives touch players a Talk button.
@@ -444,7 +671,7 @@ world.afterEvents.playerLeave.subscribe(({ playerId }) => {
 });
 
 world.afterEvents.playerSpawn.subscribe(({ player, initialSpawn }) => {
-  if (initialSpawn) system.runTimeout(() => friendSay(player, FRIENDS['plum:friend'], 'Fruity Friends v1.2.10 is loaded. Use a plum or apple fruit on tilled farmland to plant a sprout; it grows into a baby friend, and one more fruit tames it. Interact with an empty hand to make me sit or follow. Craft a Fruit Basket from three sticks and interact with me while holding it to carry me around. Interact with me or type my name in chat (for example: "Plum, what is redstone?" or "hey Apple, what do you sell?") to talk. Apple runs the Applezon shop!'), 60);
+  if (initialSpawn) system.runTimeout(() => friendSay(player, FRIENDS['plum:friend'], 'Fruity Friends v1.2.11 is loaded. Use a plum, apple or blueberry fruit on tilled farmland to plant a sprout; it grows into a baby friend, and one more fruit tames it. Interact with a Plum or Apple with an empty hand to make them sit or follow. Blueberry is the Collector: interact with him with an empty hand to open his chest, and dropped items near him go straight inside. Craft a Fruit Basket from three sticks and interact with me while holding it to carry me around. Interact with me or type my name in chat (for example: "Plum, what is redstone?", "hey Apple, what do you sell?", or "Blueberry, my chest is full?") to talk. Apple runs the Applezon shop!'), 60);
 });
 
 // Talk to a nearby tamed friend straight from chat: "Plum ...", "hey Apple, ...", "@plum hi", etc.

@@ -4,6 +4,7 @@ const REPLACEABLE = new Set(['minecraft:air', 'minecraft:short_grass', 'minecraf
 const PLANS = {
   'plum:plum_sapling': ['minecraft:oak_log', 'plum:plum_leaves'],
   'apple:apple_sapling': ['minecraft:oak_log', 'apple:apple_leaves'],
+  'blueberry:blueberry_sapling': ['minecraft:oak_log', 'blueberry:blueberry_leaves'],
 };
 
 // A compact five-block-wide crown, four-block trunk and a six-block total height.

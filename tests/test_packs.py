@@ -25,7 +25,7 @@ class PackTests(unittest.TestCase):
                     self.assertTrue(any(d.get('module_name') == '@minecraft/server-net' for d in manifest['dependencies']))
 
     def test_lifecycle_references_and_baby_growth(self):
-        for file in ['friend.json', 'apple.json']:
+        for file in ['friend.json', 'apple.json', 'blueberry.json']:
             entity = json.loads((ROOT / 'packs/Plum_BP/entities' / file).read_text())['minecraft:entity']
             groups = entity['component_groups']
             for event in entity['events'].values():
@@ -66,9 +66,35 @@ class PackTests(unittest.TestCase):
         self.assertIn('playerInteractWithEntity', (ROOT / 'packs/Plum_BP/scripts/main.js').read_text())
         self.assertTrue((ROOT / 'packs/Plum_RP/textures/entity/apple.png').exists())
 
+    def test_blueberry_collector_and_chest(self):
+        bp, rp = ROOT / 'packs/Plum_BP', ROOT / 'packs/Plum_RP'
+        entity = json.loads((bp / 'entities/blueberry.json').read_text())['minecraft:entity']
+        groups = entity['component_groups']
+        self.assertEqual(entity['components']['minecraft:tameable']['tame_items'], ['blueberry:blueberry'])
+        self.assertEqual(groups['blueberry:baby']['minecraft:ageable']['feed_items'], ['blueberry:blueberry'])
+        self.assertEqual(entity['components']['minecraft:type_family']['family'][0], 'blueberry_friend')
+        self.assertNotIn('minecraft:breedable', groups['blueberry:adult'])
+        script = (bp / 'scripts/main.js').read_text()
+        for needle in [
+            "import { CHEST_SLOTS, parseChest, serializeChest, chestIsFull, chestStore, chestTake } from './chest.js'",
+            "const CHEST_KEY = 'blueberry:chest'",
+            'function openChest(player, friend)',
+            'storeHeldItem(player, friend)', 'takeChestItem(player, friend)',
+            "type: 'minecraft:item'", "getComponent('minecraft:item')",
+            "FRIENDS[target.typeId]?.collector", 'readChest(friend)',
+            "chest: cfg.collector ? readChest(friend) : undefined",
+        ]:
+            self.assertIn(needle, script, f'blueberry collector/chest feature missing: {needle}')
+        chest_module = (bp / 'scripts/chest.js').read_text()
+        for needle in ['export const CHEST_SLOTS = 27', 'export function parseChest',
+                       'export function chestStore', 'export function chestTake']:
+            self.assertIn(needle, chest_module, f'chest module missing: {needle}')
+        self.assertTrue((rp / 'textures/entity/blueberry.png').exists())
+        self.assertTrue((rp / 'models/entity/blueberry.geo.json').exists())
+
     def test_model_and_texture_references(self):
         rp = ROOT / 'packs/Plum_RP'
-        client_files = {'plum': 'entity/friend.entity.json', 'apple': 'entity/apple.entity.json'}
+        client_files = {'plum': 'entity/friend.entity.json', 'apple': 'entity/apple.entity.json', 'blueberry': 'entity/blueberry.entity.json'}
         for name, client_file in client_files.items():
             client = json.loads((rp / client_file).read_text())['minecraft:client_entity']['description']
             self.assertEqual(client['identifier'], f'{name}:friend')
@@ -87,7 +113,7 @@ class PackTests(unittest.TestCase):
     def test_survival_fruit_chain_and_versioned_update(self):
         bp, rp = ROOT / 'packs/Plum_BP', ROOT / 'packs/Plum_RP'
         def read(path): return json.loads(path.read_text())
-        for fruit, entity_file in [('plum', 'friend.json'), ('apple', 'apple.json')]:
+        for fruit, entity_file in [('plum', 'friend.json'), ('apple', 'apple.json'), ('blueberry', 'blueberry.json')]:
             fruit_item = read(bp / 'items' / f'{fruit}.json')['minecraft:item']['description']['identifier']
             self.assertEqual(fruit_item, f'{fruit}:{fruit}')
             icon = read(bp / 'items' / f'{fruit}.json')['minecraft:item']['components']['minecraft:icon']
@@ -126,9 +152,9 @@ class PackTests(unittest.TestCase):
             for atlas in ['item_texture.json', 'terrain_texture.json']:
                 for entry in read(rp / 'textures' / atlas)['texture_data'].values():
                     self.assertTrue((rp / (entry['textures'] + '.png')).exists())
-        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 10])
+        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 11])
         with zipfile.ZipFile(ROOT / 'dist/Fruity-Friends-Dedicated-Server.zip') as z:
-            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 10])
+            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 11])
 
     def test_fruit_basket_item_recipe_and_script(self):
         bp, rp = ROOT / 'packs/Plum_BP', ROOT / 'packs/Plum_RP'
@@ -162,7 +188,7 @@ class PackTests(unittest.TestCase):
                 bp_prefix = 'Plum_BP/' if arm.endswith('.mcaddon') else 'behavior_packs/Plum_BP/'
                 rp_prefix = 'Plum_RP/' if arm.endswith('.mcaddon') else 'resource_packs/Plum_RP/'
                 for name in ['items/fruit_basket.json', 'recipes/fruit_basket.json',
-                             'scripts/main.js']:
+                             'scripts/main.js', 'scripts/chest.js']:
                     self.assertIn(bp_prefix + name, z.namelist())
                 for name in ['textures/items/basket.png', 'textures/item_texture.json']:
                     self.assertIn(rp_prefix + name, z.namelist())
