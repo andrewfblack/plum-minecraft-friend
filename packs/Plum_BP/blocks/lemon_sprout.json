@@ -1,0 +1,58 @@
+{
+  "format_version": "1.21.80",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lemon:lemon_sprout",
+      "menu_category": {
+        "category": "nature"
+      }
+    },
+    "components": {
+      "minecraft:display_name": "tile.lemon:lemon_sprout.name",
+      "minecraft:geometry": "minecraft:geometry.cross",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lemon_sprout",
+          "render_method": "alpha_test"
+        }
+      },
+      "minecraft:collision_box": false,
+      "minecraft:selection_box": {
+        "origin": [
+          -4,
+          0,
+          -4
+        ],
+        "size": [
+          8,
+          8,
+          8
+        ]
+      },
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 0
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 0
+      },
+      "minecraft:light_dampening": 0,
+      "minecraft:map_color": "#639940",
+      "minecraft:placement_filter": {
+        "conditions": [
+          {
+            "allowed_faces": [
+              "up"
+            ],
+            "block_filter": [
+              "minecraft:farmland"
+            ]
+          }
+        ]
+      },
+      "minecraft:loot": "loot_tables/blocks/lemon_sprout.json",
+      "minecraft:custom_components": [
+        "friend:sprout_grow"
+      ]
+    }
+  }
+}

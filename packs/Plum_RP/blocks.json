@@ -30,5 +30,23 @@
   },
   "blueberry:blueberry_sprout": {
     "sound": "grass"
+  },
+  "lemon:lemon_leaves": {
+    "sound": "grass"
+  },
+  "lemon:lemon_sapling": {
+    "sound": "grass"
+  },
+  "lemon:lemon_sprout": {
+    "sound": "grass"
+  },
+  "banana:banana_leaves": {
+    "sound": "grass"
+  },
+  "banana:banana_sapling": {
+    "sound": "grass"
+  },
+  "banana:banana_sprout": {
+    "sound": "grass"
   }
 }

@@ -39,6 +39,30 @@
     },
     "blueberry_bark": {
       "textures": "textures/blocks/blueberry_bark"
+    },
+    "lemon_leaves": {
+      "textures": "textures/blocks/lemon_leaves"
+    },
+    "lemon_sapling_leaf": {
+      "textures": "textures/blocks/lemon_sapling_leaf"
+    },
+    "lemon_sprout": {
+      "textures": "textures/blocks/lemon_sprout"
+    },
+    "lemon_bark": {
+      "textures": "textures/blocks/lemon_bark"
+    },
+    "banana_leaves": {
+      "textures": "textures/blocks/banana_leaves"
+    },
+    "banana_sapling_leaf": {
+      "textures": "textures/blocks/banana_sapling_leaf"
+    },
+    "banana_sprout": {
+      "textures": "textures/blocks/banana_sprout"
+    },
+    "banana_bark": {
+      "textures": "textures/blocks/banana_bark"
     }
   }
 }

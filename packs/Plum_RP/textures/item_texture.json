@@ -11,6 +11,15 @@
     "blueberry_fruit": {
       "textures": "textures/items/blueberry"
     },
+    "lemon_fruit": {
+      "textures": "textures/items/lemon"
+    },
+    "banana_fruit": {
+      "textures": "textures/items/banana"
+    },
+    "banana_peel": {
+      "textures": "textures/items/banana_peel"
+    },
     "fruit_basket": {
       "textures": "textures/items/basket"
     }

@@ -25,7 +25,7 @@ class PackTests(unittest.TestCase):
                     self.assertTrue(any(d.get('module_name') == '@minecraft/server-net' for d in manifest['dependencies']))
 
     def test_lifecycle_references_and_baby_growth(self):
-        for file in ['friend.json', 'apple.json', 'blueberry.json']:
+        for file in ['friend.json', 'apple.json', 'blueberry.json', 'lemon.json', 'banana.json']:
             entity = json.loads((ROOT / 'packs/Plum_BP/entities' / file).read_text())['minecraft:entity']
             groups = entity['component_groups']
             for event in entity['events'].values():
@@ -58,7 +58,7 @@ class PackTests(unittest.TestCase):
                           entity['events']['minecraft:on_stand'].get('remove', {}).get('component_groups', []))
 
     def test_universal_movement_modes(self):
-        for file in ['friend.json', 'apple.json', 'blueberry.json']:
+        for file in ['friend.json', 'apple.json', 'blueberry.json', 'lemon.json', 'banana.json']:
             entity = json.loads((ROOT / 'packs/Plum_BP/entities' / file).read_text())['minecraft:entity']
             groups = entity['component_groups']
             prefix = entity['description']['identifier'].split(':')[0]
@@ -123,9 +123,69 @@ class PackTests(unittest.TestCase):
         self.assertTrue((rp / 'textures/entity/blueberry.png').exists())
         self.assertTrue((rp / 'models/entity/blueberry.geo.json').exists())
 
+    def test_lemon_light_friend_glows(self):
+        bp, rp = ROOT / 'packs/Plum_BP', ROOT / 'packs/Plum_RP'
+        entity = json.loads((bp / 'entities/lemon.json').read_text())['minecraft:entity']
+        groups = entity['component_groups']
+        self.assertEqual(entity['components']['minecraft:tameable']['tame_items'], ['lemon:lemon'])
+        self.assertEqual(groups['lemon:baby']['minecraft:ageable']['feed_items'], ['lemon:lemon'])
+        self.assertEqual(entity['components']['minecraft:type_family']['family'][0], 'lemon_friend')
+        self.assertNotIn('minecraft:breedable', groups['lemon:adult'])
+        self.assertIn('friend:mode_follow', entity['events'])
+        self.assertIn('friend:mode_stay', entity['events'])
+        script = (bp / 'scripts/main.js').read_text()
+        for needle in [
+            "'lemon:friend':", "name: 'Lemon'", "fruit: 'lemon:lemon'", 'light: true',
+            "'lemon:lemon': 'lemon:friend'", "lemon: 'lemon:friend'",
+            "addEffect('glowing'",
+        ]:
+            self.assertIn(needle, script, f'lemon light-friend feature missing: {needle}')
+        self.assertNotIn('HOSTILE_FAMILY', script)
+        self.assertNotIn('hostile.remove()', script)
+        self.assertTrue((rp / 'models/entity/lemon.geo.json').exists())
+        self.assertTrue((rp / 'textures/entity/lemon.png').exists())
+        lang = (rp / 'texts/en_US.lang').read_text()
+        self.assertIn('entity.lemon:friend.name=Lemon', lang)
+        self.assertIn('Talk to Lemon', lang)
+
+    def test_banana_prankster_and_tall(self):
+        bp, rp = ROOT / 'packs/Plum_BP', ROOT / 'packs/Plum_RP'
+        def read(path): return json.loads((bp / path).read_text())
+        entity = read('entities/banana.json')['minecraft:entity']
+        groups = entity['component_groups']
+        self.assertEqual(entity['components']['minecraft:tameable']['tame_items'], ['banana:banana'])
+        self.assertEqual(groups['banana:baby']['minecraft:ageable']['feed_items'], ['banana:banana'])
+        self.assertEqual(entity['components']['minecraft:type_family']['family'][0], 'banana_friend')
+        self.assertEqual(entity['components']['minecraft:collision_box']['height'], 1.4, 'Banana is ~1.5 blocks tall')
+        self.assertNotIn('minecraft:breedable', groups['banana:adult'])
+        script = (bp / 'scripts/main.js').read_text()
+        for needle in [
+            "'banana:friend':", "name: 'Banana'", "fruit: 'banana:banana'", 'prankster: true',
+            "'banana:banana': 'banana:friend'", "banana: 'banana:friend'",
+            "const PEEL_ITEM = 'banana:banana_peel'", 'PEEL_INTERVAL = 600', 'applyImpulse',
+            "hostile.addEffect('slowness'", "families: ['monster']",
+        ]:
+            self.assertIn(needle, script, f'banana prankster feature missing: {needle}')
+        peel = read('items/banana_peel.json')['minecraft:item']
+        self.assertEqual(peel['description']['identifier'], 'banana:banana_peel')
+        self.assertNotIn('minecraft:block_placer', peel['components'], 'peels are flavor drops, not plantable')
+        atlas = json.loads((rp / 'textures/item_texture.json').read_text())['texture_data']
+        self.assertTrue((rp / (atlas['banana_peel']['textures'] + '.png')).exists())
+        geo = json.loads((rp / 'models/entity/banana.geo.json').read_text())['minecraft:geometry'][0]
+        cube = geo['bones'][0]['cubes'][0]
+        self.assertEqual(cube['size'], [12, 24, 12], 'Banana is a 1.5-block-tall 12x24x12 cuboid')
+        self.assertEqual(geo['description']['texture_height'], 40)
+        top = cube['uv']['up']
+        self.assertEqual(top['uv'], [0, 24], 'tall sheet puts the top face below the 24-row body')
+        lang = (rp / 'texts/en_US.lang').read_text()
+        self.assertIn('entity.banana:friend.name=Banana', lang)
+        self.assertIn('item.banana:banana_peel.name=Banana Peel', lang)
+        self.assertIn('Talk to Banana', lang)
+        self.assertTrue((rp / 'textures/entity/banana.png').exists())
+
     def test_model_and_texture_references(self):
         rp = ROOT / 'packs/Plum_RP'
-        client_files = {'plum': 'entity/friend.entity.json', 'apple': 'entity/apple.entity.json', 'blueberry': 'entity/blueberry.entity.json'}
+        client_files = {'plum': 'entity/friend.entity.json', 'apple': 'entity/apple.entity.json', 'blueberry': 'entity/blueberry.entity.json', 'lemon': 'entity/lemon.entity.json', 'banana': 'entity/banana.entity.json'}
         for name, client_file in client_files.items():
             client = json.loads((rp / client_file).read_text())['minecraft:client_entity']['description']
             self.assertEqual(client['identifier'], f'{name}:friend')
@@ -144,7 +204,7 @@ class PackTests(unittest.TestCase):
     def test_survival_fruit_chain_and_versioned_update(self):
         bp, rp = ROOT / 'packs/Plum_BP', ROOT / 'packs/Plum_RP'
         def read(path): return json.loads(path.read_text())
-        for fruit, entity_file in [('plum', 'friend.json'), ('apple', 'apple.json'), ('blueberry', 'blueberry.json')]:
+        for fruit, entity_file in [('plum', 'friend.json'), ('apple', 'apple.json'), ('blueberry', 'blueberry.json'), ('lemon', 'lemon.json'), ('banana', 'banana.json')]:
             fruit_item = read(bp / 'items' / f'{fruit}.json')['minecraft:item']['description']['identifier']
             self.assertEqual(fruit_item, f'{fruit}:{fruit}')
             icon = read(bp / 'items' / f'{fruit}.json')['minecraft:item']['components']['minecraft:icon']
@@ -163,6 +223,18 @@ class PackTests(unittest.TestCase):
             rule = read(bp / 'feature_rules' / f'{fruit}_tree_rule.json')['minecraft:feature_rules']
             self.assertEqual(rule['description']['places_feature'], tree['description']['identifier'])
             self.assertEqual(tree['description']['identifier'], f'{fruit}:{fruit}_tree')
+            included = {tag['value'] for tag in rule['conditions']['minecraft:biome_filter']['all_of'][1]['any_of']}
+            if fruit == 'lemon':
+                self.assertEqual(included, {'desert', 'savanna', 'jungle'})
+                self.assertNotIn('plains', included)
+                self.assertNotIn('forest', included)
+            elif fruit == 'banana':
+                self.assertEqual(included, {'jungle'}, 'banana trees grow only in jungles')
+                self.assertNotIn('plains', included)
+                self.assertNotIn('desert', included)
+            else:
+                self.assertEqual(included, {'plains', 'forest'})
+                self.assertNotIn('jungle', included)
             leaves = read(bp / 'blocks' / f'{fruit}_leaves.json')['minecraft:block']
             self.assertEqual(tree['canopy']['leaf_block'], leaves['description']['identifier'])
             loot = read(bp / leaves['components']['minecraft:loot'])
@@ -183,9 +255,9 @@ class PackTests(unittest.TestCase):
             for atlas in ['item_texture.json', 'terrain_texture.json']:
                 for entry in read(rp / 'textures' / atlas)['texture_data'].values():
                     self.assertTrue((rp / (entry['textures'] + '.png')).exists())
-        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 12])
+        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 14])
         with zipfile.ZipFile(ROOT / 'dist/Fruity-Friends-Dedicated-Server.zip') as z:
-            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 12])
+            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 14])
 
     def test_fruit_basket_item_recipe_and_script(self):
         bp, rp = ROOT / 'packs/Plum_BP', ROOT / 'packs/Plum_RP'

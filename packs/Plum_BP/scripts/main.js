@@ -42,11 +42,29 @@ const FRIENDS = {
     tamedMsg: 'Give me a blueberry fruit to tame me first. Only my owner can open my chest or conversation.',
     plantMsg: 'A tiny fruiting sprout pokes through the soil! It will grow into a baby Blueberry — one blueberry tames it.',
   },
+  'lemon:friend': {
+    name: 'Lemon', color: '§e', fruit: 'lemon:lemon', light: true,
+    title: (baby) => baby ? 'Little Lemon' : 'Lemon',
+    body: (baby, label) => `Hi, bright buddy... I mean, hi.\n${label}\n\nI glow warmly, on my own and for whoever stands beside me. Plant a lemon on tilled farmland to grow a baby.`,
+    askTitle: 'Ask Lemon', replyTitle: 'Lemon says...',
+    care: 'Tame me by giving me a lemon. Plant a lemon on tilled farmland to grow a baby. Babies grow in 20 loaded minutes and can be tamed too. I am a Light Friend: I glow warmly, on my own and for whoever stands beside me. Once tamed I stay put; interact with me with an empty hand and choose Follow, Stay, Work, or Go Home. Craft a Fruit Basket from three sticks in the bucket shape and interact with me while holding it to carry me along. Talk to me in chat while I am near you, or hold a book and interact!',
+    tamedMsg: 'Give me a lemon fruit to tame me first. Only my owner can open my conversation.',
+    plantMsg: 'A tiny fruiting sprout pokes through the soil! It will grow into a baby Lemon — one lemon tames it.',
+  },
+  'banana:friend': {
+    name: 'Banana', color: '§6', fruit: 'banana:banana', prankster: true,
+    title: (baby) => baby ? 'Little Banana' : 'Banana',
+    body: (baby, label) => `Hey, it's me, your certified Bodyguard!\n${label}\n\nDon't worry. I've got your back. Plant a banana on tilled farmland to grow a minion... I mean, a baby.`,
+    askTitle: 'Ask Banana', replyTitle: 'Banana says...',
+    care: 'Tame me by giving me a banana. Plant a banana on tilled farmland to grow a baby. Babies grow in 20 loaded minutes and can be tamed too. I am the Prank... the Bodyguard: every so often I drop a banana peel, and monsters that step on it slip and slow for a moment. Totally on purpose. Once tamed I stay put; interact with me with an empty hand and choose Follow, Stay, Work, or Go Home. Craft a Fruit Basket from three sticks in the bucket shape and interact with me while holding it to carry me along. Talk to me in chat while I am near you, or hold a book and interact!',
+    tamedMsg: 'Give me a banana fruit to tame me first. Only my owner can open my conversation.',
+    plantMsg: 'A tiny fruiting sprout pokes through the soil! It will grow into a baby Banana — one banana tames it.',
+  },
 };
 
 const TYPES = new Set(Object.keys(FRIENDS));
-const FRUIT_FRIEND = { 'plum:plum': 'plum:friend', 'apple:apple': 'apple:friend', 'blueberry:blueberry': 'blueberry:friend' };
-const FRIEND_NAMES = { plum: 'plum:friend', apple: 'apple:friend', blueberry: 'blueberry:friend' };
+const FRUIT_FRIEND = { 'plum:plum': 'plum:friend', 'apple:apple': 'apple:friend', 'blueberry:blueberry': 'blueberry:friend', 'lemon:lemon': 'lemon:friend', 'banana:banana': 'banana:friend' };
+const FRIEND_NAMES = { plum: 'plum:friend', apple: 'apple:friend', blueberry: 'blueberry:friend', lemon: 'lemon:friend', banana: 'banana:friend' };
 
 const BASKET = 'friend:fruit_basket';
 const BASKET_STORE = 'basket:friend';
@@ -82,13 +100,17 @@ function spawnStacks(dimension, typeId, count, where) {
 
 const chestNotices = new Map();
 
-function notifyOwner(ownerId, text) {
+function notifyOwnerPrefixed(ownerId, prefix, text, interval = 60) {
   const now = system.currentTick;
   if (now < (chestNotices.get(ownerId) ?? 0)) return;
-  chestNotices.set(ownerId, now + 60);
+  chestNotices.set(ownerId, now + interval);
   const owner = world.getAllPlayers().find((player) => player.id === ownerId);
   if (!owner?.isValid) return;
-  owner.onScreenDisplay.setActionBar(`§9Blueberry§r: ${text}`);
+  owner.onScreenDisplay.setActionBar(`${prefix}§r: ${text}`);
+}
+
+function notifyOwner(ownerId, text) {
+  notifyOwnerPrefixed(ownerId, '§9Blueberry', text);
 }
 
 async function openChest(player, friend) {
@@ -877,8 +899,9 @@ world.afterEvents.playerLeave.subscribe(({ playerId }) => {
   nextQuestion.delete(playerId);
 });
 
+// Talk to a nearby tamed friend straight from chat: "Plum ...", "hey Apple, ...", "@plum hi", etc.
 world.afterEvents.playerSpawn.subscribe(({ player, initialSpawn }) => {
-  if (initialSpawn) system.runTimeout(() => friendSay(player, FRIENDS['plum:friend'], 'Fruity Friends v1.2.12 is loaded. Use a plum, apple or blueberry fruit on tilled farmland to plant a sprout; it grows into a baby friend, and one more fruit tames it. Newly tamed friends stay put. Interact with an empty hand (or, for Blueberry, his chest menu) to choose Follow, Stay, Work, or Go Home - up to four friends can follow you at once. Work keeps a friend near the spot you choose; Go Home sends a friend to your spawn. Blueberry is the Collector: interact with him with an empty hand to open his chest, and dropped items near him go straight inside. Craft a Fruit Basket from three sticks and interact with me while holding it to carry me around - I always come out staying put. Interact with me or type my name in chat (for example: "Plum, what is redstone?", "hey Apple, what do you sell?", or "Blueberry, my chest is full?") to talk. Apple runs the Applezon shop!'), 60);
+  if (initialSpawn) system.runTimeout(() => friendSay(player, FRIENDS['plum:friend'], 'Fruity Friends v1.2.14 is loaded. Use a plum, apple, blueberry, lemon or banana fruit on tilled farmland to plant a sprout; it grows into a baby friend, and one more fruit tames it. Newly tamed friends stay put. Interact with an empty hand (or, for Blueberry, his chest menu) to choose Follow, Stay, Work, or Go Home - up to four friends can follow you at once. Work keeps a friend near the spot you choose; Go Home sends a friend to your spawn. Blueberry is the Collector: interact with him with an empty hand to open his chest, and dropped items near him go straight inside. Lemon is the Light Friend: he glows warmly, on his own and for whoever stands beside him. Banana is the Prankster: he drops a banana peel about every 30 seconds and hostiles that step on it slip and slow for a moment. Find lemon trees in warm biomes like deserts, savannas and jungles, and banana trees in jungles. Craft a Fruit Basket from three sticks and interact with me while holding it to carry me around - I always come out staying put. Interact with me or type my name in chat (for example: "Plum, what is redstone?", "hey Apple, what do you sell?", "Blueberry, my chest is full?", "Lemon, brighten my day!", or "Banana, tell me a joke!") to talk. Apple runs the Applezon shop!'), 60);
 });
 
 // Talk to a nearby tamed friend straight from chat: "Plum ...", "hey Apple, ...", "@plum hi", etc.
@@ -962,6 +985,70 @@ system.runInterval(() => {
     } catch (error) { console.warn(`[Plum] Healing update skipped: ${error}`); }
   }
 }, 100);
+
+// Lemon is the Light Friend: a tamed Lemon glows warmly, on his own and for
+// whoever is beside him.
+system.runInterval(() => {
+  for (const name of ['overworld', 'nether', 'the_end']) {
+    const dimension = world.getDimension(name);
+    for (const friend of dimension.getEntities({ type: 'lemon:friend' })) {
+      try {
+        if (!friend.isValid) continue;
+        const tamed = friend.getComponent('minecraft:tameable');
+        const ownerId = tamed?.tamedToPlayerId;
+        if (!ownerId) continue;
+        friend.addEffect('glowing', 120, { amplifier: 0, showParticles: false });
+      } catch (error) { console.warn(`[Lemon] Glow upkeep skipped: ${error}`); }
+    }
+  }
+}, 20);
+
+// Banana is the Prankster: a tamed Banana is convinced he is your bodyguard.
+// About every 30 seconds he cheerfully drops a banana peel, and hostile mobs
+// that step near it slip and slow for a moment (slowness + a little nudge).
+// The dropped peel is a plain item; the slip is purely script-side.
+const PEEL_ITEM = 'banana:banana_peel';
+const PEEL_INTERVAL = 600; // 30 seconds, plus small jitter per drop
+const PEEL_RADIUS = 4;
+const PEEL_LINES = [
+  'Don\'t worry. I\'ve got your back.',
+  'I a-peel to the monsters: stay off the floor.',
+  'Every hero has a plan. Mine is banana-related.',
+  'You can thank me later. Everyone slips up sometimes.',
+];
+const peelSchedule = new Map();
+
+system.runInterval(() => {
+  for (const name of ['overworld', 'nether', 'the_end']) {
+    const dimension = world.getDimension(name);
+    for (const friend of dimension.getEntities({ type: 'banana:friend' })) {
+      try {
+        if (!friend.isValid) continue;
+        const tamed = friend.getComponent('minecraft:tameable');
+        const ownerId = tamed?.tamedToPlayerId;
+        if (!ownerId) continue;
+        const now = system.currentTick;
+        const next = peelSchedule.get(friend.id) ?? 0;
+        if (now < next) continue;
+        peelSchedule.set(friend.id, now + PEEL_INTERVAL + Math.floor(Math.random() * 80));
+        dimension.spawnItem(new ItemStack(PEEL_ITEM, 1), { x: friend.location.x, y: friend.location.y - 0.5, z: friend.location.z });
+        const hostiles = dimension.getEntities({ families: ['monster'], location: friend.location, maxDistance: PEEL_RADIUS });
+        for (const hostile of hostiles) {
+          if (!hostile.isValid) continue;
+          try {
+            hostile.addEffect('slowness', 100, { amplifier: 2, showParticles: false });
+            hostile.applyImpulse({
+              x: (hostile.location.x - friend.location.x) * 0.2,
+              y: 0.12,
+              z: (hostile.location.z - friend.location.z) * 0.2,
+            });
+          } catch (error) { console.warn(`[Banana] Slip skipped: ${error}`); }
+        }
+        notifyOwnerPrefixed(ownerId, '§6Banana', PEEL_LINES[Math.floor(Math.random() * PEEL_LINES.length)], 280);
+      } catch (error) { console.warn(`[Banana] Prank upkeep skipped: ${error}`); }
+    }
+  }
+}, 20);
 
 // Universal upkeep, once per second: keeps every loaded Fruity Friend in its
 // persisted movement state (reapplying groups after a reload), enforces the shared

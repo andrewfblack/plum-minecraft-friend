@@ -47,36 +47,94 @@ FRIENDS = {
         'egg': ('#1F4FD8', '#A7E0F2'),
         'palette': ((37, 66, 205, 255), (23, 45, 148, 255), (84, 126, 240, 255), (14, 27, 88, 255), (251, 252, 255, 255), (232, 150, 200, 255)),
     },
+    'lemon': {
+        'file': 'lemon',
+        'title': 'Lemon', 'entity': 'lemon:friend', 'fruit': 'lemon:lemon', 'family': 'lemon_friend',
+        'egg': ('#F7C51E', '#3E7A24'),
+        'palette': ((243, 196, 42, 255), (201, 148, 18, 255), (250, 224, 118, 255), (143, 104, 12, 255), (255, 252, 240, 255), (242, 168, 140, 255)),
+    },
+    'banana': {
+        'file': 'banana',
+        'title': 'Banana', 'entity': 'banana:friend', 'fruit': 'banana:banana', 'family': 'banana_friend',
+        'egg': ('#FFE135', '#8B5A2B'),
+        # Tall (1.5-block) goofy Prankster: bright yellow with brown tips and derpy eyes.
+        'tall': True, 'collision_height': 1.4, 'prankster': True,
+        'palette': ((255, 214, 40, 255), (196, 140, 16, 255), (255, 235, 120, 255), (150, 100, 30, 255), (255, 255, 255, 255), (250, 150, 170, 255)),
+    },
 }
 
 def friend_geometry(name):
     uv = {face: {'uv': [0 if face == 'north' else 16, 0], 'uv_size': [16, 16]} for face in ['north', 'south', 'east', 'west', 'up', 'down']}
-    if name in ('apple', 'blueberry'):
-        # Apple and Blueberry wear a topper: a dedicated top sheet and a plain bottom sheet.
+    if name == 'banana':
+        # Banana is the tall one: a 12x24x12 box (about 1.5 blocks) so he towers
+        # over his little cube friends. Face lives in the top rows of the front.
+        height, texture_height, bounds = 24, 40, 3
+        uv['north'] = {'uv': [0, 0], 'uv_size': [16, height]}
+        uv['south'] = {'uv': [16, 0], 'uv_size': [16, height]}
+        uv['east'] = {'uv': [16, 0], 'uv_size': [16, height]}
+        uv['west'] = {'uv': [16, 0], 'uv_size': [16, height]}
+        uv['up'] = {'uv': [0, 24], 'uv_size': [16, 16]}
+        uv['down'] = {'uv': [16, 24], 'uv_size': [16, 16]}
+    elif name in ('apple', 'blueberry', 'lemon'):
+        # Topper friends wear a dedicated top sheet and a plain bottom sheet.
+        height, texture_height, bounds = 12, 32, 2
         uv['up'] = {'uv': [0, 16], 'uv_size': [16, 16]}
         uv['down'] = {'uv': [16, 16], 'uv_size': [16, 16]}
-    return {'format_version': '1.12.0', 'minecraft:geometry': [{'description': {'identifier': f'geometry.{name}', 'texture_width': 32, 'texture_height': 16 if name == 'plum' else 32, 'visible_bounds_width': 2, 'visible_bounds_height': 2, 'visible_bounds_offset': [0, 0.5, 0]}, 'bones': [{'name': 'body', 'pivot': [0, 6, 0], 'cubes': [{'origin': [-6, 0, -6], 'size': [12, 12, 12], 'uv': uv}]}]}]}
+    else:
+        height, texture_height, bounds = 12, 16, 2
+    return {'format_version': '1.12.0', 'minecraft:geometry': [{'description': {'identifier': f'geometry.{name}', 'texture_width': 32, 'texture_height': texture_height, 'visible_bounds_width': 2, 'visible_bounds_height': bounds, 'visible_bounds_offset': [0, bounds / 2 - 0.5, 0]}, 'bones': [{'name': 'body', 'pivot': [0, 6, 0] if name != 'banana' else [0, 12, 0], 'cubes': [{'origin': [-6, 0, -6], 'size': [12, height, 12], 'uv': uv}]}]}]}
 
 def friend_texture(name):
-    """Purple Plum keeps the classic 32x16 sheet; Apple and Blueberry add a 32x32 two-sheet top."""
+    """Purple Plum keeps the classic 32x16 sheet; Apple, Blueberry, and Lemon add
+    a 32x32 two-sheet top; Banana is the tall one with a 32x40 sheet."""
     main, edge, light, dark, white, pink = FRIENDS[name]['palette']
     tile = [[edge if x in (0, 15) or y in (0, 15) else light if y == 1 else main for x in range(16)] for y in range(16)]
-    if name == 'blueberry':
-        # A frosted berry bloom: pale-blue speckle rows beneath the top highlight.
-        bloom = (120, 156, 247, 255)
-        for y in (2, 3):
-            for x in range(1, 15):
-                tile[y][x] = bloom if (x + y) % 3 else main
+    if name == 'banana':
+        # Tall goofy Prankster. The body is 24 rows tall, face near the top.
+        tilerow = lambda y: [edge if x in (0, 15) or y in (0, 23) else light if y == 1 else main for x in range(16)]
+        body_tile = [tilerow(y) for y in range(24)]
+        for y in range(3, 21): body_tile[y][5] = body_tile[y][6] = light
+        face = [r[:] for r in body_tile]
+        # Goofy mismatched eyes: a big left eye, a smaller right eye, derpy pupils.
+        for y in range(4, 10):
+            for x in range(3, 7): face[y][x] = white
+        for y in range(5, 9):
+            for x in range(9, 13): face[y][x] = white
+        for y in range(6, 8):
+            for x in range(4, 6): face[y][x] = dark
+            for x in range(10, 12): face[y][x] = dark
+        # Wide open goofy grin with a pink tongue sticking out.
+        for x in range(3, 13): face[10][x] = face[13][x] = dark
+        for y in range(10, 14): face[y][3] = face[y][12] = dark
+        for y in range(11, 13):
+            for x in range(4, 12): face[y][x] = pink
+        for x in range(6, 10): face[13][x] = pink
+        for x, y in [(2, 9), (3, 9), (12, 9), (13, 9)]: face[y][x] = pink
+        # Up face wears a brown tip like the end of the fruit; down stays plain.
+        top = [r[:] for r in tile]
+        top_brown, top_tip = (160, 105, 42, 255), (120, 74, 28, 255)
+        for y in range(4, 12):
+            for x in range(4, 12):
+                if (x - 7.5) ** 2 + (y - 7.5) ** 2 <= 16:
+                    top[y][x] = top_tip if (x - 7.5) ** 2 + (y - 7.5) ** 2 <= 6 else top_brown
+        return [face[y] + body_tile[y] for y in range(24)] + [top[y] + tile[y] for y in range(16)]
     face = [r[:] for r in tile]
     for x in (4, 10):
         for y in range(4, 8):
             face[y][x] = face[y][x + 1] = dark
         face[4][x] = white
-    for x, y in [(4, 10), (5, 11), (6, 12), (7, 12), (8, 12), (9, 12), (10, 11), (11, 10)]: face[y][x] = dark
+    if name == 'lemon':
+        # Slightly grumpy: inward-drooping brows and a frown instead of a smile.
+        for x, y in [(3, 2), (4, 3)]: face[y][x] = dark
+        for x, y in [(11, 2), (10, 3)]: face[y][x] = dark
+        frown = [(4, 12), (5, 11), (6, 10), (7, 9), (8, 9), (9, 10), (10, 11), (11, 12)]
+        for x, y in frown: face[y][x] = dark
+    else:
+        for x, y in [(4, 10), (5, 11), (6, 12), (7, 12), (8, 12), (9, 12), (10, 11), (11, 10)]: face[y][x] = dark
     for x in (2, 3, 12, 13): face[9][x] = pink
     if name == 'plum':
         return [face[y] + tile[y] for y in range(16)]
-    # Apple and Blueberry: a topper on the top face (up = region [0,16]); bottom stays plain.
+    # Topper friends: the top face (up = region [0,16]) wears the leaf or calyx; bottom stays plain.
     top = [r[:] for r in tile]
     bottom = [r[:] for r in tile]
     if name == 'apple':
@@ -86,7 +144,18 @@ def friend_texture(name):
                 top[y][x] = (86, 158, 44, 255)
         for y in range(4, 8): top[y][7] = top[y][8] = (150, 208, 76, 255)
         top[4][7] = top[4][8] = (56, 118, 38, 255)
-    else:
+    elif name == 'lemon':
+        # Lemon wears a broad, pointed citrus leaf across the top, like a fresh lemon leaf.
+        leaf_dark, leaf_mid, leaf_light = (56, 118, 38, 255), (86, 158, 44, 255), (150, 208, 76, 255)
+        for x, y in [(8, 1), (8, 2), (9, 1)]: top[y][x] = (150, 100, 40, 255)
+        for y in range(4, 10):
+            for x in range(4, 13):
+                d = ((x - 8) / 4.4) ** 2 + ((y - 6.8) / 2.7) ** 2
+                if d <= 1:
+                    top[y][x] = leaf_dark if d > 0.7 else leaf_mid
+        for x in range(5, 12): top[6][x] = leaf_light
+        top[6][4] = top[6][11] = leaf_dark
+    elif name == 'blueberry':
         # Blueberry: a tiny green calyx crown like a real berry, ringed by pale frost.
         calyx_dark, calyx_mid, calyx_light = (46, 96, 40, 255), (84, 150, 54, 255), (130, 186, 64, 255)
         bloom = (120, 156, 247, 255)
@@ -130,7 +199,7 @@ def build_friend(name, data):
         'minecraft:health': {'value': 100, 'max': 100},
         'minecraft:damage_sensor': {'triggers': [{'cause': 'all', 'deals_damage': 'no'}]},
         'minecraft:fire_immune': {}, 'minecraft:persistent': {},
-        'minecraft:collision_box': {'width': 0.75, 'height': 0.75},
+        'minecraft:collision_box': {'width': 0.75, 'height': data.get('collision_height', 0.75)},
         'minecraft:physics': {}, 'minecraft:pushable': {'is_pushable': True, 'is_pushable_by_piston': True},
         'minecraft:movement': {'value': 0.28}, 'minecraft:movement.basic': {}, 'minecraft:jump.static': {},
         'minecraft:navigation.walk': {'can_path_over_water': False, 'avoid_water': True, 'avoid_damage_blocks': True, 'can_pass_doors': True},
@@ -231,14 +300,14 @@ def build_basket(bp, rp, write, png):
         stream.write('item.friend:fruit_basket.name=Fruit Basket\n')
 
 def build(net_version='1.0.0-beta', admin_version='1.0.0-beta'):
-    version = [1, 2, 12]
+    version = [1, 2, 14]
     for path, name, uid, modules in [
         (BP, 'Fruity Friends', BP_ID, [
             {'type': 'data', 'uuid': 'fce620e4-42ac-4477-a84b-c8113d47ba2e', 'version': version},
             {'type': 'script', 'language': 'javascript', 'entry': 'scripts/main.js', 'uuid': 'a91c511c-d9d5-48e5-82c9-25cc48706cbb', 'version': version}]),
         (RP, 'Fruity Friends Resources', RP_ID, [
             {'type': 'resources', 'uuid': '6b250c6d-d093-4cb1-b16b-a42cd137d4bb', 'version': version}])]:
-        manifest = {'format_version': 2, 'header': {'name': name, 'description': 'Smiling cube companions with babies, healing, shopping, and a portable chest. Friends use a universal Follow/Stay/Work/Go Home system; Apple runs the Applezon shop; Blueberry collects drops.', 'uuid': uid, 'version': version, 'min_engine_version': [1, 21, 90]}, 'modules': modules}
+        manifest = {'format_version': 2, 'header': {'name': name, 'description': 'Smiling cube companions with babies, healing, shopping, collecting, a glow, and a prankster. Friends use a universal Follow/Stay/Work/Go Home system; Apple runs the Applezon shop; Blueberry collects drops; Lemon glows warmly; Banana (the Prankster) drops peels that trip up monsters.', 'uuid': uid, 'version': version, 'min_engine_version': [1, 21, 90]}, 'modules': modules}
         if path == BP:
             manifest['dependencies'] = [{'uuid': RP_ID, 'version': version}, {'module_name': '@minecraft/server', 'version': '2.0.0'}, {'module_name': '@minecraft/server-ui', 'version': '2.0.0'}]
         write(path / 'manifest.json', manifest)
@@ -274,32 +343,38 @@ This zip contains the server packs and a Python service; it is not a mobile impo
 
 ## Play
 
-1. To start in Survival, use a plum, apple or blueberry fruit on tilled farmland: a sprout appears
+1. To start in Survival, use a plum, apple, blueberry, lemon or banana fruit on tilled farmland: a sprout appears
    and grows into a baby friend on its own (or interact with it to sprout it immediately).
    In Creative, spawn friends with the matching Spawn Egg instead.
-2. Give each friend its own fruit to tame them: a plum tames Plum, an apple tames Apple, and a
-   blueberry tames Blueberry.
+2. Give each friend its own fruit to tame them: a plum tames Plum, an apple tames Apple, a
+   blueberry tames Blueberry, a lemon tames Lemon, and a banana tames Banana.
    A newly tamed friend stays put where it is. Interact with an empty hand (or, for Blueberry,
    choose Movement in his chest menu) to open the Movement menu: Follow, Stay, Work, or Go Home.
    Up to four friends can follow you at once. Work keeps a friend within 20 blocks of where you
    set it; Go Home sends a friend to your spawn point, where it roams within 10 blocks.
-3. Hold a book and interact (Talk to Plum / Talk to Apple / Talk to Blueberry on touch, right-click on PC).
+3. Hold a book and interact (Talk to Plum / Talk to Apple / Talk to Blueberry / Talk to Lemon / Talk to Banana on touch, right-click on PC).
 4. Choose Ask a question and type your message. Replies are private.
 5. Plant a fruit on tilled farmland to grow a baby friend; it sprouts and grows in 20 loaded minutes.
 6. Tame the baby with its fruit. Fruit also speeds growth. Stay within 8 blocks of your tamed Plum for regeneration. Apple does not heal you;
    instead she owns Applezon and delivers a surprise or a search result for one apple fruit.
 7. Blueberry is the Collector: dropped items within four blocks go straight into his chest. Interact with
    him with an empty hand to open it, store what you are holding, take something out, or choose Movement.
-8. Craft a Fruit Basket from three sticks in the bucket shape, then hold it and interact with a tamed
+8. Lemon is the Light Friend: he glows warmly, on his own and for whoever stands beside him.
+   Lemon does not heal you; stay near your tamed Plum for that.
+9. Banana is the Prankster: he is convinced he is your bodyguard. About every 30 seconds he drops a
+   banana peel, and hostile mobs that step on it slip and slow for a moment. He does not heal you and
+   his co-workers are unimpressed.
+10. Craft a Fruit Basket from three sticks in the bucket shape, then hold it and interact with a tamed
    friend to tuck them inside (Blueberry keeps his chest contents). Carry them in your inventory and interact with a block to let them out again — they always come out in Stay mode, waiting for your next order.
 
-Find plum, apple and blueberry trees in newly generated plains and forests. Break their fruit-speckled
+Find plum, apple and blueberry trees in newly generated plains and forests, lemon trees in warm
+biomes like deserts, savannas and jungles, and banana trees in jungles. Break their fruit-speckled
 leaves in Survival for the matching fruit and sapling. Plant a sapling on soil with a clear
 5-wide, 6-high space; wait for growth or use bone meal. Leaves do not decay automatically.
 The fruit works as a seed and snack: plant it on farmland to grow a baby friend.
 
 Updating from 1.1.0: replace both pack folders and the bridge script, update each Fruity Friends
-world-pack-list entry to [1,2,12], and restart. Keep existing credentials and UUIDs.
+world-pack-list entry to [1,2,14], and restart. Keep existing credentials and UUIDs.
 
 Friends resist ordinary damage and do not naturally despawn. Administrative removal,
 /kill, and engine edge cases are outside this protection. Unloaded companions cannot

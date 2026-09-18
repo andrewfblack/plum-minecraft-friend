@@ -37,7 +37,7 @@ class BridgeTests(unittest.TestCase):
         self.assertNotIn('one', json.dumps(self.calls))
 
     def test_rejects_invalid_inputs_without_calling_ai(self):
-        for body in [[], {}, self.body(question=''), self.body(question='x' * 401), {'playerId': 9, 'question': 'hey'}, dict(self.body(), dimension='invented'), dict(self.body(), friend='banana')]:
+        for body in [[], {}, self.body(question=''), self.body(question='x' * 401), {'playerId': 9, 'question': 'hey'}, dict(self.body(), dimension='invented'), dict(self.body(), friend='kiwi')]:
             self.assertEqual(self.state.answer(body)[0], 400)
         self.assertEqual(self.calls, [])
 
@@ -100,5 +100,24 @@ class BridgeTests(unittest.TestCase):
             self.assertIn('Collector', sent['instructions'])
             self.assertIn('Blueberry is an adult', sent['input'][-1]['content'])
         self.assertEqual(self.state.answer(self.body(friend='blueberry'))[0], 200)
+
+    def test_lemon_friend_selects_light_friend_instructions(self):
+        payload = {'output': [{'type': 'message', 'content': [{'type': 'output_text', 'text': 'Stay out of the dark, friend.'}]}]}
+        with patch('urllib.request.urlopen', return_value=io.BytesIO(json.dumps(payload).encode())) as mocked:
+            self.assertEqual(bridge.ask_openai('why do you glow?', [], 'minecraft:overworld', False, 'fake-key', 'test-model', friend='lemon'), 'Stay out of the dark, friend.')
+            sent = json.loads(mocked.call_args.args[0].data)
+            self.assertIn('Light Friend', sent['instructions'])
+            self.assertIn('Lemon is an adult', sent['input'][-1]['content'])
+        self.assertEqual(self.state.answer(self.body(friend='lemon'))[0], 200)
+
+    def test_banana_friend_selects_prankster_instructions(self):
+        payload = {'output': [{'type': 'message', 'content': [{'type': 'output_text', 'text': 'That is a-peel-ing advice, friend.'}]}]}
+        with patch('urllib.request.urlopen', return_value=io.BytesIO(json.dumps(payload).encode())) as mocked:
+            self.assertEqual(bridge.ask_openai('how do I make a torch?', [], 'minecraft:overworld', False, 'fake-key', 'test-model', friend='banana'), 'That is a-peel-ing advice, friend.')
+            sent = json.loads(mocked.call_args.args[0].data)
+            self.assertIn('Prankster', sent['instructions'])
+            self.assertIn('every 30 seconds', sent['instructions'])
+            self.assertIn('Banana is an adult', sent['input'][-1]['content'])
+        self.assertEqual(self.state.answer(self.body(friend='banana'))[0], 200)
 
 if __name__ == '__main__': unittest.main()

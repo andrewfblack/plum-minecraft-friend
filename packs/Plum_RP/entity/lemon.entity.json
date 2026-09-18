@@ -1,0 +1,36 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "lemon:friend",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/lemon"
+      },
+      "geometry": {
+        "default": "geometry.lemon"
+      },
+      "render_controllers": [
+        "controller.render.lemon"
+      ],
+      "animations": {
+        "bob": "animation.lemon.bob",
+        "sit": "animation.lemon.sit"
+      },
+      "scripts": {
+        "animate": [
+          "bob",
+          {
+            "sit": "query.is_sitting"
+          }
+        ]
+      },
+      "spawn_egg": {
+        "base_color": "#F7C51E",
+        "overlay_color": "#3E7A24"
+      }
+    }
+  }
+}

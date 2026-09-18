@@ -1,0 +1,36 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "banana:friend",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/banana"
+      },
+      "geometry": {
+        "default": "geometry.banana"
+      },
+      "render_controllers": [
+        "controller.render.banana"
+      ],
+      "animations": {
+        "bob": "animation.banana.bob",
+        "sit": "animation.banana.sit"
+      },
+      "scripts": {
+        "animate": [
+          "bob",
+          {
+            "sit": "query.is_sitting"
+          }
+        ]
+      },
+      "spawn_egg": {
+        "base_color": "#FFE135",
+        "overlay_color": "#8B5A2B"
+      }
+    }
+  }
+}

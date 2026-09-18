@@ -34,6 +34,27 @@ test('blueberry answers about collecting and his portable chest, not healing', (
   assert.match(offlineAnswer('How do I make a bed?', 'blueberry'), /three matching wool/);
 });
 
+test('lemon answers about glowing, grumpiness, and warm-biome trees, not healing', () => {
+  assert.match(offlineAnswer('do you glow?', 'lemon'), /Light Friend/);
+  assert.match(offlineAnswer('why are you so grumpy?', 'lemon'), /Grumpy\? A little/);
+  assert.match(offlineAnswer('how do I care for Lemon?', 'lemon'), /Tame me with a lemon/);
+  assert.match(offlineAnswer('where can I find lemons?', 'lemon'), /warm biomes/);
+  assert.match(offlineAnswer('does Lemon heal me?', 'lemon'), /do NOT grant healing/);
+  assert.match(offlineAnswer('how do I grow a baby Lemon?', 'lemon'), /baby Lemon will sprout/);
+  assert.match(offlineAnswer('How do I make Lemon sit?', 'lemon'), /empty hand/);
+  assert.match(offlineAnswer('How do I make a bed?', 'lemon'), /three matching wool/);
+});
+
+test('banana answers correctly but wraps everything in terrible puns', () => {
+  assert.match(offlineAnswer('do you drop peels?', 'banana'), /every 30 seconds/);
+  assert.match(offlineAnswer('where can I find bananas?', 'banana'), /new jungles/);
+  assert.match(offlineAnswer('how do I care for Banana?', 'banana'), /Tame me with a banana/);
+  assert.match(offlineAnswer('does Banana heal me?', 'banana'), /NOT on the list/);
+  assert.match(offlineAnswer('how do I grow a baby Banana?', 'banana'), /baby Banana will sprout/);
+  assert.match(offlineAnswer('tell me a joke', 'banana'), /a-peel|peel/);
+  assert.match(offlineAnswer('How do I make a bed?', 'banana'), /three matching wool/);
+});
+
 test('input bounds and formatting cannot inject chat colors or control characters', () => {
   assert.equal(cleanText('§cHello\nfriend'), 'Hello friend');
   assert.equal(cleanText('a'.repeat(1000)).length, 400);
