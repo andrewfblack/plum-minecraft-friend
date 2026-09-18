@@ -255,9 +255,9 @@ class PackTests(unittest.TestCase):
             for atlas in ['item_texture.json', 'terrain_texture.json']:
                 for entry in read(rp / 'textures' / atlas)['texture_data'].values():
                     self.assertTrue((rp / (entry['textures'] + '.png')).exists())
-        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 14])
+        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 15])
         with zipfile.ZipFile(ROOT / 'dist/Fruity-Friends-Dedicated-Server.zip') as z:
-            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 14])
+            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 15])
 
     def test_fruit_basket_item_recipe_and_script(self):
         bp, rp = ROOT / 'packs/Plum_BP', ROOT / 'packs/Plum_RP'
@@ -295,5 +295,27 @@ class PackTests(unittest.TestCase):
                     self.assertIn(bp_prefix + name, z.namelist())
                 for name in ['textures/items/basket.png', 'textures/item_texture.json']:
                     self.assertIn(rp_prefix + name, z.namelist())
+
+    def test_block_custom_components_are_registered_by_scripts(self):
+        bp = ROOT / 'packs/Plum_BP'
+        def read(path): return json.loads(path.read_text())
+        declared = set()
+        for block in (bp / 'blocks').glob('*.json'):
+            block_id = read(block)['minecraft:block']['description']['identifier']
+            for component in read(block)['minecraft:block']['components'].get('minecraft:custom_components', []):
+                declared.add((block_id, component))
+        orchard = (bp / 'scripts/orchard.js').read_text()
+        sprouts = [block_id for block_id, component in declared if block_id.endswith('_sprout')]
+        saplings = sorted(block_id for block_id, component in declared if block_id.endswith('_sapling'))
+        self.assertEqual(saplings, ['apple:apple_sapling', 'banana:banana_sapling', 'blueberry:blueberry_sapling', 'lemon:lemon_sapling', 'plum:plum_sapling'])
+        for _, component in declared:
+            self.assertIn(f"registerCustomComponent('{component}'", orchard, f'{component} must be registered in orchard.js')
+        for sprout_id in sprouts:
+            fruit = sprout_id.split(':')[0]
+            self.assertIn(f"'{sprout_id}': '{fruit}:friend'", orchard, f'sprout {sprout_id} must grow into {fruit}:friend')
+        growth = (bp / 'scripts/tree_growth.js').read_text()
+        for sapling_id in saplings:
+            fruit = sapling_id.split(':')[0]
+            self.assertIn(f"'{sapling_id}': ['minecraft:oak_log', '{fruit}:{fruit}_leaves']", growth, f'sapling {sapling_id} needs a PLANS entry')
 
 if __name__ == '__main__': unittest.main()

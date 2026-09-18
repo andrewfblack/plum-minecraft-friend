@@ -2,7 +2,7 @@ import { system, EquipmentSlot, GameMode } from '@minecraft/server';
 import { growTree } from './tree_growth.js';
 
 // A fruit planted on tilled farmland becomes a sprout that grows into a baby friend.
-const SPROUT_FRIEND = { 'plum:plum_sprout': 'plum:friend', 'apple:apple_sprout': 'apple:friend', 'blueberry:blueberry_sprout': 'blueberry:friend', 'lemon:lemon_sprout': 'lemon:friend' };
+const SPROUT_FRIEND = { 'plum:plum_sprout': 'plum:friend', 'apple:apple_sprout': 'apple:friend', 'blueberry:blueberry_sprout': 'blueberry:friend', 'lemon:lemon_sprout': 'lemon:friend', 'banana:banana_sprout': 'banana:friend' };
 
 function growFriend(sprout) {
   const friendType = SPROUT_FRIEND[sprout.typeId];
@@ -67,5 +67,6 @@ system.beforeEvents.startup.subscribe(({ blockComponentRegistry }) => {
   blockComponentRegistry.registerCustomComponent('apple:grow_tree', makeComponent('Apple'));
   blockComponentRegistry.registerCustomComponent('blueberry:grow_tree', makeComponent('Blueberry'));
   blockComponentRegistry.registerCustomComponent('lemon:grow_tree', makeComponent('Lemon'));
+  blockComponentRegistry.registerCustomComponent('banana:grow_tree', makeComponent('Banana'));
   blockComponentRegistry.registerCustomComponent('friend:sprout_grow', makeSproutComponent());
 });

@@ -5,6 +5,8 @@ const PLANS = {
   'plum:plum_sapling': ['minecraft:oak_log', 'plum:plum_leaves'],
   'apple:apple_sapling': ['minecraft:oak_log', 'apple:apple_leaves'],
   'blueberry:blueberry_sapling': ['minecraft:oak_log', 'blueberry:blueberry_leaves'],
+  'lemon:lemon_sapling': ['minecraft:oak_log', 'lemon:lemon_leaves'],
+  'banana:banana_sapling': ['minecraft:oak_log', 'banana:banana_leaves'],
 };
 
 // A compact five-block-wide crown, four-block trunk and a six-block total height.
