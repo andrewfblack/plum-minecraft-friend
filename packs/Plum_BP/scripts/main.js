@@ -869,22 +869,26 @@ async function talk(player, friend) {
   }
 }
 
-world.afterEvents.playerInteractWithEntity.subscribe(({ player, target, beforeItemStack }) => {
+world.beforeEvents.playerInteractWithEntity.subscribe((event) => {
+  const { player, target, itemStack } = event;
   if (!TYPES.has(target.typeId)) return;
   // A Fruit Basket tucks a tamed friend away for carrying.
-  if (beforeItemStack && beforeItemStack.typeId === BASKET) {
+  if (itemStack && itemStack.typeId === BASKET) {
+    event.cancel = true;
     system.run(() => { void captureInBasket(player, target); });
     return;
   }
   // Empty hand: Blueberry opens his portable chest; everyone else gets the Movement menu
   // (Follow, Stay, Work, Go Home).
-  if (!beforeItemStack || beforeItemStack.typeId === 'minecraft:air') {
+  if (!itemStack || itemStack.typeId === 'minecraft:air') {
+    event.cancel = true;
     if (FRIENDS[target.typeId]?.collector) system.run(() => { void openChest(player, target); });
     else system.run(() => { void modeMenu(player, target); });
     return;
   }
   // Leave food, taming, name tags and leads to the engine. A book also gives touch players a Talk button.
-  if (beforeItemStack.typeId !== 'minecraft:book') return;
+  if (itemStack.typeId !== 'minecraft:book') return;
+  event.cancel = true;
   system.run(() => { void talk(player, target); });
 });
 
@@ -901,7 +905,7 @@ world.afterEvents.playerLeave.subscribe(({ playerId }) => {
 
 // Talk to a nearby tamed friend straight from chat: "Plum ...", "hey Apple, ...", "@plum hi", etc.
 world.afterEvents.playerSpawn.subscribe(({ player, initialSpawn }) => {
-  if (initialSpawn) system.runTimeout(() => friendSay(player, FRIENDS['plum:friend'], 'Fruity Friends v1.2.15 is loaded. Use a plum, apple, blueberry, lemon or banana fruit on tilled farmland to plant a sprout; it grows into a baby friend, and one more fruit tames it. Newly tamed friends stay put. Interact with an empty hand (or, for Blueberry, his chest menu) to choose Follow, Stay, Work, or Go Home - up to four friends can follow you at once. Work keeps a friend near the spot you choose; Go Home sends a friend to your spawn. Blueberry is the Collector: interact with him with an empty hand to open his chest, and dropped items near him go straight inside. Lemon is the Light Friend: he glows warmly, on his own and for whoever stands beside him. Banana is the Prankster: he drops a banana peel about every 30 seconds and hostiles that step on it slip and slow for a moment. Find lemon trees in warm biomes like deserts, savannas and jungles, and banana trees in jungles. Craft a Fruit Basket from three sticks and interact with me while holding it to carry me around - I always come out staying put. Interact with me or type my name in chat (for example: "Plum, what is redstone?", "hey Apple, what do you sell?", "Blueberry, my chest is full?", "Lemon, brighten my day!", or "Banana, tell me a joke!") to talk. Apple runs the Applezon shop!'), 60);
+  if (initialSpawn) system.runTimeout(() => friendSay(player, FRIENDS['plum:friend'], 'Fruity Friends v1.2.16 is loaded. Use a plum, apple, blueberry, lemon or banana fruit on tilled farmland to plant a sprout; it grows into a baby friend, and one more fruit tames it. Newly tamed friends stay put. Interact with an empty hand (or, for Blueberry, his chest menu) to choose Follow, Stay, Work, or Go Home - up to four friends can follow you at once. Work keeps a friend near the spot you choose; Go Home sends a friend to your spawn. Blueberry is the Collector: interact with him with an empty hand to open his chest, and dropped items near him go straight inside. Lemon is the Light Friend: he glows warmly, on his own and for whoever stands beside him. Banana is the Prankster: he drops a banana peel about every 30 seconds and hostiles that step on it slip and slow for a moment. Find lemon trees in warm biomes like deserts, savannas and jungles, and banana trees in jungles. Craft a Fruit Basket from three sticks and interact with me while holding it to carry me around - I always come out staying put. Interact with me or type my name in chat (for example: "Plum, what is redstone?", "hey Apple, what do you sell?", "Blueberry, my chest is full?", "Lemon, brighten my day!", or "Banana, tell me a joke!") to talk. Apple runs the Applezon shop!'), 60);
 });
 
 // Talk to a nearby tamed friend straight from chat: "Plum ...", "hey Apple, ...", "@plum hi", etc.

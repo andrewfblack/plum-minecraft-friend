@@ -94,7 +94,10 @@ class PackTests(unittest.TestCase):
         self.assertEqual(entity['components']['minecraft:tameable']['tame_items'], ['apple:apple'])
         self.assertEqual(entity['components']['minecraft:behavior.tempt']['items'], ['apple:apple'])
         self.assertNotIn('minecraft:interact', entity['components'])
-        self.assertIn('playerInteractWithEntity', (ROOT / 'packs/Plum_BP/scripts/main.js').read_text())
+        script = (ROOT / 'packs/Plum_BP/scripts/main.js').read_text()
+        self.assertIn('world.beforeEvents.playerInteractWithEntity', script)
+        self.assertNotIn('world.afterEvents.playerInteractWithEntity', script,
+                         'script-owned interactions must not wait for an engine interaction to succeed')
         self.assertTrue((ROOT / 'packs/Plum_RP/textures/entity/apple.png').exists())
 
     def test_blueberry_collector_and_chest(self):
@@ -255,9 +258,9 @@ class PackTests(unittest.TestCase):
             for atlas in ['item_texture.json', 'terrain_texture.json']:
                 for entry in read(rp / 'textures' / atlas)['texture_data'].values():
                     self.assertTrue((rp / (entry['textures'] + '.png')).exists())
-        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 15])
+        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 16])
         with zipfile.ZipFile(ROOT / 'dist/Fruity-Friends-Dedicated-Server.zip') as z:
-            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 15])
+            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 16])
 
     def test_fruit_basket_item_recipe_and_script(self):
         bp, rp = ROOT / 'packs/Plum_BP', ROOT / 'packs/Plum_RP'
