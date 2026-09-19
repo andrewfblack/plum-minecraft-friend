@@ -68,6 +68,77 @@ const FRIEND_NAMES = { plum: 'plum:friend', apple: 'apple:friend', blueberry: 'b
 
 const BASKET = 'friend:fruit_basket';
 const BASKET_STORE = 'basket:friend';
+const GUIDEBOOK = 'friend:guidebook';
+
+const GUIDE_SECTIONS = [
+  {
+    title: 'Getting Started',
+    body: '1. Find fruit in fruit-tree leaves.\n2. Plant fruit on tilled farmland to grow a baby friend.\n3. Give the baby its matching fruit to tame it. More fruit speeds baby growth.\n4. A newly tamed friend starts in Stay mode.',
+  },
+  {
+    title: 'Controls',
+    body: 'Empty hand: open Movement (Blueberry opens his chest first).\n\nBook: talk to your friend.\n\nFruit Basket: pick up a tamed friend. Use the filled basket on a block to release them.\n\nFruit: tame an untamed friend or speed up a baby\'s growth.',
+  },
+  {
+    title: 'The Friends',
+    body: 'Plum heals his nearby owner.\n\nApple runs Applezon.\n\nBlueberry collects dropped items in his chest.\n\nLemon grants nearby Night Vision.\n\nBanana drops peel traps that slow monsters.',
+  },
+  {
+    title: 'Movement',
+    body: 'Follow: travels with you. Up to four friends can follow.\n\nStay: waits in place.\n\nWork: roams within 20 blocks of the chosen spot.\n\nGo Home: returns to your bed spawn and roams within 10 blocks.',
+  },
+  {
+    title: 'Fruit Trees',
+    body: 'Plum, Apple, and Blueberry trees grow in new plains and forests. Lemon trees prefer deserts, savannas, and jungles. Banana trees grow in jungles.\n\nBreak fruit leaves for fruit and saplings. Saplings need soil and a clear area 5 blocks wide and 6 blocks tall. Bone meal grows them immediately when there is room.',
+  },
+];
+
+async function openGuide(player) {
+  if (openForms.has(player.id)) return;
+  openForms.add(player.id);
+  try {
+    while (player.isValid) {
+      const menu = new ActionFormData().title('Fruity Friend Guidebook')
+        .body('Everything you need to raise fruit trees and travel with your Fruity Friends.');
+      for (const section of GUIDE_SECTIONS) menu.button(section.title);
+      menu.button('Close');
+      const choice = await menu.show(player);
+      if (choice.canceled || choice.selection === GUIDE_SECTIONS.length) return;
+      const section = GUIDE_SECTIONS[choice.selection];
+      if (!section) return;
+      const page = await new ActionFormData().title(section.title).body(section.body).button('Back').show(player);
+      if (page.canceled) return;
+    }
+  } catch (error) {
+    console.warn(`[Guidebook] Could not open: ${error}`);
+  } finally {
+    openForms.delete(player.id);
+  }
+}
+
+function giveGuidebook(player) {
+  if (!player.isValid) return;
+  const inventory = player.getComponent('minecraft:inventory')?.container;
+  if (!inventory) return;
+  for (let slot = 0; slot < inventory.size; slot++) {
+    if (inventory.getItem(slot)?.typeId === GUIDEBOOK) return;
+  }
+  try {
+    const leftover = inventory.addItem(new ItemStack(GUIDEBOOK));
+    if (leftover) player.dimension.spawnItem(leftover, player.location);
+    player.onScreenDisplay.setActionBar('Fruity Friend Guidebook added to your inventory.');
+  } catch (error) {
+    console.warn(`[Guidebook] Could not give guidebook: ${error}`);
+  }
+}
+
+system.beforeEvents.startup.subscribe(({ itemComponentRegistry }) => {
+  itemComponentRegistry.registerCustomComponent('friend:open_guide', {
+    onUse({ source }) {
+      system.run(() => { void openGuide(source); });
+    },
+  });
+});
 
 // A Fruit Basket carries one tamed friend as a snapshot stored on the item stack.
 function basketContents(stack) {
@@ -905,7 +976,7 @@ world.afterEvents.playerLeave.subscribe(({ playerId }) => {
 
 // Talk to a nearby tamed friend straight from chat: "Plum ...", "hey Apple, ...", "@plum hi", etc.
 world.afterEvents.playerSpawn.subscribe(({ player, initialSpawn }) => {
-  if (initialSpawn) system.runTimeout(() => friendSay(player, FRIENDS['plum:friend'], 'Fruity Friends v1.2.17 is loaded. Use a plum, apple, blueberry, lemon or banana fruit on tilled farmland to plant a sprout; it grows into a baby friend, and one more fruit tames it. Newly tamed friends stay put. Interact with an empty hand (or, for Blueberry, his chest menu) to choose Follow, Stay, Work, or Go Home - up to four friends can follow you at once. Work keeps a friend near the spot you choose; Go Home sends a friend to your spawn. Blueberry is the Collector: interact with him with an empty hand to open his chest, and dropped items near him go straight inside. Lemon is the Light Friend: he stays bright in darkness and grants Night Vision to every player within 8 blocks while tamed and loaded. Banana is the Prankster: he drops a banana peel about every 30 seconds and hostiles that step on it slip and slow for a moment. Find lemon trees in warm biomes like deserts, savannas and jungles, and banana trees in jungles. Craft a Fruit Basket from three sticks and interact with me while holding it to carry me around - I always come out staying put. Interact with me or type my name in chat (for example: "Plum, what is redstone?", "hey Apple, what do you sell?", "Blueberry, my chest is full?", "Lemon, brighten my day!", or "Banana, tell me a joke!") to talk. Apple runs the Applezon shop!'), 60);
+  if (initialSpawn) system.runTimeout(() => giveGuidebook(player), 40);
 });
 
 // Talk to a nearby tamed friend straight from chat: "Plum ...", "hey Apple, ...", "@plum hi", etc.

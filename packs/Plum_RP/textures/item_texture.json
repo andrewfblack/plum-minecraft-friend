@@ -17,6 +17,9 @@
     "banana_fruit": {
       "textures": "textures/items/banana"
     },
+    "fruity_friend_guidebook": {
+      "textures": "textures/items/guidebook"
+    },
     "fruit_basket": {
       "textures": "textures/items/basket"
     }

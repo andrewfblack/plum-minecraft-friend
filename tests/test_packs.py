@@ -58,6 +58,7 @@ class PackTests(unittest.TestCase):
                           entity['events']['minecraft:on_stand'].get('remove', {}).get('component_groups', []))
 
     def test_universal_movement_modes(self):
+        lang = (ROOT / 'packs/Plum_RP/texts/en_US.lang').read_text()
         for file in ['friend.json', 'apple.json', 'blueberry.json', 'lemon.json', 'banana.json']:
             entity = json.loads((ROOT / 'packs/Plum_BP/entities' / file).read_text())['minecraft:entity']
             groups = entity['component_groups']
@@ -65,6 +66,20 @@ class PackTests(unittest.TestCase):
             # The tamed group must never auto-follow: a freshly tamed friend starts in STAY.
             self.assertNotIn('minecraft:behavior.follow_owner', groups[f'{prefix}:tamed'],
                              f'{file}: the tamed group must not contain follow_owner (new tames start in STAY)')
+            interactions = groups[f'{prefix}:tamed']['minecraft:interact']['interactions']
+            self.assertEqual(len(interactions), 3)
+            for entry in interactions:
+                self.assertIn(f'{entry["interact_text"]}=', lang)
+                self.assertIn({'test': 'is_owner', 'subject': 'other', 'value': True},
+                              entry['on_interact']['filters']['all_of'])
+            self.assertEqual(
+                {entry['interact_text'] for entry in interactions},
+                {f'action.interact.{prefix}_chest' if prefix == 'blueberry' else f'action.interact.{prefix}_manage',
+                 f'action.interact.{prefix}_talk', f'action.interact.{prefix}_basket'})
+            held_filters = [entry['on_interact']['filters']['all_of'][-1] for entry in interactions]
+            self.assertEqual(held_filters[0], {'test': 'all_slots_empty', 'subject': 'other', 'value': 'hand'})
+            self.assertEqual({entry.get('value') for entry in held_filters[1:]}, {'minecraft:book', 'friend:fruit_basket'})
+            self.assertIn('friend:script_interact', entity['events'])
             self.assertIn('minecraft:is_tamed', groups['friend:follow'])
             self.assertIn('minecraft:behavior.follow_owner', groups['friend:follow'],
                           f'{file}: FOLLOW mode is powered by the universal friend:follow group')
@@ -229,12 +244,15 @@ class PackTests(unittest.TestCase):
             self.assertEqual(entity['component_groups'][f'{fruit}:baby']['minecraft:ageable']['feed_items'], [fruit_item])
             self.assertIn(fruit_item, entity['components']['minecraft:behavior.tempt']['items'])
             self.assertEqual(entity['components']['minecraft:tameable']['tame_items'], [fruit_item])
-            self.assertNotIn('minecraft:interact', entity['components'], 'entity-wide interact competes with tame/feed right-clicks')
+            self.assertNotIn('minecraft:interact', entity['components'], 'entity-wide interact competes with taming and item actions')
             self.assertEqual(entity['components']['minecraft:type_family']['family'][0], f'{fruit}_friend')
             tree = read(bp / 'features' / f'{fruit}_tree.json')['minecraft:tree_feature']
             rule = read(bp / 'feature_rules' / f'{fruit}_tree_rule.json')['minecraft:feature_rules']
             self.assertEqual(rule['description']['places_feature'], tree['description']['identifier'])
             self.assertEqual(tree['description']['identifier'], f'{fruit}:{fruit}_tree')
+            self.assertEqual(tree['trunk']['trunk_height'], {'range_min': 4, 'range_max': 4})
+            self.assertEqual(tree['canopy']['min_width'], 2)
+            self.assertEqual(tree['canopy']['variation_chance'], {'numerator': 1, 'denominator': 1})
             included = {tag['value'] for tag in rule['conditions']['minecraft:biome_filter']['all_of'][1]['any_of']}
             if fruit == 'lemon':
                 self.assertEqual(included, {'desert', 'savanna', 'jungle'})
@@ -267,9 +285,33 @@ class PackTests(unittest.TestCase):
             for atlas in ['item_texture.json', 'terrain_texture.json']:
                 for entry in read(rp / 'textures' / atlas)['texture_data'].values():
                     self.assertTrue((rp / (entry['textures'] + '.png')).exists())
-        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 17])
+        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 19])
         with zipfile.ZipFile(ROOT / 'dist/Fruity-Friends-Dedicated-Server.zip') as z:
-            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 17])
+            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 19])
+
+    def test_guidebook_item_and_script(self):
+        bp, rp = ROOT / 'packs/Plum_BP', ROOT / 'packs/Plum_RP'
+        def read(path): return json.loads(path.read_text())
+        item = read(bp / 'items/guidebook.json')['minecraft:item']
+        self.assertEqual(item['description']['identifier'], 'friend:guidebook')
+        components = item['components']
+        self.assertEqual(components['minecraft:display_name']['value'], 'item.friend:guidebook.name')
+        self.assertIn('friend:open_guide', components)
+        atlas = read(rp / 'textures/item_texture.json')['texture_data']
+        self.assertEqual(atlas[components['minecraft:icon']['textures']['default']]['textures'], 'textures/items/guidebook')
+        self.assertTrue((rp / 'textures/items/guidebook.png').exists())
+        self.assertIn('item.friend:guidebook.name=Fruity Friend Guidebook', (rp / 'texts/en_US.lang').read_text())
+        script = (bp / 'scripts/main.js').read_text()
+        self.assertIn("registerCustomComponent('friend:open_guide'", script)
+        self.assertIn('giveGuidebook(player)', script)
+        self.assertIn("new ActionFormData().title('Fruity Friend Guidebook')", script)
+        self.assertNotIn('Fruity Friends v', script, 'the login monologue was replaced by the guidebook')
+        for archive_name in ['Fruity-Friends.mcaddon', 'Fruity-Friends-Dedicated-Server.zip']:
+            with zipfile.ZipFile(ROOT / 'dist' / archive_name) as archive:
+                bp_prefix = 'Plum_BP/' if archive_name.endswith('.mcaddon') else 'behavior_packs/Plum_BP/'
+                rp_prefix = 'Plum_RP/' if archive_name.endswith('.mcaddon') else 'resource_packs/Plum_RP/'
+                self.assertIn(bp_prefix + 'items/guidebook.json', archive.namelist())
+                self.assertIn(rp_prefix + 'textures/items/guidebook.png', archive.namelist())
 
     def test_fruit_basket_item_recipe_and_script(self):
         bp, rp = ROOT / 'packs/Plum_BP', ROOT / 'packs/Plum_RP'

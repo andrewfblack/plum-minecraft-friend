@@ -2,9 +2,13 @@
 
 **Fruity Friends** is a family of smiling, animated cube companions for **Minecraft Bedrock**, with half-size baby forms. The first friend is **Plum**, a purple cube with a sweet tooth for plums; version **1.2.0** added **Apple**, a red cube friend who owns **Applezon**, a blocky parody of a giant online shop, plus apple fruit to plant and naturally generated apple trees. Version **1.2.1** renamed the add-on to **Fruity Friends** and lets you greet a friend in chat (`hey Apple, ...`). Version **1.2.2** fixes the Applezon shop, chat replies, and fruit icons. Version **1.2.3** keeps taming reliable for both friends. Version **1.2.4** turns fruit planting into a real sprout block that grows into each friend. Version **1.2.5** makes the fruit carrot-style: plant it on tilled farmland to grow a sprout, or eat it to restore 4 hunger points. Version **1.2.6** removes breeding entirely: the only way to get a baby is to plant a fruit on tilled farmland. Version **1.2.7** adds dog-style sit: interact with an empty hand to make a tamed friend stay put or follow. Version **1.2.8** adds the **Fruit Basket**: craft three sticks in a bucket shape, then hold it and interact with a tamed friend to tuck them inside your inventory; interact with a block to let them out again. Version **1.2.9** corrects the name — v1.2.8 briefly shipped it as "Fruid Basket" (a typo), now fixed everywhere to **Fruit Basket**. Version **1.2.10** fixes the setup guides that still pinned servers to outdated pack versions (which silently stopped the basket, recipe, and other content from loading after an update) and adds the active pack version to the startup message. Version **1.2.11** adds **Blueberry**, a deep-blue berry friend and the **Collector**, who scoops up nearby dropped items into a portable chest his owner opens with an empty hand. Version **1.2.12** replaces dog-style sit with a universal movement system: every Fruity Friend is always in one of **Follow, Stay, Work, or Go Home** (or carried in a Fruit Basket), a newly tamed friend stays put instead of auto-following, up to **four friends may follow you at once**, Work keeps a friend within 20 blocks of a spot you choose, and Go Home sends a friend to your spawn point. Version **1.2.13** adds **Lemon**, a sunny-yellow but slightly grumpy cube and the **Light Friend**: he glows warmly so you can always find him, and lemon trees grow in warm biomes like deserts, savannas, and jungles. Version **1.2.14** adds **Banana**, the tall goofy cube and the **Prankster**: he is convinced he is your bodyguard, drops a banana peel about every 30 seconds that makes monsters slip and slow for a moment, and answers every question with a terrible banana pun. Banana trees grow only in jungles. Version **1.2.15** fixes load-time and growth bugs from 1.2.14: the Banana sapling's custom component is now registered (so it and every friend's blocks load cleanly), and Lemon and Banana saplings actually grow into their trees. This project includes an offline add-on and a Dedicated Server edition with typed AI conversation for mobile and Windows players.
 
-Version **1.2.16** restores empty-hand, book, and Fruit Basket interactions by handling script-owned actions before Minecraft requires a native entity interaction to succeed. Fruit taming, feeding, leads, and name tags remain engine-controlled.
+Version **1.2.16** restores empty-hand, book, and Fruit Basket interactions by handling script-owned actions before Minecraft requires a native entity interaction to succeed. Fruit taming, leads, and name tags remain engine-controlled.
 
 Version **1.2.17** fixes Lemon's Light Friend ability on Bedrock: Lemon now renders full-bright in darkness and grants particle-free Night Vision to every player within 8 blocks while he is tamed and loaded.
+
+Version **1.2.18** restores native interaction prompts for tamed friends, removes baby-growth feeding, and gives every four-log fruit tree a fuller canopy.
+
+Version **1.2.19** restores fruit-based baby growth and replaces Plum's long login message with a reusable **Fruity Friend Guidebook**.
 
 ## Downloads
 
@@ -15,6 +19,8 @@ Version **1.2.17** fixes Lemon's Light Friend ability on Bedrock: Lemon now rend
 
 ## Playing with Plum
 
+When you join, the add-on places a **Fruity Friend Guidebook** in your inventory if you do not already carry one. Use it to open the in-game guide; it replaces the old multi-line login message.
+
 1. Start by **planting a plum fruit on tilled farmland** — it becomes a sprout that grows into a tiny baby Plum. Interact with the sprout to sprout it instantly, or let it grow on its own in a minute or two. In Creative you can instead spawn two friends directly with the **Plum Spawn Egg**.
 2. Give a **plum fruit** to each Plum to tame him. One plum always works.
 3. He follows his owner, steps up blocks, and can catch up with normal pet teleporting.
@@ -22,7 +28,7 @@ Version **1.2.17** fixes Lemon's Light Friend ability on Bedrock: Lemon now rend
 5. **Carry him in a basket:** craft a **Fruit Basket** from three sticks in the bucket shape (two on top, one below in the middle). Hold it and interact with a tamed friend to tuck him inside. Carry the basket in your inventory, then interact with **any block** to let him out again — name, baby/sit state, his owner, and (for Blueberry) his chest contents all come back. Whatever he was doing before (Follow, Work, or roaming Home), a friend released from a basket **always comes out staying put** until you give him a new order.
 6. Talk to your friend two ways. **In chat**: while a tamed Plum is within 10 blocks, just type his name first — for example `Plum, what is redstone?`, `hey Plum, hi`, or `@plum ping`. A greeting like `hey`/`hi`/`hello` can come before his name. He answers in chat instantly (or with his knowledge base offline). **With a book**: hold an ordinary **book**, point at your Plum, and use **Talk to Plum** / interact. On PC, right-click; on mobile, use the interaction control for your chosen touch layout. Select **Ask a question**, type, and press **Ask**. Answers appear in a private window and your private chat. No chat commands or operator permissions are needed to talk.
 7. Plant a **fruit on tilled farmland** to grow a baby friend. Only planting makes babies — breeding was removed. A sprout appears, then the baby sprouts from it.
-8. Babies are half-size and follow a parent until they grow. Give a baby a plum fruit to make it yours. Babies grow after approximately **20 minutes while loaded**; plums accelerate growth.
+8. Babies are half-size and follow a parent until they grow. Give a baby a plum fruit to make it yours. Babies grow after approximately **20 minutes while loaded**; matching fruit speeds growth.
 9. Stay within **8 blocks** of your tamed Plum for regeneration. Having several Plums does not multiply the effect.
 
 The **cube friends** do not spawn naturally and have no Survival crafting recipe. Plant a plum fruit on tilled farmland to grow your first baby, then tame it. Their fruit is obtainable in Survival from trees.
@@ -33,7 +39,7 @@ The **cube friends** do not spawn naturally and have no Survival crafting recipe
 - Break **Plum Leaves** in Survival: each block has a **35% chance to drop a plum fruit** and a separate **10% chance to drop a Plum Sapling**. Leaves are harvested by breaking them and do not decay automatically in this version.
 - Plant a sapling on grass, dirt, coarse dirt, podzol, or moss. Leave a **5-block-wide area and 6 blocks of height** clear. Trees grow on random ticks while their area is loaded; there is no fixed growth time.
 - Use **bone meal** on a sapling to grow it immediately if there is space. Successful growth uses one bone meal in Survival; blocked growth consumes none. Creative uses none.
-- Plant a plum on tilled farmland to grow a new baby friend, or feed plums to babies to speed up growth — the fruit is a seed in this pack.
+- Plant a plum on tilled farmland to grow a new baby friend, or feed matching fruit to a baby to speed up growth.
 
 Trees will not be added retroactively to old chunks. Explore beyond previously generated terrain, or obtain a Plum Sapling from Creative. For a quick operator test, use `/give @s plum:plum_sapling 1` and `/give @s plum:plum 16`.
 
@@ -90,7 +96,7 @@ Banana is a tall — about **1.5 blocks** — sunny-yellow cube friend with a go
 
 ## Updating from version 1.1.0
 
-Reimport the updated offline add-on, or stop BDS and replace the pack folders from the new server archive. On BDS, update both world pack-list entries to **`[1,2,17]`**, preserving entries for other packs. Replace `plum-service/bridge.py` too and restart the bridge so the AI knows about Apple, Applezon, Blueberry, the Collector chest, Lemon the Light Friend, Banana the Prankster, and the five kinds of fruit trees. Keep existing pack UUIDs, credentials, and world data. Existing tamed friends carried over from older worlds keep working: friends that were sitting migrate to **Stay**, and others keep their old follow-the-owner behavior as **Follow**.
+Reimport the updated offline add-on, or stop BDS and replace the pack folders from the new server archive. On BDS, update both world pack-list entries to **`[1,2,19]`**, preserving entries for other packs. Replace `plum-service/bridge.py` too and restart the bridge so the AI knows about Apple, Applezon, Blueberry, the Collector chest, Lemon the Light Friend, Banana the Prankster, and the five kinds of fruit trees. Keep existing pack UUIDs, credentials, and world data. Existing tamed friends carried over from older worlds keep working: friends that were sitting migrate to **Stay**, and others keep their old follow-the-owner behavior as **Follow**.
 
 ## Protection and following
 

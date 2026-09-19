@@ -8,7 +8,7 @@
       "trunk_block": "minecraft:oak_log",
       "trunk_height": {
         "range_min": 4,
-        "range_max": 5
+        "range_max": 4
       }
     },
     "canopy": {
@@ -17,14 +17,14 @@
         "min": -2,
         "max": -2
       },
-      "min_width": 1,
+      "min_width": 2,
       "canopy_slope": {
         "rise": 1,
         "run": 1
       },
       "variation_chance": {
-        "numerator": 9,
-        "denominator": 10
+        "numerator": 1,
+        "denominator": 1
       }
     },
     "base_block": "minecraft:dirt",

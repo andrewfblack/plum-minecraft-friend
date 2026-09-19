@@ -194,8 +194,8 @@ def build_fruit(bp, rp, root, write, png, fruit, accumulate, biomes=('plains', '
     write(bp / f'features/{fruit}_tree.json', {
         'format_version': '1.13.0', 'minecraft:tree_feature': {
             'description': {'identifier': tree},
-            'trunk': {'trunk_block': 'minecraft:oak_log', 'trunk_height': {'range_min': 4, 'range_max': 5}},
-            'canopy': {'leaf_block': leaf, 'canopy_offset': {'min': -2, 'max': -2}, 'min_width': 1, 'canopy_slope': {'rise': 1, 'run': 1}, 'variation_chance': {'numerator': 9, 'denominator': 10}},
+            'trunk': {'trunk_block': 'minecraft:oak_log', 'trunk_height': {'range_min': 4, 'range_max': 4}},
+            'canopy': {'leaf_block': leaf, 'canopy_offset': {'min': -2, 'max': -2}, 'min_width': 2, 'canopy_slope': {'rise': 1, 'run': 1}, 'variation_chance': {'numerator': 1, 'denominator': 1}},
             'base_block': 'minecraft:dirt', 'may_grow_on': SOIL,
             'may_replace': ['minecraft:air', 'minecraft:short_grass', 'minecraft:tall_grass', leaf],
             'may_grow_through': ['minecraft:air', 'minecraft:short_grass', 'minecraft:tall_grass']

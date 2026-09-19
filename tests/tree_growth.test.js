@@ -43,7 +43,7 @@ test('sapling becomes a complete tree with fruit leaves and no duplicate positio
   assert.equal(growTree(f.sapling), true);
   assert.equal(f.sapling.typeId, 'minecraft:oak_log');
   assert.equal(f.writes.filter(([, type]) => type === 'minecraft:oak_log').length, 4);
-  assert.ok(f.writes.filter(([, type]) => type === 'plum:plum_leaves').length >= 40);
+  assert.equal(f.writes.filter(([, type]) => type === 'plum:plum_leaves').length, 66);
   assert.equal(Math.max(...plan.map(p => p.location.y)), 69);
   assert.equal(growTree(f.sapling), false, 'repeated interactions cannot regrow an existing trunk');
 });

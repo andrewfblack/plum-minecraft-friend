@@ -168,6 +168,21 @@ def friend_texture(name):
 
 def build_friend(name, data):
     entity, fruit = data['entity'], data['fruit']
+    def interaction(item, text):
+        held_filter = ({'test': 'all_slots_empty', 'subject': 'other', 'value': 'hand'} if item is None else
+                       {'test': 'has_equipment', 'subject': 'other', 'domain': 'hand', 'value': item})
+        return {
+            'on_interact': {
+                'filters': {'all_of': [
+                    {'test': 'is_family', 'subject': 'other', 'value': 'player'},
+                    {'test': 'is_owner', 'subject': 'other', 'value': True},
+                    held_filter,
+                ]},
+                'event': 'friend:script_interact', 'target': 'self',
+            },
+            'interact_text': text,
+        }
+    empty_text = f'action.interact.{name}_chest' if name == 'blueberry' else f'action.interact.{name}_manage'
     groups = {
         f'{name}:adult': {
             'minecraft:scale': {'value': 1},
@@ -179,6 +194,13 @@ def build_friend(name, data):
         },
         f'{name}:tamed': {
             'minecraft:is_tamed': {},
+            # Native interactions provide touch/controller prompts. Script catches
+            # them before the no-op event and opens the appropriate form.
+            'minecraft:interact': {'interactions': [
+                interaction(None, empty_text),
+                interaction('minecraft:book', f'action.interact.{name}_talk'),
+                interaction('friend:fruit_basket', f'action.interact.{name}_basket'),
+            ]},
         },
         f'{name}:sit': {
             'minecraft:is_sitting': {},
@@ -218,6 +240,7 @@ def build_friend(name, data):
         'minecraft:ageable_grow_up': {'remove': {'component_groups': [f'{name}:baby']}, 'add': {'component_groups': [f'{name}:adult']}},
         # A freshly tamed friend starts in STAY, never following automatically.
         'minecraft:on_tame': {'add': {'component_groups': [f'{name}:tamed', f'{name}:sit']}},
+        'friend:script_interact': {},
         'minecraft:on_sit': {'add': {'component_groups': [f'{name}:sit']}},
         'minecraft:on_stand': {'remove': {'component_groups': [f'{name}:sit']}},
         # Universal mode events, shared verbatim by every future fruit. main.js fires
@@ -300,6 +323,42 @@ def build_basket(bp, rp, write, png):
     with (rp / 'texts/en_US.lang').open('a', encoding='utf-8') as stream:
         stream.write('item.friend:fruit_basket.name=Fruit Basket\n')
 
+def guidebook_texture():
+    """Original 16x16 purple-and-gold guidebook icon."""
+    clear = (0, 0, 0, 0)
+    cover, cover_dark = (119, 58, 166, 255), (70, 32, 104, 255)
+    page, page_dark, gold = (246, 231, 190, 255), (198, 174, 126, 255), (241, 190, 54, 255)
+    grid = [[clear for _ in range(16)] for _ in range(16)]
+    for y in range(2, 15):
+        for x in range(2, 14):
+            grid[y][x] = cover_dark if x in (2, 13) or y in (2, 14) else cover
+    for y in range(3, 13):
+        for x in range(4, 12):
+            grid[y][x] = page_dark if x == 11 or y == 12 else page
+    for x, y in [(7, 5), (8, 5), (6, 6), (7, 6), (8, 6), (9, 6),
+                 (7, 7), (8, 7), (7, 8), (8, 8), (7, 10), (8, 10)]:
+        grid[y][x] = gold
+    return grid
+
+def build_guidebook(bp, rp, write, png):
+    write(bp / 'items/guidebook.json', {
+        'format_version': '1.21.90', 'minecraft:item': {
+            'description': {'identifier': 'friend:guidebook', 'menu_category': {'category': 'items'}},
+            'components': {
+                'minecraft:display_name': {'value': 'item.friend:guidebook.name'},
+                'minecraft:icon': {'textures': {'default': 'fruity_friend_guidebook'}},
+                'minecraft:max_stack_size': 1,
+                'friend:open_guide': {},
+            },
+        },
+    })
+    png(rp / 'textures/items/guidebook.png', guidebook_texture())
+    atlas = json.loads((rp / 'textures/item_texture.json').read_text(encoding='utf-8'))
+    atlas['texture_data']['fruity_friend_guidebook'] = {'textures': 'textures/items/guidebook'}
+    write(rp / 'textures/item_texture.json', atlas)
+    with (rp / 'texts/en_US.lang').open('a', encoding='utf-8') as stream:
+        stream.write('item.friend:guidebook.name=Fruity Friend Guidebook\n')
+
 def build_peel_trap(bp, rp, write):
     """A visible floor trap entity: unlike a dropped item, players cannot pick it up."""
     write(bp / 'entities/banana_peel.json', {
@@ -335,7 +394,7 @@ def build_peel_trap(bp, rp, write):
     }})
 
 def build(net_version='1.0.0-beta', admin_version='1.0.0-beta'):
-    version = [1, 2, 17]
+    version = [1, 2, 19]
     for path, name, uid, modules in [
         (BP, 'Fruity Friends', BP_ID, [
             {'type': 'data', 'uuid': 'fce620e4-42ac-4477-a84b-c8113d47ba2e', 'version': version},
@@ -352,11 +411,14 @@ def build(net_version='1.0.0-beta', admin_version='1.0.0-beta'):
     lines = []
     for name, data in FRIENDS.items():
         build_friend(name, data)
-        lines.append(f'entity.{data["entity"]}.name={data["title"]}\nitem.spawn_egg.entity.{data["entity"]}.name={data["title"]} Spawn Egg\naction.interact.{name}_talk=Talk to {data["title"]}\n')
+        empty_label = f'Open {data["title"]}\'s Chest' if name == 'blueberry' else f'Manage {data["title"]}'
+        empty_key = 'chest' if name == 'blueberry' else 'manage'
+        lines.append(f'entity.{data["entity"]}.name={data["title"]}\nitem.spawn_egg.entity.{data["entity"]}.name={data["title"]} Spawn Egg\naction.interact.{name}_{empty_key}={empty_label}\naction.interact.{name}_talk=Talk to {data["title"]}\naction.interact.{name}_basket=Put {data["title"]} in Fruit Basket\n')
     (RP / 'texts/en_US.lang').write_text(''.join(lines), encoding='utf-8')
     icon = [[friend_texture('plum')[:16][y // 8][x // 8] for x in range(128)] for y in range(128)]
     for pack in (BP, RP): png(pack / 'pack_icon.png', icon)
     build_orchard(BP, RP, ROOT, write, png)
+    build_guidebook(BP, RP, write, png)
     build_basket(BP, RP, write, png)
     build_peel_trap(BP, RP, write)
     out = ROOT / 'dist/Fruity-Friends.mcaddon'
@@ -376,6 +438,7 @@ def build(net_version='1.0.0-beta', admin_version='1.0.0-beta'):
 
 Read plum-service/SETUP.md to install the AI edition on a Bedrock Dedicated Server.
 This zip contains the server packs and a Python service; it is not a mobile import file.
+Players receive a Fruity Friend Guidebook when they join without one in their inventory.
 
 ## Play
 
@@ -391,7 +454,7 @@ This zip contains the server packs and a Python service; it is not a mobile impo
 3. Hold a book and interact (Talk to Plum / Talk to Apple / Talk to Blueberry / Talk to Lemon / Talk to Banana on touch, right-click on PC).
 4. Choose Ask a question and type your message. Replies are private.
 5. Plant a fruit on tilled farmland to grow a baby friend; it sprouts and grows in 20 loaded minutes.
-6. Tame the baby with its fruit. Fruit also speeds growth. Stay within 8 blocks of your tamed Plum for regeneration. Apple does not heal you;
+6. Tame the baby with its fruit; more fruit speeds its growth. Stay within 8 blocks of your tamed Plum for regeneration. Apple does not heal you;
    instead she owns Applezon and delivers a surprise or a search result for one apple fruit.
 7. Blueberry is the Collector: dropped items within four blocks go straight into his chest. Interact with
    him with an empty hand to open it, store what you are holding, take something out, or choose Movement.
@@ -412,7 +475,7 @@ leaves in Survival for the matching fruit and sapling. Plant a sapling on soil w
 The fruit works as a seed and snack: plant it on farmland to grow a baby friend.
 
 Updating from 1.1.0: replace both pack folders and the bridge script, update each Fruity Friends
-world-pack-list entry to [1,2,17], and restart. Keep existing credentials and UUIDs.
+world-pack-list entry to [1,2,19], and restart. Keep existing credentials and UUIDs.
 
 Friends resist ordinary damage and do not naturally despawn. Administrative removal,
 /kill, and engine edge cases are outside this protection. Unloaded companions cannot
