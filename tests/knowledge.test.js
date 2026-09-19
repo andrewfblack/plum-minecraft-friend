@@ -35,7 +35,7 @@ test('blueberry answers about collecting and his portable chest, not healing', (
 });
 
 test('lemon answers about glowing, grumpiness, and warm-biome trees, not healing', () => {
-  assert.match(offlineAnswer('do you glow?', 'lemon'), /Light Friend/);
+  assert.match(offlineAnswer('do you glow?', 'lemon'), /Night Vision.*8 blocks/);
   assert.match(offlineAnswer('why are you so grumpy?', 'lemon'), /Grumpy\? A little/);
   assert.match(offlineAnswer('how do I care for Lemon?', 'lemon'), /Tame me with a lemon/);
   assert.match(offlineAnswer('where can I find lemons?', 'lemon'), /warm biomes/);

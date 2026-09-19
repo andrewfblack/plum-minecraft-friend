@@ -45,9 +45,9 @@ const FRIENDS = {
   'lemon:friend': {
     name: 'Lemon', color: '§e', fruit: 'lemon:lemon', light: true,
     title: (baby) => baby ? 'Little Lemon' : 'Lemon',
-    body: (baby, label) => `Hi, bright buddy... I mean, hi.\n${label}\n\nI glow warmly, on my own and for whoever stands beside me. Plant a lemon on tilled farmland to grow a baby.`,
+    body: (baby, label) => `Hi, bright buddy... I mean, hi.\n${label}\n\nI stay bright in the dark and give Night Vision to players within 8 blocks. Plant a lemon on tilled farmland to grow a baby.`,
     askTitle: 'Ask Lemon', replyTitle: 'Lemon says...',
-    care: 'Tame me by giving me a lemon. Plant a lemon on tilled farmland to grow a baby. Babies grow in 20 loaded minutes and can be tamed too. I am a Light Friend: I glow warmly, on my own and for whoever stands beside me. Once tamed I stay put; interact with me with an empty hand and choose Follow, Stay, Work, or Go Home. Craft a Fruit Basket from three sticks in the bucket shape and interact with me while holding it to carry me along. Talk to me in chat while I am near you, or hold a book and interact!',
+    care: 'Tame me by giving me a lemon. Plant a lemon on tilled farmland to grow a baby. Babies grow in 20 loaded minutes and can be tamed too. I am a Light Friend: I stay bright in the dark and give Night Vision to players within 8 blocks. Once tamed I stay put; interact with me with an empty hand and choose Follow, Stay, Work, or Go Home. Craft a Fruit Basket from three sticks in the bucket shape and interact with me while holding it to carry me along. Talk to me in chat while I am near you, or hold a book and interact!',
     tamedMsg: 'Give me a lemon fruit to tame me first. Only my owner can open my conversation.',
     plantMsg: 'A tiny fruiting sprout pokes through the soil! It will grow into a baby Lemon — one lemon tames it.',
   },
@@ -905,7 +905,7 @@ world.afterEvents.playerLeave.subscribe(({ playerId }) => {
 
 // Talk to a nearby tamed friend straight from chat: "Plum ...", "hey Apple, ...", "@plum hi", etc.
 world.afterEvents.playerSpawn.subscribe(({ player, initialSpawn }) => {
-  if (initialSpawn) system.runTimeout(() => friendSay(player, FRIENDS['plum:friend'], 'Fruity Friends v1.2.16 is loaded. Use a plum, apple, blueberry, lemon or banana fruit on tilled farmland to plant a sprout; it grows into a baby friend, and one more fruit tames it. Newly tamed friends stay put. Interact with an empty hand (or, for Blueberry, his chest menu) to choose Follow, Stay, Work, or Go Home - up to four friends can follow you at once. Work keeps a friend near the spot you choose; Go Home sends a friend to your spawn. Blueberry is the Collector: interact with him with an empty hand to open his chest, and dropped items near him go straight inside. Lemon is the Light Friend: he glows warmly, on his own and for whoever stands beside him. Banana is the Prankster: he drops a banana peel about every 30 seconds and hostiles that step on it slip and slow for a moment. Find lemon trees in warm biomes like deserts, savannas and jungles, and banana trees in jungles. Craft a Fruit Basket from three sticks and interact with me while holding it to carry me around - I always come out staying put. Interact with me or type my name in chat (for example: "Plum, what is redstone?", "hey Apple, what do you sell?", "Blueberry, my chest is full?", "Lemon, brighten my day!", or "Banana, tell me a joke!") to talk. Apple runs the Applezon shop!'), 60);
+  if (initialSpawn) system.runTimeout(() => friendSay(player, FRIENDS['plum:friend'], 'Fruity Friends v1.2.17 is loaded. Use a plum, apple, blueberry, lemon or banana fruit on tilled farmland to plant a sprout; it grows into a baby friend, and one more fruit tames it. Newly tamed friends stay put. Interact with an empty hand (or, for Blueberry, his chest menu) to choose Follow, Stay, Work, or Go Home - up to four friends can follow you at once. Work keeps a friend near the spot you choose; Go Home sends a friend to your spawn. Blueberry is the Collector: interact with him with an empty hand to open his chest, and dropped items near him go straight inside. Lemon is the Light Friend: he stays bright in darkness and grants Night Vision to every player within 8 blocks while tamed and loaded. Banana is the Prankster: he drops a banana peel about every 30 seconds and hostiles that step on it slip and slow for a moment. Find lemon trees in warm biomes like deserts, savannas and jungles, and banana trees in jungles. Craft a Fruit Basket from three sticks and interact with me while holding it to carry me around - I always come out staying put. Interact with me or type my name in chat (for example: "Plum, what is redstone?", "hey Apple, what do you sell?", "Blueberry, my chest is full?", "Lemon, brighten my day!", or "Banana, tell me a joke!") to talk. Apple runs the Applezon shop!'), 60);
 });
 
 // Talk to a nearby tamed friend straight from chat: "Plum ...", "hey Apple, ...", "@plum hi", etc.
@@ -990,30 +990,30 @@ system.runInterval(() => {
   }
 }, 100);
 
-// Lemon is the Light Friend: a tamed Lemon glows warmly, on his own and for
-// whoever is beside him.
+// Lemon is the Light Friend: his emissive material stays visible in the dark,
+// and every player near a loaded, tamed Lemon receives particle-free Night Vision.
+const LEMON_LIGHT_RADIUS = 8;
 system.runInterval(() => {
   for (const name of ['overworld', 'nether', 'the_end']) {
     const dimension = world.getDimension(name);
     for (const friend of dimension.getEntities({ type: 'lemon:friend' })) {
       try {
         if (!friend.isValid) continue;
-        const tamed = friend.getComponent('minecraft:tameable');
-        const ownerId = tamed?.tamedToPlayerId;
-        if (!ownerId) continue;
-        friend.addEffect('glowing', 120, { amplifier: 0, showParticles: false });
-      } catch (error) { console.warn(`[Lemon] Glow upkeep skipped: ${error}`); }
+        if (!friend.getComponent('minecraft:tameable')?.tamedToPlayerId) continue;
+        for (const player of dimension.getPlayers({ location: friend.location, maxDistance: LEMON_LIGHT_RADIUS })) {
+          player.addEffect('night_vision', 240, { amplifier: 0, showParticles: false });
+        }
+      } catch (error) { console.warn(`[Lemon] Light upkeep skipped: ${error}`); }
     }
   }
 }, 20);
 
 // Banana is the Prankster: a tamed Banana is convinced he is your bodyguard.
-// About every 30 seconds he cheerfully drops a banana peel, and hostile mobs
-// that step near it slip and slow for a moment (slowness + a little nudge).
-// The dropped peel is a plain item; the slip is purely script-side.
-const PEEL_ITEM = 'banana:banana_peel';
+// About every 30 seconds he cheerfully drops a banana peel trap. It cannot be
+// picked up, trips the first hostile mob that steps close, and expires after two minutes.
+const PEEL_ENTITY = 'banana:peel_trap';
 const PEEL_INTERVAL = 600; // 30 seconds, plus small jitter per drop
-const PEEL_RADIUS = 4;
+const PEEL_TRIGGER_RADIUS = 0.9;
 const PEEL_LINES = [
   'Don\'t worry. I\'ve got your back.',
   'I a-peel to the monsters: stay off the floor.',
@@ -1035,24 +1035,32 @@ system.runInterval(() => {
         const next = peelSchedule.get(friend.id) ?? 0;
         if (now < next) continue;
         peelSchedule.set(friend.id, now + PEEL_INTERVAL + Math.floor(Math.random() * 80));
-        dimension.spawnItem(new ItemStack(PEEL_ITEM, 1), { x: friend.location.x, y: friend.location.y - 0.5, z: friend.location.z });
-        const hostiles = dimension.getEntities({ families: ['monster'], location: friend.location, maxDistance: PEEL_RADIUS });
-        for (const hostile of hostiles) {
-          if (!hostile.isValid) continue;
-          try {
-            hostile.addEffect('slowness', 100, { amplifier: 2, showParticles: false });
-            hostile.applyImpulse({
-              x: (hostile.location.x - friend.location.x) * 0.2,
-              y: 0.12,
-              z: (hostile.location.z - friend.location.z) * 0.2,
-            });
-          } catch (error) { console.warn(`[Banana] Slip skipped: ${error}`); }
-        }
+        dimension.spawnEntity(PEEL_ENTITY, { x: friend.location.x, y: friend.location.y + 0.1, z: friend.location.z });
         notifyOwnerPrefixed(ownerId, '§6Banana', PEEL_LINES[Math.floor(Math.random() * PEEL_LINES.length)], 280);
       } catch (error) { console.warn(`[Banana] Prank upkeep skipped: ${error}`); }
     }
   }
 }, 20);
+
+system.runInterval(() => {
+  for (const name of ['overworld', 'nether', 'the_end']) {
+    const dimension = world.getDimension(name);
+    for (const peel of dimension.getEntities({ type: PEEL_ENTITY })) {
+      try {
+        if (!peel.isValid) continue;
+        const hostile = dimension.getEntities({ families: ['monster'], location: peel.location, maxDistance: PEEL_TRIGGER_RADIUS })[0];
+        if (!hostile?.isValid) continue;
+        hostile.addEffect('slowness', 100, { amplifier: 2, showParticles: false });
+        hostile.applyImpulse({
+          x: (hostile.location.x - peel.location.x) * 0.35,
+          y: 0.12,
+          z: (hostile.location.z - peel.location.z) * 0.35,
+        });
+        peel.remove();
+      } catch (error) { console.warn(`[Banana] Peel trap skipped: ${error}`); }
+    }
+  }
+}, 2);
 
 // Universal upkeep, once per second: keeps every loaded Fruity Friend in its
 // persisted movement state (reapplying groups after a reload), enforces the shared

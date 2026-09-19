@@ -4,6 +4,8 @@
 
 Version **1.2.16** restores empty-hand, book, and Fruit Basket interactions by handling script-owned actions before Minecraft requires a native entity interaction to succeed. Fruit taming, feeding, leads, and name tags remain engine-controlled.
 
+Version **1.2.17** fixes Lemon's Light Friend ability on Bedrock: Lemon now renders full-bright in darkness and grants particle-free Night Vision to every player within 8 blocks while he is tamed and loaded.
+
 ## Downloads
 
 - **`dist/Fruity-Friends-Dedicated-Server.zip`** — the AI edition, behavior/resource packs, Python AI service, and server setup instructions. This is the edition for your requested setup.
@@ -66,7 +68,7 @@ Blueberry is a deep-blue cube friend who works like the others — plant a **blu
 
 Lemon is a sunny-yellow cube friend with a slightly grumpy face and a broad green leaf on top. He works like the others — plant a **lemon fruit** on tilled farmland to grow a baby Lemon, tame him with a **lemon**, and talk to him with a book or in chat — but his job is light.
 
-- **He glows.** A tamed Lemon glows warmly so you can always find him, even in the dark or through walls; stand beside him and his light carries to you.
+- **He lights the way.** A tamed Lemon renders full-bright so he remains visible in darkness and grants particle-free **Night Vision** to every player within **8 blocks**. The effect is active in every movement mode while Lemon is loaded; it fades shortly after walking away. Bedrock does not support true moving block light from an entity, so nearby Night Vision is the reliable equivalent.
 - **He does not heal you.** Stay near your tamed Plum for that.
 - **He is a little grumpy.** His care messages are unfailingly dry and slightly deadpan, but he always means well.
 - Find **yellow-fruited lemon trees in warm biomes** — deserts, savannas, and jungles — in newly generated terrain. Break their lemon-speckled leaves in Survival for lemons and Lemon Saplings; their fruit drops, sapling chances, planting, and bone-meal growth work exactly like the other trees. `/give @s lemon:lemon_sapling 1` and `/give @s lemon:lemon 16` work in Creative too.
@@ -78,7 +80,7 @@ Lemon is a sunny-yellow cube friend with a slightly grumpy face and a broad gree
 
 Banana is a tall — about **1.5 blocks** — sunny-yellow cube friend with a goofy face (mismatched derpy eyes, a wide grin, and a tongue) that makes him easy to spot among the smaller cubes. He works like the others — plant a **banana fruit** on tilled farmland to grow a baby Banana, tame him with a **banana**, and talk with a book or in chat — but his real job, according to him and him alone, is bodyguard.
 
-- **He drops banana peels.** About every **30 seconds**, a tamed Banana cheerfully drops a **banana peel** on the floor. Hostile mobs (zombies, creepers, skeletons and friends) that walk through the spot **slip and slow** for a moment. He will insist this is a sophisticated tactical maneuver.
+- **He drops banana peels.** About every **30 seconds**, a tamed Banana cheerfully drops a **banana peel trap** on the floor. It cannot be picked up. The first hostile mob (zombie, creeper, skeleton, and friends) that comes within about one block **slips and slows**, consuming the peel. An unused peel removes itself after **two minutes**. He will insist this is a sophisticated tactical maneuver.
 - **He does not heal you.** Stay near your tamed Plum for that.
 - **He is comedy.** Banana answers questions *correctly* — the facts are right — but he wraps every answer in terrible banana puns and is utterly convinced he is the most useful friend in existence. He is never mean, just very, very confident.
 - Find **banana trees in jungles** in newly generated terrain. Break their yellow-speckled leaves in Survival for bananas and Banana Saplings; drops, planting, and bone-meal growth match the other trees. `/give @s banana:banana_sapling 1` and `/give @s banana:banana 16` work in Creative too.
@@ -88,7 +90,7 @@ Banana is a tall — about **1.5 blocks** — sunny-yellow cube friend with a go
 
 ## Updating from version 1.1.0
 
-Reimport the updated offline add-on, or stop BDS and replace the pack folders from the new server archive. On BDS, update both world pack-list entries to **`[1,2,16]`**, preserving entries for other packs. Replace `plum-service/bridge.py` too and restart the bridge so the AI knows about Apple, Applezon, Blueberry, the Collector chest, Lemon the Light Friend, Banana the Prankster, and the five kinds of fruit trees. Keep existing pack UUIDs, credentials, and world data. Existing tamed friends carried over from older worlds keep working: friends that were sitting migrate to **Stay**, and others keep their old follow-the-owner behavior as **Follow**.
+Reimport the updated offline add-on, or stop BDS and replace the pack folders from the new server archive. On BDS, update both world pack-list entries to **`[1,2,17]`**, preserving entries for other packs. Replace `plum-service/bridge.py` too and restart the bridge so the AI knows about Apple, Applezon, Blueberry, the Collector chest, Lemon the Light Friend, Banana the Prankster, and the five kinds of fruit trees. Keep existing pack UUIDs, credentials, and world data. Existing tamed friends carried over from older worlds keep working: friends that were sitting migrate to **Stay**, and others keep their old follow-the-owner behavior as **Follow**.
 
 ## Protection and following
 
@@ -129,10 +131,10 @@ Tree tests also cover complete sapling growth, blocked/unloaded destinations, ro
 - Find plum, apple and blueberry trees in new plains/forest terrain, lemon trees in warm biomes (desert, savanna, jungle), and banana trees in jungles; break leaves in Survival to verify each fruit and sapling drop.
 - Plant a sapling, test bone meal and natural growth, and confirm a nearby wall/chest is preserved when growth is blocked.
 - Verify fruit icons, fruit planting, sprout growth, and sapling rendering on mobile and PC.
-- Tame a Banana, wait about 30 seconds, and confirm he drops a peel and nearby zombies/creepers slip and slow; confirm the peel is a plain item, the effect stops when he is untamed or in a basket, and that Banana renders about 1.5 blocks tall with his goofy face in adult and baby forms.
+- Tame a Banana, wait about 30 seconds, and confirm he drops a peel trap that cannot be picked up; lead a zombie or creeper within one block and confirm it slips, slows, and consumes the peel. Confirm an unused peel removes itself after two minutes, no new peels appear while Banana is untamed or in a basket, and Banana renders about 1.5 blocks tall with his goofy face in adult and baby forms.
 - Tame a Blueberry, drop items nearby, and confirm he collects them; open his chest and store/take stacks; fill all 27 slots and confirm he warns you when full.
 - Carry a Blueberry with items in his chest in a Fruit Basket and confirm the items return when he is released.
-- Tame a Lemon and confirm he glows warmly while tamed, and that the glow stops when he is untamed.
+- Tame a Lemon and confirm he remains visible in darkness and grants particle-free Night Vision to every player within 8 blocks; confirm the effect fades after moving away and untamed Lemons grant nothing.
 - Confirm Lemon's grumpy face (angled brows and a frown) renders on the front of both adult and baby forms.
 - Hold a book and open the conversation on both mobile and PC. Verify cancel/reopen and private answers.
 - Ask a follow-up AI question; confirm a second player's history is separate.

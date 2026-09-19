@@ -50,6 +50,7 @@ FRIENDS = {
     'lemon': {
         'file': 'lemon',
         'title': 'Lemon', 'entity': 'lemon:friend', 'fruit': 'lemon:lemon', 'family': 'lemon_friend',
+        'material': 'entity_emissive_alpha',
         'egg': ('#F7C51E', '#3E7A24'),
         'palette': ((243, 196, 42, 255), (201, 148, 18, 255), (250, 224, 118, 255), (143, 104, 12, 255), (255, 252, 240, 255), (242, 168, 140, 255)),
     },
@@ -230,7 +231,7 @@ def build_friend(name, data):
     file_name = data.get('file', name)
     write(BP / f'entities/{file_name}.json', {'format_version': '1.21.0', 'minecraft:entity': {'description': {'identifier': entity, 'is_spawnable': True, 'is_summonable': True, 'is_experimental': False}, 'component_groups': groups, 'components': components, 'events': events}})
     write(RP / f'entity/{file_name}.entity.json', {'format_version': '1.10.0', 'minecraft:client_entity': {'description': {
-        'identifier': entity, 'materials': {'default': 'entity_alphatest'}, 'textures': {'default': f'textures/entity/{name}'},
+        'identifier': entity, 'materials': {'default': data.get('material', 'entity_alphatest')}, 'textures': {'default': f'textures/entity/{name}'},
         'geometry': {'default': f'geometry.{name}'}, 'render_controllers': [f'controller.render.{name}'],
         'animations': {'bob': f'animation.{name}.bob', 'sit': f'animation.{name}.sit'}, 'scripts': {'animate': ['bob', {'sit': 'query.is_sitting'}]},
         'spawn_egg': {'base_color': data['egg'][0], 'overlay_color': data['egg'][1]}
@@ -299,15 +300,49 @@ def build_basket(bp, rp, write, png):
     with (rp / 'texts/en_US.lang').open('a', encoding='utf-8') as stream:
         stream.write('item.friend:fruit_basket.name=Fruit Basket\n')
 
+def build_peel_trap(bp, rp, write):
+    """A visible floor trap entity: unlike a dropped item, players cannot pick it up."""
+    write(bp / 'entities/banana_peel.json', {
+        'format_version': '1.21.0',
+        'minecraft:entity': {
+            'description': {'identifier': 'banana:peel_trap', 'is_spawnable': False, 'is_summonable': False, 'is_experimental': False},
+            'component_groups': {'banana:despawn': {'minecraft:instant_despawn': {}}},
+            'components': {
+                'minecraft:type_family': {'family': ['banana_peel_trap']},
+                'minecraft:collision_box': {'width': 0.6, 'height': 0.08},
+                'minecraft:physics': {'has_gravity': True, 'has_collision': True},
+                'minecraft:pushable': {'is_pushable': False, 'is_pushable_by_piston': False},
+                'minecraft:damage_sensor': {'triggers': [{'cause': 'all', 'deals_damage': 'no'}]},
+                'minecraft:persistent': {},
+                'minecraft:timer': {'looping': False, 'time': 120, 'time_down_event': {'event': 'banana:expire', 'target': 'self'}},
+            },
+            'events': {'banana:expire': {'add': {'component_groups': ['banana:despawn']}}},
+        },
+    })
+    faces = {face: {'uv': [0, 0], 'uv_size': [16, 16]} for face in ('north', 'south', 'east', 'west', 'up', 'down')}
+    write(rp / 'entity/banana_peel.entity.json', {'format_version': '1.10.0', 'minecraft:client_entity': {'description': {
+        'identifier': 'banana:peel_trap', 'materials': {'default': 'entity_alphatest'},
+        'textures': {'default': 'textures/items/banana_peel'}, 'geometry': {'default': 'geometry.banana_peel'},
+        'render_controllers': ['controller.render.banana_peel'],
+    }}})
+    write(rp / 'models/entity/banana_peel.geo.json', {'format_version': '1.12.0', 'minecraft:geometry': [{
+        'description': {'identifier': 'geometry.banana_peel', 'texture_width': 16, 'texture_height': 16,
+                        'visible_bounds_width': 1, 'visible_bounds_height': 1, 'visible_bounds_offset': [0, 0.25, 0]},
+        'bones': [{'name': 'peel', 'pivot': [0, 0, 0], 'cubes': [{'origin': [-5, 0, -5], 'size': [10, 1, 10], 'uv': faces}]}],
+    }]})
+    write(rp / 'render_controllers/banana_peel.render_controllers.json', {'format_version': '1.8.0', 'render_controllers': {
+        'controller.render.banana_peel': {'geometry': 'Geometry.default', 'materials': [{'*': 'Material.default'}], 'textures': ['Texture.default']},
+    }})
+
 def build(net_version='1.0.0-beta', admin_version='1.0.0-beta'):
-    version = [1, 2, 16]
+    version = [1, 2, 17]
     for path, name, uid, modules in [
         (BP, 'Fruity Friends', BP_ID, [
             {'type': 'data', 'uuid': 'fce620e4-42ac-4477-a84b-c8113d47ba2e', 'version': version},
             {'type': 'script', 'language': 'javascript', 'entry': 'scripts/main.js', 'uuid': 'a91c511c-d9d5-48e5-82c9-25cc48706cbb', 'version': version}]),
         (RP, 'Fruity Friends Resources', RP_ID, [
             {'type': 'resources', 'uuid': '6b250c6d-d093-4cb1-b16b-a42cd137d4bb', 'version': version}])]:
-        manifest = {'format_version': 2, 'header': {'name': name, 'description': 'Smiling cube companions with babies, healing, shopping, collecting, a glow, and a prankster. Friends use a universal Follow/Stay/Work/Go Home system; Apple runs the Applezon shop; Blueberry collects drops; Lemon glows warmly; Banana (the Prankster) drops peels that trip up monsters.', 'uuid': uid, 'version': version, 'min_engine_version': [1, 21, 90]}, 'modules': modules}
+        manifest = {'format_version': 2, 'header': {'name': name, 'description': 'Smiling cube companions with babies, healing, shopping, collecting, light, and a prankster. Friends use a universal Follow/Stay/Work/Go Home system; Apple runs the Applezon shop; Blueberry collects drops; Lemon grants nearby Night Vision; Banana (the Prankster) drops peels that trip up monsters.', 'uuid': uid, 'version': version, 'min_engine_version': [1, 21, 90]}, 'modules': modules}
         if path == BP:
             manifest['dependencies'] = [{'uuid': RP_ID, 'version': version}, {'module_name': '@minecraft/server', 'version': '2.0.0'}, {'module_name': '@minecraft/server-ui', 'version': '2.0.0'}]
         write(path / 'manifest.json', manifest)
@@ -323,6 +358,7 @@ def build(net_version='1.0.0-beta', admin_version='1.0.0-beta'):
     for pack in (BP, RP): png(pack / 'pack_icon.png', icon)
     build_orchard(BP, RP, ROOT, write, png)
     build_basket(BP, RP, write, png)
+    build_peel_trap(BP, RP, write)
     out = ROOT / 'dist/Fruity-Friends.mcaddon'
     out.parent.mkdir(exist_ok=True)
     with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as archive:
@@ -359,10 +395,12 @@ This zip contains the server packs and a Python service; it is not a mobile impo
    instead she owns Applezon and delivers a surprise or a search result for one apple fruit.
 7. Blueberry is the Collector: dropped items within four blocks go straight into his chest. Interact with
    him with an empty hand to open it, store what you are holding, take something out, or choose Movement.
-8. Lemon is the Light Friend: he glows warmly, on his own and for whoever stands beside him.
+8. Lemon is the Light Friend: he stays bright in the dark and grants Night Vision to every player
+   within eight blocks while he is tamed and loaded.
    Lemon does not heal you; stay near your tamed Plum for that.
 9. Banana is the Prankster: he is convinced he is your bodyguard. About every 30 seconds he drops a
-   banana peel, and hostile mobs that step on it slip and slow for a moment. He does not heal you and
+   non-pickup banana peel trap. The first hostile mob that steps close slips and slows; an unused peel
+   removes itself after two minutes. He does not heal you and
    his co-workers are unimpressed.
 10. Craft a Fruit Basket from three sticks in the bucket shape, then hold it and interact with a tamed
    friend to tuck them inside (Blueberry keeps his chest contents). Carry them in your inventory and interact with a block to let them out again — they always come out in Stay mode, waiting for your next order.
@@ -374,7 +412,7 @@ leaves in Survival for the matching fruit and sapling. Plant a sapling on soil w
 The fruit works as a seed and snack: plant it on farmland to grow a baby friend.
 
 Updating from 1.1.0: replace both pack folders and the bridge script, update each Fruity Friends
-world-pack-list entry to [1,2,16], and restart. Keep existing credentials and UUIDs.
+world-pack-list entry to [1,2,17], and restart. Keep existing credentials and UUIDs.
 
 Friends resist ordinary damage and do not naturally despawn. Administrative removal,
 /kill, and engine edge cases are outside this protection. Unloaded companions cannot

@@ -1,0 +1,20 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "banana:peel_trap",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/items/banana_peel"
+      },
+      "geometry": {
+        "default": "geometry.banana_peel"
+      },
+      "render_controllers": [
+        "controller.render.banana_peel"
+      ]
+    }
+  }
+}

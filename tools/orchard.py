@@ -281,19 +281,6 @@ def build_orchard(bp, rp, root, write, png):
         sprout = _sprout_pixels(FRUIT_COLORS[fruit], fruit)
         png(root / f'art/{fruit}-sprout.png', [[sprout[y // 16][x // 16] for x in range(256)] for y in range(256)])
     peel = peel_pixels()
-    write(bp / 'items/banana_peel.json', {
-        'format_version': '1.21.90',
-        'minecraft:item': {
-            'description': {'identifier': 'banana:banana_peel', 'menu_category': {'category': 'nature'}},
-            'components': {
-                'minecraft:display_name': {'value': 'item.banana:banana_peel.name'},
-                'minecraft:icon': {'textures': {'default': 'banana_peel'}},
-                'minecraft:max_stack_size': 64,
-            }
-        }
-    })
-    accumulate['textures']['banana_peel'] = {'textures': 'textures/items/banana_peel'}
-    accumulate['lines'].append('item.banana:banana_peel.name=Banana Peel\n')
     png(rp / 'textures/items/banana_peel.png', peel)
     png(root / 'art/banana-peel.png', [[peel[y // 16][x // 16] for x in range(256)] for y in range(256)])
     write(rp / 'textures/item_texture.json', {'resource_pack_name': 'plum_friend', 'texture_name': 'atlas.items', 'texture_data': accumulate['textures']})

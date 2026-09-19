@@ -126,7 +126,7 @@ class PackTests(unittest.TestCase):
         self.assertTrue((rp / 'textures/entity/blueberry.png').exists())
         self.assertTrue((rp / 'models/entity/blueberry.geo.json').exists())
 
-    def test_lemon_light_friend_glows(self):
+    def test_lemon_light_friend_illuminates_nearby_players(self):
         bp, rp = ROOT / 'packs/Plum_BP', ROOT / 'packs/Plum_RP'
         entity = json.loads((bp / 'entities/lemon.json').read_text())['minecraft:entity']
         groups = entity['component_groups']
@@ -140,13 +140,17 @@ class PackTests(unittest.TestCase):
         for needle in [
             "'lemon:friend':", "name: 'Lemon'", "fruit: 'lemon:lemon'", 'light: true',
             "'lemon:lemon': 'lemon:friend'", "lemon: 'lemon:friend'",
-            "addEffect('glowing'",
+            'const LEMON_LIGHT_RADIUS = 8', "getPlayers({ location: friend.location",
+            "addEffect('night_vision'",
         ]:
             self.assertIn(needle, script, f'lemon light-friend feature missing: {needle}')
+        self.assertNotIn("addEffect('glowing'", script, 'glowing is a Java-only effect')
         self.assertNotIn('HOSTILE_FAMILY', script)
         self.assertNotIn('hostile.remove()', script)
         self.assertTrue((rp / 'models/entity/lemon.geo.json').exists())
         self.assertTrue((rp / 'textures/entity/lemon.png').exists())
+        client = json.loads((rp / 'entity/lemon.entity.json').read_text())['minecraft:client_entity']['description']
+        self.assertEqual(client['materials']['default'], 'entity_emissive_alpha')
         lang = (rp / 'texts/en_US.lang').read_text()
         self.assertIn('entity.lemon:friend.name=Lemon', lang)
         self.assertIn('Talk to Lemon', lang)
@@ -165,15 +169,21 @@ class PackTests(unittest.TestCase):
         for needle in [
             "'banana:friend':", "name: 'Banana'", "fruit: 'banana:banana'", 'prankster: true',
             "'banana:banana': 'banana:friend'", "banana: 'banana:friend'",
-            "const PEEL_ITEM = 'banana:banana_peel'", 'PEEL_INTERVAL = 600', 'applyImpulse',
+            "const PEEL_ENTITY = 'banana:peel_trap'", 'PEEL_INTERVAL = 600', 'PEEL_TRIGGER_RADIUS = 0.9',
+            'spawnEntity(PEEL_ENTITY', 'peel.remove()', 'applyImpulse',
             "hostile.addEffect('slowness'", "families: ['monster']",
         ]:
             self.assertIn(needle, script, f'banana prankster feature missing: {needle}')
-        peel = read('items/banana_peel.json')['minecraft:item']
-        self.assertEqual(peel['description']['identifier'], 'banana:banana_peel')
-        self.assertNotIn('minecraft:block_placer', peel['components'], 'peels are flavor drops, not plantable')
-        atlas = json.loads((rp / 'textures/item_texture.json').read_text())['texture_data']
-        self.assertTrue((rp / (atlas['banana_peel']['textures'] + '.png')).exists())
+        self.assertFalse((bp / 'items/banana_peel.json').exists(), 'peel traps must not be collectible items')
+        peel = read('entities/banana_peel.json')['minecraft:entity']
+        self.assertEqual(peel['description']['identifier'], 'banana:peel_trap')
+        self.assertFalse(peel['description']['is_summonable'])
+        self.assertEqual(peel['components']['minecraft:timer']['time'], 120)
+        self.assertIn('minecraft:instant_despawn', peel['component_groups']['banana:despawn'])
+        peel_client = json.loads((rp / 'entity/banana_peel.entity.json').read_text())['minecraft:client_entity']['description']
+        self.assertEqual(peel_client['identifier'], 'banana:peel_trap')
+        self.assertTrue((rp / (peel_client['textures']['default'] + '.png')).exists())
+        self.assertTrue((rp / 'models/entity/banana_peel.geo.json').exists())
         geo = json.loads((rp / 'models/entity/banana.geo.json').read_text())['minecraft:geometry'][0]
         cube = geo['bones'][0]['cubes'][0]
         self.assertEqual(cube['size'], [12, 24, 12], 'Banana is a 1.5-block-tall 12x24x12 cuboid')
@@ -182,7 +192,6 @@ class PackTests(unittest.TestCase):
         self.assertEqual(top['uv'], [0, 24], 'tall sheet puts the top face below the 24-row body')
         lang = (rp / 'texts/en_US.lang').read_text()
         self.assertIn('entity.banana:friend.name=Banana', lang)
-        self.assertIn('item.banana:banana_peel.name=Banana Peel', lang)
         self.assertIn('Talk to Banana', lang)
         self.assertTrue((rp / 'textures/entity/banana.png').exists())
 
@@ -258,9 +267,9 @@ class PackTests(unittest.TestCase):
             for atlas in ['item_texture.json', 'terrain_texture.json']:
                 for entry in read(rp / 'textures' / atlas)['texture_data'].values():
                     self.assertTrue((rp / (entry['textures'] + '.png')).exists())
-        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 16])
+        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 17])
         with zipfile.ZipFile(ROOT / 'dist/Fruity-Friends-Dedicated-Server.zip') as z:
-            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 16])
+            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 17])
 
     def test_fruit_basket_item_recipe_and_script(self):
         bp, rp = ROOT / 'packs/Plum_BP', ROOT / 'packs/Plum_RP'
