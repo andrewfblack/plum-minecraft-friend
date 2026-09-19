@@ -1,5 +1,5 @@
 {
-  "format_version": "1.21.80",
+  "format_version": "1.21.90",
   "minecraft:block": {
     "description": {
       "identifier": "blueberry:blueberry_sapling",
@@ -58,9 +58,7 @@
         ]
       },
       "minecraft:loot": "loot_tables/blocks/blueberry_sapling.json",
-      "minecraft:custom_components": [
-        "blueberry:grow_tree"
-      ]
+      "blueberry:grow_tree": {}
     }
   }
 }

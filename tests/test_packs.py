@@ -277,20 +277,21 @@ class PackTests(unittest.TestCase):
             self.assertEqual(fruit_components['minecraft:block_placer']['block'], f'{fruit}:{fruit}_sprout')
             self.assertEqual(fruit_components['minecraft:food']['nutrition'], 4, 'carrot-style: plant it or eat it')
             sprout = read(bp / 'blocks' / f'{fruit}_sprout.json')['minecraft:block']
-            self.assertIn('friend:sprout_grow', sprout['components']['minecraft:custom_components'])
+            self.assertIn('friend:sprout_grow', sprout['components'])
+            self.assertNotIn('minecraft:custom_components', sprout['components'], '1.21.90 removed custom_components; use the bare component key')
             sprout_geometry = sprout['components']['minecraft:geometry']
             self.assertEqual(sprout_geometry.get('identifier') if isinstance(sprout_geometry, dict) else sprout_geometry, 'minecraft:geometry.cross')
             sprout_drops = {entry['name'] for pool in read(bp / sprout['components']['minecraft:loot'])['pools'] for entry in pool['entries']}
             self.assertEqual(sprout_drops, {fruit_item}, 'sprout drops exactly its fruit seed')
             sapling = read(bp / 'blocks' / f'{fruit}_sapling.json')['minecraft:block']
-            self.assertIn(f'{fruit}:grow_tree', sapling['components']['minecraft:custom_components'])
+            self.assertIn(f'{fruit}:grow_tree', sapling['components'])
             self.assertIn("import './orchard.js'", (bp / 'scripts/main.js').read_text())
             for atlas in ['item_texture.json', 'terrain_texture.json']:
                 for entry in read(rp / 'textures' / atlas)['texture_data'].values():
                     self.assertTrue((rp / (entry['textures'] + '.png')).exists())
-        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 22])
+        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 23])
         with zipfile.ZipFile(ROOT / 'dist/Fruity-Friends-Dedicated-Server.zip') as z:
-            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 22])
+            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 23])
 
     def test_guidebook_item_and_script(self):
         bp, rp = ROOT / 'packs/Plum_BP', ROOT / 'packs/Plum_RP'
@@ -299,7 +300,8 @@ class PackTests(unittest.TestCase):
         self.assertEqual(item['description']['identifier'], 'friend:guidebook')
         components = item['components']
         self.assertEqual(components['minecraft:display_name']['value'], 'item.friend:guidebook.name')
-        self.assertEqual(components['minecraft:custom_components'], ['friend:open_guide'])
+        self.assertEqual(components['friend:open_guide'], {}, '1.21.90 custom components bind as a bare key, not custom_components')
+        self.assertNotIn('minecraft:custom_components', components)
         atlas = read(rp / 'textures/item_texture.json')['texture_data']
         self.assertEqual(atlas[components['minecraft:icon']['textures']['default']]['textures'], 'textures/items/guidebook')
         self.assertTrue((rp / 'textures/items/guidebook.png').exists())
@@ -359,8 +361,9 @@ class PackTests(unittest.TestCase):
         declared = set()
         for block in (bp / 'blocks').glob('*.json'):
             block_id = read(block)['minecraft:block']['description']['identifier']
-            for component in read(block)['minecraft:block']['components'].get('minecraft:custom_components', []):
-                declared.add((block_id, component))
+            for name in read(block)['minecraft:block']['components']:
+                if ':' in name and not name.startswith('minecraft:') and not name.startswith('tag:'):
+                    declared.add((block_id, name))
         orchard = (bp / 'scripts/orchard.js').read_text()
         sprouts = [block_id for block_id, component in declared if block_id.endswith('_sprout')]
         saplings = sorted(block_id for block_id, component in declared if block_id.endswith('_sapling'))

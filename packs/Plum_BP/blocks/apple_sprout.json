@@ -1,5 +1,5 @@
 {
-  "format_version": "1.21.80",
+  "format_version": "1.21.90",
   "minecraft:block": {
     "description": {
       "identifier": "apple:apple_sprout",
@@ -50,9 +50,7 @@
         ]
       },
       "minecraft:loot": "loot_tables/blocks/apple_sprout.json",
-      "minecraft:custom_components": [
-        "friend:sprout_grow"
-      ]
+      "friend:sprout_grow": {}
     }
   }
 }

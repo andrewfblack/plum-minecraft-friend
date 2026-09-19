@@ -17,9 +17,7 @@
         }
       },
       "minecraft:max_stack_size": 1,
-      "minecraft:custom_components": [
-        "friend:open_guide"
-      ]
+      "friend:open_guide": {}
     }
   }
 }

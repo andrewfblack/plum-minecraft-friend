@@ -135,7 +135,7 @@ def build_fruit(bp, rp, root, write, png, fruit, accumulate, biomes=('plains', '
         }
     })
     write(bp / f'blocks/{fruit}_sprout.json', {
-        'format_version': '1.21.80', 'minecraft:block': {
+        'format_version': '1.21.90', 'minecraft:block': {
             'description': {'identifier': sprout, 'menu_category': {'category': 'nature'}},
             'components': {
                 'minecraft:display_name': f'tile.{sprout}.name',
@@ -148,7 +148,7 @@ def build_fruit(bp, rp, root, write, png, fruit, accumulate, biomes=('plains', '
                 'minecraft:light_dampening': 0, 'minecraft:map_color': '#639940',
                 'minecraft:placement_filter': {'conditions': [{'allowed_faces': ['up'], 'block_filter': ['minecraft:farmland']}]},
                 'minecraft:loot': f'loot_tables/blocks/{fruit}_sprout.json',
-                'minecraft:custom_components': ['friend:sprout_grow']
+                'friend:sprout_grow': {}
             }
         }
     })
@@ -168,7 +168,7 @@ def build_fruit(bp, rp, root, write, png, fruit, accumulate, biomes=('plains', '
         }
     })
     write(bp / f'blocks/{fruit}_sapling.json', {
-        'format_version': '1.21.80', 'minecraft:block': {
+        'format_version': '1.21.90', 'minecraft:block': {
             'description': {'identifier': sapling_block, 'menu_category': {'category': 'nature'}},
             'components': {
                 'minecraft:display_name': f'tile.{sapling_block}.name',
@@ -184,7 +184,7 @@ def build_fruit(bp, rp, root, write, png, fruit, accumulate, biomes=('plains', '
                 'minecraft:light_dampening': 0, 'minecraft:map_color': '#639940',
                 'minecraft:placement_filter': {'conditions': [{'allowed_faces': ['up'], 'block_filter': SOIL}]},
                 'minecraft:loot': f'loot_tables/blocks/{fruit}_sapling.json',
-                'minecraft:custom_components': [component]
+                **{component: {}}
             }
         }
     })
