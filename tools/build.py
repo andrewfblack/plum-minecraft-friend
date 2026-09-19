@@ -194,12 +194,15 @@ def build_friend(name, data):
         },
         f'{name}:tamed': {
             'minecraft:is_tamed': {},
-            # Native interactions provide touch/controller prompts. Script catches
-            # them before the no-op event and opens the appropriate form.
+            # Native interactions provide touch/controller prompts for manage and talk.
+            # Script catches them before the no-op event and opens the appropriate form.
+            # The Fruit Basket deliberately has NO native interaction: when the engine
+            # claims the custom-item interaction it swallows the tap before main.js can
+            # capture the friend, and the empty friend:script_interact event does nothing.
+            # The script-only basket path (1.2.17 behavior) always reaches captureInBasket.
             'minecraft:interact': {'interactions': [
                 interaction(None, empty_text),
                 interaction('minecraft:book', f'action.interact.{name}_talk'),
-                interaction('friend:fruit_basket', f'action.interact.{name}_basket'),
             ]},
         },
         f'{name}:sit': {
@@ -394,7 +397,7 @@ def build_peel_trap(bp, rp, write):
     }})
 
 def build(net_version='1.0.0-beta', admin_version='1.0.0-beta'):
-    version = [1, 2, 20]
+    version = [1, 2, 22]
     for path, name, uid, modules in [
         (BP, 'Fruity Friends', BP_ID, [
             {'type': 'data', 'uuid': 'fce620e4-42ac-4477-a84b-c8113d47ba2e', 'version': version},
@@ -413,7 +416,7 @@ def build(net_version='1.0.0-beta', admin_version='1.0.0-beta'):
         build_friend(name, data)
         empty_label = f'Open {data["title"]}\'s Chest' if name == 'blueberry' else f'Manage {data["title"]}'
         empty_key = 'chest' if name == 'blueberry' else 'manage'
-        lines.append(f'entity.{data["entity"]}.name={data["title"]}\nitem.spawn_egg.entity.{data["entity"]}.name={data["title"]} Spawn Egg\naction.interact.{name}_{empty_key}={empty_label}\naction.interact.{name}_talk=Talk to {data["title"]}\naction.interact.{name}_basket=Put {data["title"]} in Fruit Basket\n')
+        lines.append(f'entity.{data["entity"]}.name={data["title"]}\nitem.spawn_egg.entity.{data["entity"]}.name={data["title"]} Spawn Egg\naction.interact.{name}_{empty_key}={empty_label}\naction.interact.{name}_talk=Talk to {data["title"]}\n')
     (RP / 'texts/en_US.lang').write_text(''.join(lines), encoding='utf-8')
     icon = [[friend_texture('plum')[:16][y // 8][x // 8] for x in range(128)] for y in range(128)]
     for pack in (BP, RP): png(pack / 'pack_icon.png', icon)
@@ -475,7 +478,7 @@ leaves in Survival for the matching fruit and sapling. Plant a sapling on soil w
 The fruit works as a seed and snack: plant it on farmland to grow a baby friend.
 
 Updating from 1.1.0: replace both pack folders and the bridge script, update each Fruity Friends
-world-pack-list entry to [1,2,20], and restart. Keep existing credentials and UUIDs.
+world-pack-list entry to [1,2,22], and restart. Keep existing credentials and UUIDs.
 
 Friends resist ordinary damage and do not naturally despawn. Administrative removal,
 /kill, and engine edge cases are outside this protection. Unloaded companions cannot

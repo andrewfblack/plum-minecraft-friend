@@ -67,7 +67,10 @@ class PackTests(unittest.TestCase):
             self.assertNotIn('minecraft:behavior.follow_owner', groups[f'{prefix}:tamed'],
                              f'{file}: the tamed group must not contain follow_owner (new tames start in STAY)')
             interactions = groups[f'{prefix}:tamed']['minecraft:interact']['interactions']
-            self.assertEqual(len(interactions), 3)
+            # Manage and talk get native prompts. The Fruit Basket must NOT be a native
+            # interaction: the engine claims custom-item interactions and swallows the tap
+            # before main.js can capture the friend (basketing is script-only, 1.2.17 style).
+            self.assertEqual(len(interactions), 2)
             for entry in interactions:
                 self.assertIn(f'{entry["interact_text"]}=', lang)
                 self.assertIn({'test': 'is_owner', 'subject': 'other', 'value': True},
@@ -75,10 +78,10 @@ class PackTests(unittest.TestCase):
             self.assertEqual(
                 {entry['interact_text'] for entry in interactions},
                 {f'action.interact.{prefix}_chest' if prefix == 'blueberry' else f'action.interact.{prefix}_manage',
-                 f'action.interact.{prefix}_talk', f'action.interact.{prefix}_basket'})
+                 f'action.interact.{prefix}_talk'})
             held_filters = [entry['on_interact']['filters']['all_of'][-1] for entry in interactions]
             self.assertEqual(held_filters[0], {'test': 'all_slots_empty', 'subject': 'other', 'value': 'hand'})
-            self.assertEqual({entry.get('value') for entry in held_filters[1:]}, {'minecraft:book', 'friend:fruit_basket'})
+            self.assertEqual({entry.get('value') for entry in held_filters[1:]}, {'minecraft:book'})
             self.assertIn('friend:script_interact', entity['events'])
             self.assertIn('minecraft:is_tamed', groups['friend:follow'])
             self.assertIn('minecraft:behavior.follow_owner', groups['friend:follow'],
@@ -285,9 +288,9 @@ class PackTests(unittest.TestCase):
             for atlas in ['item_texture.json', 'terrain_texture.json']:
                 for entry in read(rp / 'textures' / atlas)['texture_data'].values():
                     self.assertTrue((rp / (entry['textures'] + '.png')).exists())
-        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 20])
+        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 22])
         with zipfile.ZipFile(ROOT / 'dist/Fruity-Friends-Dedicated-Server.zip') as z:
-            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 20])
+            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 22])
 
     def test_guidebook_item_and_script(self):
         bp, rp = ROOT / 'packs/Plum_BP', ROOT / 'packs/Plum_RP'

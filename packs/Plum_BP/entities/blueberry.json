@@ -89,33 +89,6 @@
                 "target": "self"
               },
               "interact_text": "action.interact.blueberry_talk"
-            },
-            {
-              "on_interact": {
-                "filters": {
-                  "all_of": [
-                    {
-                      "test": "is_family",
-                      "subject": "other",
-                      "value": "player"
-                    },
-                    {
-                      "test": "is_owner",
-                      "subject": "other",
-                      "value": true
-                    },
-                    {
-                      "test": "has_equipment",
-                      "subject": "other",
-                      "domain": "hand",
-                      "value": "friend:fruit_basket"
-                    }
-                  ]
-                },
-                "event": "friend:script_interact",
-                "target": "self"
-              },
-              "interact_text": "action.interact.blueberry_basket"
             }
           ]
         }
