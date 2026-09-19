@@ -348,7 +348,7 @@ def build_guidebook(bp, rp, write, png):
                 'minecraft:display_name': {'value': 'item.friend:guidebook.name'},
                 'minecraft:icon': {'textures': {'default': 'fruity_friend_guidebook'}},
                 'minecraft:max_stack_size': 1,
-                'friend:open_guide': {},
+                'minecraft:custom_components': ['friend:open_guide'],
             },
         },
     })
@@ -394,7 +394,7 @@ def build_peel_trap(bp, rp, write):
     }})
 
 def build(net_version='1.0.0-beta', admin_version='1.0.0-beta'):
-    version = [1, 2, 19]
+    version = [1, 2, 20]
     for path, name, uid, modules in [
         (BP, 'Fruity Friends', BP_ID, [
             {'type': 'data', 'uuid': 'fce620e4-42ac-4477-a84b-c8113d47ba2e', 'version': version},
@@ -475,7 +475,7 @@ leaves in Survival for the matching fruit and sapling. Plant a sapling on soil w
 The fruit works as a seed and snack: plant it on farmland to grow a baby friend.
 
 Updating from 1.1.0: replace both pack folders and the bridge script, update each Fruity Friends
-world-pack-list entry to [1,2,19], and restart. Keep existing credentials and UUIDs.
+world-pack-list entry to [1,2,20], and restart. Keep existing credentials and UUIDs.
 
 Friends resist ordinary damage and do not naturally despawn. Administrative removal,
 /kill, and engine edge cases are outside this protection. Unloaded companions cannot

@@ -285,9 +285,9 @@ class PackTests(unittest.TestCase):
             for atlas in ['item_texture.json', 'terrain_texture.json']:
                 for entry in read(rp / 'textures' / atlas)['texture_data'].values():
                     self.assertTrue((rp / (entry['textures'] + '.png')).exists())
-        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 19])
+        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 20])
         with zipfile.ZipFile(ROOT / 'dist/Fruity-Friends-Dedicated-Server.zip') as z:
-            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 19])
+            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 20])
 
     def test_guidebook_item_and_script(self):
         bp, rp = ROOT / 'packs/Plum_BP', ROOT / 'packs/Plum_RP'
@@ -296,7 +296,7 @@ class PackTests(unittest.TestCase):
         self.assertEqual(item['description']['identifier'], 'friend:guidebook')
         components = item['components']
         self.assertEqual(components['minecraft:display_name']['value'], 'item.friend:guidebook.name')
-        self.assertIn('friend:open_guide', components)
+        self.assertEqual(components['minecraft:custom_components'], ['friend:open_guide'])
         atlas = read(rp / 'textures/item_texture.json')['texture_data']
         self.assertEqual(atlas[components['minecraft:icon']['textures']['default']]['textures'], 'textures/items/guidebook')
         self.assertTrue((rp / 'textures/items/guidebook.png').exists())
