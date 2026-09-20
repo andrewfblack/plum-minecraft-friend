@@ -16,6 +16,8 @@ Version **1.2.22** fixes two regressions: friends now answer in chat (the add-on
 
 Version **1.2.24** makes newly tamed friends reliably start in **Stay**, raises the follower limit from four to six, and replaces Lemon's nearby Night Vision with moving block light. It also removes the Guidebook; hold an ordinary book and interact with a friend for help and conversation.
 
+Version **1.2.25** fixes a pack-load schema error in every fruit item: `minecraft:block_placer` no longer declares `dispense_on`, which Minecraft removed from that component in the 1.21.50+ schema (it is valid only on `minecraft:entity_placer`). The fruit keeps planting into its sprouts exactly as before.
+
 ## Downloads
 
 - **`dist/Fruity-Friends-Dedicated-Server.zip`** — the AI edition, behavior/resource packs, Python AI service, and server setup instructions. This is the edition for your requested setup.
@@ -102,7 +104,7 @@ Banana is a tall — about **1.5 blocks** — sunny-yellow cube friend with a go
 
 ## Updating from version 1.1.0
 
-Reimport the updated offline add-on, or stop BDS and replace the pack folders from the new server archive. On BDS, update both world pack-list entries to **`[1,2,24]`**, preserving entries for other packs. Replace `plum-service/bridge.py` too and restart the bridge so the AI knows about Apple, Applezon, Blueberry, the Collector chest, Lemon the Light Friend, Banana the Prankster, and the five kinds of fruit trees. Keep existing pack UUIDs, credentials, and world data. Existing tamed friends carried over from older worlds keep working: friends that were sitting migrate to **Stay**, and others keep their old follow-the-owner behavior as **Follow**.
+Reimport the updated offline add-on, or stop BDS and replace the pack folders from the new server archive. On BDS, update both world pack-list entries to **`[1,2,25]`**, preserving entries for other packs. Replace `plum-service/bridge.py` too and restart the bridge so the AI knows about Apple, Applezon, Blueberry, the Collector chest, Lemon the Light Friend, Banana the Prankster, and the five kinds of fruit trees. Keep existing pack UUIDs, credentials, and world data. Existing tamed friends carried over from older worlds keep working: friends that were sitting migrate to **Stay**, and others keep their old follow-the-owner behavior as **Follow**.
 
 ## Protection and following
 

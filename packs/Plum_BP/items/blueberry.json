@@ -21,8 +21,7 @@
         "block": "blueberry:blueberry_sprout",
         "use_on": [
           "minecraft:farmland"
-        ],
-        "dispense_on": []
+        ]
       },
       "minecraft:food": {
         "nutrition": 4,

@@ -285,6 +285,7 @@ class PackTests(unittest.TestCase):
             self.assertEqual(drops, {fruit_item, f'{fruit}:{fruit}_sapling'})
             fruit_components = read(bp / 'items' / f'{fruit}.json')['minecraft:item']['components']
             self.assertEqual(fruit_components['minecraft:block_placer']['block'], f'{fruit}:{fruit}_sprout')
+            self.assertNotIn('dispense_on', fruit_components['minecraft:block_placer'], 'dispense_on is not a valid block_placer property at 1.21.90+')
             self.assertEqual(fruit_components['minecraft:food']['nutrition'], 4, 'carrot-style: plant it or eat it')
             sprout = read(bp / 'blocks' / f'{fruit}_sprout.json')['minecraft:block']
             self.assertIn('friend:sprout_grow', sprout['components'])
@@ -299,9 +300,9 @@ class PackTests(unittest.TestCase):
             for atlas in ['item_texture.json', 'terrain_texture.json']:
                 for entry in read(rp / 'textures' / atlas)['texture_data'].values():
                     self.assertTrue((rp / (entry['textures'] + '.png')).exists())
-        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 24])
+        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 25])
         with zipfile.ZipFile(ROOT / 'dist/Fruity-Friends-Dedicated-Server.zip') as z:
-            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 24])
+            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 25])
 
     def test_fruit_basket_item_recipe_and_script(self):
         bp, rp = ROOT / 'packs/Plum_BP', ROOT / 'packs/Plum_RP'
