@@ -14,7 +14,7 @@
         "*": {
           "texture": "lemon_leaves",
           "render_method": "alpha_test",
-          "ambient_occlusion": false
+          "ambient_occlusion": 0.0
         }
       },
       "minecraft:destructible_by_mining": {

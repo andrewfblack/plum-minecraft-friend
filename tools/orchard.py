@@ -158,7 +158,7 @@ def build_fruit(bp, rp, root, write, png, fruit, accumulate, biomes=('plains', '
             'components': {
                 'minecraft:display_name': f'tile.{leaf}.name',
                 'minecraft:geometry': 'minecraft:geometry.full_block',
-                'minecraft:material_instances': {'*': {'texture': f'{fruit}_leaves', 'render_method': 'alpha_test', 'ambient_occlusion': False}},
+                'minecraft:material_instances': {'*': {'texture': f'{fruit}_leaves', 'render_method': 'alpha_test', 'ambient_occlusion': 0.0}},
                 'minecraft:destructible_by_mining': {'seconds_to_destroy': 0.25},
                 'minecraft:destructible_by_explosion': {'explosion_resistance': 0.2},
                 'minecraft:light_dampening': 1, 'minecraft:map_color': '#477738',
