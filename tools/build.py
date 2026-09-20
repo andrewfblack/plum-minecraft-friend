@@ -326,42 +326,6 @@ def build_basket(bp, rp, write, png):
     with (rp / 'texts/en_US.lang').open('a', encoding='utf-8') as stream:
         stream.write('item.friend:fruit_basket.name=Fruit Basket\n')
 
-def guidebook_texture():
-    """Original 16x16 purple-and-gold guidebook icon."""
-    clear = (0, 0, 0, 0)
-    cover, cover_dark = (119, 58, 166, 255), (70, 32, 104, 255)
-    page, page_dark, gold = (246, 231, 190, 255), (198, 174, 126, 255), (241, 190, 54, 255)
-    grid = [[clear for _ in range(16)] for _ in range(16)]
-    for y in range(2, 15):
-        for x in range(2, 14):
-            grid[y][x] = cover_dark if x in (2, 13) or y in (2, 14) else cover
-    for y in range(3, 13):
-        for x in range(4, 12):
-            grid[y][x] = page_dark if x == 11 or y == 12 else page
-    for x, y in [(7, 5), (8, 5), (6, 6), (7, 6), (8, 6), (9, 6),
-                 (7, 7), (8, 7), (7, 8), (8, 8), (7, 10), (8, 10)]:
-        grid[y][x] = gold
-    return grid
-
-def build_guidebook(bp, rp, write, png):
-    write(bp / 'items/guidebook.json', {
-        'format_version': '1.21.90', 'minecraft:item': {
-            'description': {'identifier': 'friend:guidebook', 'menu_category': {'category': 'items'}},
-            'components': {
-                'minecraft:display_name': {'value': 'item.friend:guidebook.name'},
-                'minecraft:icon': {'textures': {'default': 'fruity_friend_guidebook'}},
-                'minecraft:max_stack_size': 1,
-                'friend:open_guide': {},
-            },
-        },
-    })
-    png(rp / 'textures/items/guidebook.png', guidebook_texture())
-    atlas = json.loads((rp / 'textures/item_texture.json').read_text(encoding='utf-8'))
-    atlas['texture_data']['fruity_friend_guidebook'] = {'textures': 'textures/items/guidebook'}
-    write(rp / 'textures/item_texture.json', atlas)
-    with (rp / 'texts/en_US.lang').open('a', encoding='utf-8') as stream:
-        stream.write('item.friend:guidebook.name=Fruity Friend Guidebook\n')
-
 def build_peel_trap(bp, rp, write):
     """A visible floor trap entity: unlike a dropped item, players cannot pick it up."""
     write(bp / 'entities/banana_peel.json', {
@@ -397,14 +361,14 @@ def build_peel_trap(bp, rp, write):
     }})
 
 def build(net_version='1.0.0-beta', admin_version='1.0.0-beta'):
-    version = [1, 2, 23]
+    version = [1, 2, 24]
     for path, name, uid, modules in [
         (BP, 'Fruity Friends', BP_ID, [
             {'type': 'data', 'uuid': 'fce620e4-42ac-4477-a84b-c8113d47ba2e', 'version': version},
             {'type': 'script', 'language': 'javascript', 'entry': 'scripts/main.js', 'uuid': 'a91c511c-d9d5-48e5-82c9-25cc48706cbb', 'version': version}]),
         (RP, 'Fruity Friends Resources', RP_ID, [
             {'type': 'resources', 'uuid': '6b250c6d-d093-4cb1-b16b-a42cd137d4bb', 'version': version}])]:
-        manifest = {'format_version': 2, 'header': {'name': name, 'description': 'Smiling cube companions with babies, healing, shopping, collecting, light, and a prankster. Friends use a universal Follow/Stay/Work/Go Home system; Apple runs the Applezon shop; Blueberry collects drops; Lemon grants nearby Night Vision; Banana (the Prankster) drops peels that trip up monsters.', 'uuid': uid, 'version': version, 'min_engine_version': [1, 21, 90]}, 'modules': modules}
+        manifest = {'format_version': 2, 'header': {'name': name, 'description': 'Smiling cube companions with babies, healing, shopping, collecting, light, and a prankster. Friends use a universal Follow/Stay/Work/Go Home system; Apple runs the Applezon shop; Blueberry collects drops; Lemon casts moving block light; Banana (the Prankster) drops peels that trip up monsters.', 'uuid': uid, 'version': version, 'min_engine_version': [1, 21, 90]}, 'modules': modules}
         if path == BP:
             manifest['dependencies'] = [{'uuid': RP_ID, 'version': version}, {'module_name': '@minecraft/server', 'version': '2.0.0'}, {'module_name': '@minecraft/server-ui', 'version': '2.0.0'}]
         write(path / 'manifest.json', manifest)
@@ -421,7 +385,6 @@ def build(net_version='1.0.0-beta', admin_version='1.0.0-beta'):
     icon = [[friend_texture('plum')[:16][y // 8][x // 8] for x in range(128)] for y in range(128)]
     for pack in (BP, RP): png(pack / 'pack_icon.png', icon)
     build_orchard(BP, RP, ROOT, write, png)
-    build_guidebook(BP, RP, write, png)
     build_basket(BP, RP, write, png)
     build_peel_trap(BP, RP, write)
     out = ROOT / 'dist/Fruity-Friends.mcaddon'
@@ -441,7 +404,6 @@ def build(net_version='1.0.0-beta', admin_version='1.0.0-beta'):
 
 Read plum-service/SETUP.md to install the AI edition on a Bedrock Dedicated Server.
 This zip contains the server packs and a Python service; it is not a mobile import file.
-Players receive a Fruity Friend Guidebook when they join without one in their inventory.
 
 ## Play
 
@@ -452,7 +414,7 @@ Players receive a Fruity Friend Guidebook when they join without one in their in
    blueberry tames Blueberry, a lemon tames Lemon, and a banana tames Banana.
    A newly tamed friend stays put where it is. Interact with an empty hand (or, for Blueberry,
    choose Movement in his chest menu) to open the Movement menu: Follow, Stay, Work, or Go Home.
-   Up to four friends can follow you at once. Work keeps a friend within 20 blocks of where you
+   Up to six friends can follow you at once. Work keeps a friend within 20 blocks of where you
    set it; Go Home sends a friend to your spawn point, where it roams within 10 blocks.
 3. Hold a book and interact (Talk to Plum / Talk to Apple / Talk to Blueberry / Talk to Lemon / Talk to Banana on touch, right-click on PC).
 4. Choose Ask a question and type your message. Replies are private.
@@ -461,8 +423,8 @@ Players receive a Fruity Friend Guidebook when they join without one in their in
    instead she owns Applezon and delivers a surprise or a search result for one apple fruit.
 7. Blueberry is the Collector: dropped items within four blocks go straight into his chest. Interact with
    him with an empty hand to open it, store what you are holding, take something out, or choose Movement.
-8. Lemon is the Light Friend: he stays bright in the dark and grants Night Vision to every player
-   within eight blocks while he is tamed and loaded.
+8. Lemon is the Light Friend: he drops a real light block at his feet as he moves, so he
+   lights the way with moving block light instead of Night Vision.
    Lemon does not heal you; stay near your tamed Plum for that.
 9. Banana is the Prankster: he is convinced he is your bodyguard. About every 30 seconds he drops a
    non-pickup banana peel trap. The first hostile mob that steps close slips and slows; an unused peel
@@ -478,7 +440,7 @@ leaves in Survival for the matching fruit and sapling. Plant a sapling on soil w
 The fruit works as a seed and snack: plant it on farmland to grow a baby friend.
 
 Updating from 1.1.0: replace both pack folders and the bridge script, update each Fruity Friends
-world-pack-list entry to [1,2,23], and restart. Keep existing credentials and UUIDs.
+world-pack-list entry to [1,2,24], and restart. Keep existing credentials and UUIDs.
 
 Friends resist ordinary damage and do not naturally despawn. Administrative removal,
 /kill, and engine edge cases are outside this protection. Unloaded companions cannot

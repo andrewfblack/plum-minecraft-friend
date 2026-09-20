@@ -100,9 +100,14 @@ class PackTests(unittest.TestCase):
                 for action in ('add', 'remove'):
                     for group in entity['events'][event].get(action, {}).get('component_groups', []):
                         self.assertIn(group, groups, f'{file}: {event} {action} references missing group {group}')
-            self.assertIn("from './friend_state.js'", (ROOT / 'packs/Plum_BP/scripts/main.js').read_text())
-            self.assertIn('friend:mode_stay', (ROOT / 'packs/Plum_BP/scripts/main.js').read_text(),
+            script = (ROOT / 'packs/Plum_BP/scripts/main.js').read_text()
+            self.assertIn("from './friend_state.js'", script)
+            self.assertIn('friend:mode_stay', script,
                           'basket release should always restore a friend to Stay')
+            self.assertIn('world.afterEvents.dataDrivenEntityTrigger.subscribe', script)
+            self.assertIn("eventTypes: ['minecraft:on_tame']", script)
+            self.assertIn('setMode(entity, MODE.STAY)', script,
+                          'taming must persist Stay before upkeep can migrate the friend to Follow')
 
     def test_apple_tames_and_grows(self):
         entity = json.loads((ROOT / 'packs/Plum_BP/entities/apple.json').read_text())['minecraft:entity']
@@ -158,10 +163,15 @@ class PackTests(unittest.TestCase):
         for needle in [
             "'lemon:friend':", "name: 'Lemon'", "fruit: 'lemon:lemon'", 'light: true',
             "'lemon:lemon': 'lemon:friend'", "lemon: 'lemon:friend'",
-            'const LEMON_LIGHT_RADIUS = 8', "getPlayers({ location: friend.location",
-            "addEffect('night_vision'",
+            'const LEMON_LIGHT_LEVEL = 15',
+            "BlockPermutation.resolve('minecraft:light_block'",
+            'const lemonLights = new Map()',
+            "removedEntityId && lemonLights.has(removedEntityId)",
+            "block?.typeId === 'minecraft:light_block'",
+            "block.typeId !== 'minecraft:air'",
         ]:
             self.assertIn(needle, script, f'lemon light-friend feature missing: {needle}')
+        self.assertNotIn('night_vision', script, 'night vision is no longer part of the light core')
         self.assertNotIn("addEffect('glowing'", script, 'glowing is a Java-only effect')
         self.assertNotIn('HOSTILE_FAMILY', script)
         self.assertNotIn('hostile.remove()', script)
@@ -289,34 +299,9 @@ class PackTests(unittest.TestCase):
             for atlas in ['item_texture.json', 'terrain_texture.json']:
                 for entry in read(rp / 'textures' / atlas)['texture_data'].values():
                     self.assertTrue((rp / (entry['textures'] + '.png')).exists())
-        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 23])
+        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 24])
         with zipfile.ZipFile(ROOT / 'dist/Fruity-Friends-Dedicated-Server.zip') as z:
-            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 23])
-
-    def test_guidebook_item_and_script(self):
-        bp, rp = ROOT / 'packs/Plum_BP', ROOT / 'packs/Plum_RP'
-        def read(path): return json.loads(path.read_text())
-        item = read(bp / 'items/guidebook.json')['minecraft:item']
-        self.assertEqual(item['description']['identifier'], 'friend:guidebook')
-        components = item['components']
-        self.assertEqual(components['minecraft:display_name']['value'], 'item.friend:guidebook.name')
-        self.assertEqual(components['friend:open_guide'], {}, '1.21.90 custom components bind as a bare key, not custom_components')
-        self.assertNotIn('minecraft:custom_components', components)
-        atlas = read(rp / 'textures/item_texture.json')['texture_data']
-        self.assertEqual(atlas[components['minecraft:icon']['textures']['default']]['textures'], 'textures/items/guidebook')
-        self.assertTrue((rp / 'textures/items/guidebook.png').exists())
-        self.assertIn('item.friend:guidebook.name=Fruity Friend Guidebook', (rp / 'texts/en_US.lang').read_text())
-        script = (bp / 'scripts/main.js').read_text()
-        self.assertIn("registerCustomComponent('friend:open_guide'", script)
-        self.assertIn('giveGuidebook(player)', script)
-        self.assertIn("new ActionFormData().title('Fruity Friend Guidebook')", script)
-        self.assertNotIn('Fruity Friends v', script, 'the login monologue was replaced by the guidebook')
-        for archive_name in ['Fruity-Friends.mcaddon', 'Fruity-Friends-Dedicated-Server.zip']:
-            with zipfile.ZipFile(ROOT / 'dist' / archive_name) as archive:
-                bp_prefix = 'Plum_BP/' if archive_name.endswith('.mcaddon') else 'behavior_packs/Plum_BP/'
-                rp_prefix = 'Plum_RP/' if archive_name.endswith('.mcaddon') else 'resource_packs/Plum_RP/'
-                self.assertIn(bp_prefix + 'items/guidebook.json', archive.namelist())
-                self.assertIn(rp_prefix + 'textures/items/guidebook.png', archive.namelist())
+            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 24])
 
     def test_fruit_basket_item_recipe_and_script(self):
         bp, rp = ROOT / 'packs/Plum_BP', ROOT / 'packs/Plum_RP'
@@ -354,6 +339,15 @@ class PackTests(unittest.TestCase):
                     self.assertIn(bp_prefix + name, z.namelist())
                 for name in ['textures/items/basket.png', 'textures/item_texture.json']:
                     self.assertIn(rp_prefix + name, z.namelist())
+
+    def test_removed_guidebook_is_not_packaged(self):
+        self.assertFalse((ROOT / 'packs/Plum_BP/items/guidebook.json').exists())
+        self.assertFalse((ROOT / 'packs/Plum_RP/textures/items/guidebook.png').exists())
+        self.assertNotIn('friend:guidebook', (ROOT / 'packs/Plum_BP/scripts/main.js').read_text())
+        for archive_name in ['Fruity-Friends.mcaddon', 'Fruity-Friends-Dedicated-Server.zip']:
+            with zipfile.ZipFile(ROOT / 'dist' / archive_name) as archive:
+                self.assertFalse(any(name.endswith('/items/guidebook.json') for name in archive.namelist()))
+                self.assertFalse(any(name.endswith('/textures/items/guidebook.png') for name in archive.namelist()))
 
     def test_block_custom_components_are_registered_by_scripts(self):
         bp = ROOT / 'packs/Plum_BP'

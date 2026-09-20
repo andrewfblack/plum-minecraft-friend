@@ -21,7 +21,7 @@ export const MODE = Object.freeze({
 const MODE_VALUES = new Set(Object.values(MODE));
 
 // Centralized configurable values shared by every fruit type.
-export const MAX_FOLLOWING_FRIENDS = 4;
+export const MAX_FOLLOWING_FRIENDS = 6;
 export const WORK_RADIUS = 20;
 export const HOME_RADIUS = 10;
 

@@ -1,4 +1,4 @@
-import { world, system, EquipmentSlot, ItemStack, Player } from '@minecraft/server';
+import { world, system, EquipmentSlot, ItemStack, Player, BlockPermutation } from '@minecraft/server';
 import { ActionFormData, ModalFormData } from '@minecraft/server-ui';
 import { answerQuestion, chatLabelFor } from './provider.js';
 import { cleanText } from './knowledge.js';
@@ -20,7 +20,7 @@ const FRIENDS = {
     title: (baby) => baby ? 'Little Plum' : 'Plum',
     body: (baby, label) => `Hi, adventure buddy!\n${label}\n\nStay close for healing. Plant a plum on tilled farmland to grow a baby.`,
     askTitle: 'Ask Plum', replyTitle: 'Plum says...',
-    care: 'Tame me by giving me a plum. Plant a plum on tilled farmland to grow a baby. Babies grow in 20 loaded minutes and can be tamed too. Once tamed I stay put; interact with me with an empty hand and choose Follow, Stay, Work, or Go Home (up to four friends may follow you at once). Work keeps me near where you tell me; Go Home sends me to your spawn point. Craft a Fruit Basket from three sticks in the bucket shape and interact with me while holding it to carry me along — I always come out of a basket staying put. Talk to me in chat while I am near you, or hold a book and interact!',
+    care: 'Tame me by giving me a plum. Plant a plum on tilled farmland to grow a baby. Babies grow in 20 loaded minutes and can be tamed too. Once tamed I stay put; interact with me with an empty hand and choose Follow, Stay, Work, or Go Home (up to six friends may follow you at once). Work keeps me near where you tell me; Go Home sends me to your spawn point. Craft a Fruit Basket from three sticks in the bucket shape and interact with me while holding it to carry me along — I always come out of a basket staying put. Talk to me in chat while I am near you, or hold a book and interact!',
     tamedMsg: 'Give me a plum fruit to tame me first. Only my owner can open my conversation.',
     plantMsg: 'A tiny fruiting sprout pokes through the soil! It will grow into a baby Plum — one plum tames it.',
   },
@@ -45,9 +45,9 @@ const FRIENDS = {
   'lemon:friend': {
     name: 'Lemon', color: '§e', fruit: 'lemon:lemon', light: true,
     title: (baby) => baby ? 'Little Lemon' : 'Lemon',
-    body: (baby, label) => `Hi, bright buddy... I mean, hi.\n${label}\n\nI stay bright in the dark and give Night Vision to players within 8 blocks. Plant a lemon on tilled farmland to grow a baby.`,
+    body: (baby, label) => `Hi, bright buddy... I mean, hi.\n${label}\n\nI stay bright in the dark and cast moving block light at my feet. Plant a lemon on tilled farmland to grow a baby.`,
     askTitle: 'Ask Lemon', replyTitle: 'Lemon says...',
-    care: 'Tame me by giving me a lemon. Plant a lemon on tilled farmland to grow a baby. Babies grow in 20 loaded minutes and can be tamed too. I am a Light Friend: I stay bright in the dark and give Night Vision to players within 8 blocks. Once tamed I stay put; interact with me with an empty hand and choose Follow, Stay, Work, or Go Home. Craft a Fruit Basket from three sticks in the bucket shape and interact with me while holding it to carry me along. Talk to me in chat while I am near you, or hold a book and interact!',
+    care: 'Tame me by giving me a lemon. Plant a lemon on tilled farmland to grow a baby. Babies grow in 20 loaded minutes and can be tamed too. I am a Light Friend: I stay bright in the dark and cast moving block light at my feet. Once tamed I stay put; interact with me with an empty hand and choose Follow, Stay, Work, or Go Home. Craft a Fruit Basket from three sticks in the bucket shape and interact with me while holding it to carry me along. Talk to me in chat while I am near you, or hold a book and interact!',
     tamedMsg: 'Give me a lemon fruit to tame me first. Only my owner can open my conversation.',
     plantMsg: 'A tiny fruiting sprout pokes through the soil! It will grow into a baby Lemon — one lemon tames it.',
   },
@@ -68,77 +68,6 @@ const FRIEND_NAMES = { plum: 'plum:friend', apple: 'apple:friend', blueberry: 'b
 
 const BASKET = 'friend:fruit_basket';
 const BASKET_STORE = 'basket:friend';
-const GUIDEBOOK = 'friend:guidebook';
-
-const GUIDE_SECTIONS = [
-  {
-    title: 'Getting Started',
-    body: '1. Find fruit in fruit-tree leaves.\n2. Plant fruit on tilled farmland to grow a baby friend.\n3. Give the baby its matching fruit to tame it. More fruit speeds baby growth.\n4. A newly tamed friend starts in Stay mode.',
-  },
-  {
-    title: 'Controls',
-    body: 'Empty hand: open Movement (Blueberry opens his chest first).\n\nBook: talk to your friend.\n\nFruit Basket: pick up a tamed friend. Use the filled basket on a block to release them.\n\nFruit: tame an untamed friend or speed up a baby\'s growth.',
-  },
-  {
-    title: 'The Friends',
-    body: 'Plum heals his nearby owner.\n\nApple runs Applezon.\n\nBlueberry collects dropped items in his chest.\n\nLemon grants nearby Night Vision.\n\nBanana drops peel traps that slow monsters.',
-  },
-  {
-    title: 'Movement',
-    body: 'Follow: travels with you. Up to four friends can follow.\n\nStay: waits in place.\n\nWork: roams within 20 blocks of the chosen spot.\n\nGo Home: returns to your bed spawn and roams within 10 blocks.',
-  },
-  {
-    title: 'Fruit Trees',
-    body: 'Plum, Apple, and Blueberry trees grow in new plains and forests. Lemon trees prefer deserts, savannas, and jungles. Banana trees grow in jungles.\n\nBreak fruit leaves for fruit and saplings. Saplings need soil and a clear area 5 blocks wide and 6 blocks tall. Bone meal grows them immediately when there is room.',
-  },
-];
-
-async function openGuide(player) {
-  if (openForms.has(player.id)) return;
-  openForms.add(player.id);
-  try {
-    while (player.isValid) {
-      const menu = new ActionFormData().title('Fruity Friend Guidebook')
-        .body('Everything you need to raise fruit trees and travel with your Fruity Friends.');
-      for (const section of GUIDE_SECTIONS) menu.button(section.title);
-      menu.button('Close');
-      const choice = await menu.show(player);
-      if (choice.canceled || choice.selection === GUIDE_SECTIONS.length) return;
-      const section = GUIDE_SECTIONS[choice.selection];
-      if (!section) return;
-      const page = await new ActionFormData().title(section.title).body(section.body).button('Back').show(player);
-      if (page.canceled) return;
-    }
-  } catch (error) {
-    console.warn(`[Guidebook] Could not open: ${error}`);
-  } finally {
-    openForms.delete(player.id);
-  }
-}
-
-function giveGuidebook(player) {
-  if (!player.isValid) return;
-  const inventory = player.getComponent('minecraft:inventory')?.container;
-  if (!inventory) return;
-  for (let slot = 0; slot < inventory.size; slot++) {
-    if (inventory.getItem(slot)?.typeId === GUIDEBOOK) return;
-  }
-  try {
-    const leftover = inventory.addItem(new ItemStack(GUIDEBOOK));
-    if (leftover) player.dimension.spawnItem(leftover, player.location);
-    player.onScreenDisplay.setActionBar('Fruity Friend Guidebook added to your inventory.');
-  } catch (error) {
-    console.warn(`[Guidebook] Could not give guidebook: ${error}`);
-  }
-}
-
-system.beforeEvents.startup.subscribe(({ itemComponentRegistry }) => {
-  itemComponentRegistry.registerCustomComponent('friend:open_guide', {
-    onUse({ source }) {
-      system.run(() => { void openGuide(source); });
-    },
-  });
-});
 
 // A Fruit Basket carries one tamed friend as a snapshot stored on the item stack.
 function basketContents(stack) {
@@ -611,7 +540,7 @@ function setFriendMode(player, friend, mode) {
   }
   const name = friendDisplayName(friend, cfg);
   if (mode === MODE.FOLLOW && readMode(friend) !== MODE.FOLLOW && countFollowing(ownerId) >= MAX_FOLLOWING_FRIENDS) {
-    friendSay(player, cfg, 'Your Fruity Friend party is full! You can have up to 4 friends following you. Set one to Stay or Work, send one Home, or put one in a Fruit Basket first.');
+    friendSay(player, cfg, `Your Fruity Friend party is full! You can have up to ${MAX_FOLLOWING_FRIENDS} friends following you. Set one to Stay or Work, send one Home, or put one in a Fruit Basket first.`);
     return false;
   }
   try {
@@ -940,6 +869,20 @@ async function talk(player, friend) {
   }
 }
 
+// Persist Stay as part of the tame transaction. Without this, the upkeep pass can
+// see the new owner before the entity's sit group is visible, migrate the friend as
+// a legacy follower, and bypass the follower limit.
+world.afterEvents.dataDrivenEntityTrigger.subscribe(({ entity, eventId }) => {
+  if (eventId !== 'minecraft:on_tame' || !TYPES.has(entity.typeId)) return;
+  try {
+    setMode(entity, MODE.STAY);
+    seenMode.delete(entity.id);
+    entity.triggerEvent('friend:mode_stay');
+  } catch (error) {
+    console.warn(`[Movement] Could not initialize a newly tamed friend in Stay: ${error}`);
+  }
+}, { entityTypes: [...TYPES], eventTypes: ['minecraft:on_tame'] });
+
 world.beforeEvents.playerInteractWithEntity.subscribe((event) => {
   const { player, target, itemStack } = event;
   if (!TYPES.has(target.typeId)) return;
@@ -972,11 +915,6 @@ world.afterEvents.playerInteractWithBlock.subscribe(({ player, block, blockFace,
 world.afterEvents.playerLeave.subscribe(({ playerId }) => {
   openForms.delete(playerId);
   nextQuestion.delete(playerId);
-});
-
-// Talk to a nearby tamed friend straight from chat: "Plum ...", "hey Apple, ...", "@plum hi", etc.
-world.afterEvents.playerSpawn.subscribe(({ player, initialSpawn }) => {
-  if (initialSpawn) system.runTimeout(() => giveGuidebook(player), 40);
 });
 
 // Talk to a nearby tamed friend straight from chat: "Plum ...", "hey Apple, ...", "@plum hi", etc.
@@ -1031,7 +969,7 @@ const chatSources = [
   afterWorld?.chatSend?.subscribe && { name: 'afterEvents.chatSend', subscribe: () => afterWorld.chatSend.subscribe(onFriendChat) },
 ].filter(Boolean);
 if (chatSources.length === 0) {
-  console.warn('[Chat] No chatSend signal is exposed. Enable the "Beta APIs" experiment on the world to let friends answer in chat; the Fruity Friend Guidebook book still always works.');
+  console.warn('[Chat] No chatSend signal is exposed. Enable the "Beta APIs" experiment on the world to let friends answer in chat; holding a Book and interacting with a friend always works.');
 } else {
   for (const source of chatSources) {
     try {
@@ -1073,9 +1011,28 @@ system.runInterval(() => {
   }
 }, 100);
 
-// Lemon is the Light Friend: his emissive material stays visible in the dark,
-// and every player near a loaded, tamed Lemon receives particle-free Night Vision.
-const LEMON_LIGHT_RADIUS = 8;
+// Lemon is the Light Friend: he drops a real block light at his feet and swaps
+// the previous one away, the closest Bedrock gets to moving light from an entity.
+// Every placed block is tracked per friend so removal only ever touches our own
+// block (never one a player placed), and entityRemove cleans up the moment a
+// Lemon despawns or is tucked into a Fruit Basket. The light updates each pass
+// the Lemon actually moves to a new block; a stationary Lemon does not flicker.
+const LEMON_LIGHT_LEVEL = 15;
+const LEMON_LIGHT_INTERVAL = 10; // ticks between light moves (~0.5s)
+const lemonLights = new Map(); // friend.id -> { dimension, x, y, z } cell the light lives in
+
+function clearLemonLight(friendId) {
+  const light = lemonLights.get(friendId);
+  if (!light) return;
+  lemonLights.delete(friendId);
+  try {
+    const block = world.getDimension(light.dimension).getBlock({ x: light.x, y: light.y, z: light.z });
+    if (block?.typeId === 'minecraft:light_block') block.setType('minecraft:air');
+  } catch (error) {
+    console.warn(`[Lemon] Could not remove a light block: ${error}`);
+  }
+}
+
 system.runInterval(() => {
   for (const name of ['overworld', 'nether', 'the_end']) {
     const dimension = world.getDimension(name);
@@ -1083,13 +1040,23 @@ system.runInterval(() => {
       try {
         if (!friend.isValid) continue;
         if (!friend.getComponent('minecraft:tameable')?.tamedToPlayerId) continue;
-        for (const player of dimension.getPlayers({ location: friend.location, maxDistance: LEMON_LIGHT_RADIUS })) {
-          player.addEffect('night_vision', 240, { amplifier: 0, showParticles: false });
-        }
-      } catch (error) { console.warn(`[Lemon] Light upkeep skipped: ${error}`); }
+        const where = { x: Math.floor(friend.location.x), y: Math.floor(friend.location.y), z: Math.floor(friend.location.z) };
+        const previous = lemonLights.get(friend.id);
+        if (previous && previous.dimension === name
+            && previous.x === where.x && previous.y === where.y && previous.z === where.z) continue;
+        clearLemonLight(friend.id);
+        const block = dimension.getBlock(where);
+        if (!block || (block.typeId !== 'minecraft:air' && block.typeId !== 'minecraft:light_block')) continue;
+        block.setPermutation(BlockPermutation.resolve('minecraft:light_block', { block_light_level: LEMON_LIGHT_LEVEL }));
+        lemonLights.set(friend.id, { dimension: name, ...where });
+      } catch (error) { console.warn(`[Lemon] Light core skipped: ${error}`); }
     }
   }
-}, 20);
+}, LEMON_LIGHT_INTERVAL);
+
+world.afterEvents.entityRemove.subscribe(({ removedEntityId }) => {
+  if (removedEntityId && lemonLights.has(removedEntityId)) clearLemonLight(removedEntityId);
+});
 
 // Banana is the Prankster: a tamed Banana is convinced he is your bodyguard.
 // About every 30 seconds he cheerfully drops a banana peel trap. It cannot be

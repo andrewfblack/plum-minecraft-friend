@@ -17,7 +17,7 @@ function fakeEntity(dynamic = new Map()) {
 }
 
 test('shared config values are centralized', () => {
-  assert.equal(MAX_FOLLOWING_FRIENDS, 4);
+  assert.equal(MAX_FOLLOWING_FRIENDS, 6);
   assert.equal(WORK_RADIUS, 20);
   assert.equal(HOME_RADIUS, 10);
   assert.equal(MODE.STAY, 'stay');
