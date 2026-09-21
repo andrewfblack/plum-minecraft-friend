@@ -1020,17 +1020,40 @@ system.runInterval(() => {
 const LEMON_LIGHT_LEVEL = 15;
 const LEMON_LIGHT_INTERVAL = 10; // ticks between light moves (~0.5s)
 const lemonLights = new Map(); // friend.id -> { dimension, x, y, z } cell the light lives in
+const LEMON_AIR_PERMUTATION = BlockPermutation.resolve('minecraft:air');
 
+// Removes Lemon's tracked light cell. Returns true once the cell is confirmed
+// clear (or was never tracked), and false when the cell could not be verified
+// yet (unloaded chunk or the block refused to change). The caller keeps the
+// record and retries next pass so a light never gets ghosted permanently.
 function clearLemonLight(friendId) {
   const light = lemonLights.get(friendId);
-  if (!light) return;
-  lemonLights.delete(friendId);
+  if (!light) return true;
+  let block;
   try {
-    const block = world.getDimension(light.dimension).getBlock({ x: light.x, y: light.y, z: light.z });
-    if (block?.typeId === 'minecraft:light_block') block.setType('minecraft:air');
+    block = world.getDimension(light.dimension).getBlock({ x: light.x, y: light.y, z: light.z });
+  } catch (error) {
+    console.warn(`[Lemon] Could not reach a light block: ${error}`);
+    return false;
+  }
+  if (!block) return false; // chunk not loaded yet - retry next pass
+  if (block.typeId !== 'minecraft:light_block') {
+    lemonLights.delete(friendId);
+    return true; // already clear
+  }
+  try {
+    block.setPermutation(LEMON_AIR_PERMUTATION);
   } catch (error) {
     console.warn(`[Lemon] Could not remove a light block: ${error}`);
+    return false;
   }
+  const now = world.getDimension(light.dimension).getBlock({ x: light.x, y: light.y, z: light.z });
+  if (!now || now.typeId !== 'minecraft:light_block') {
+    lemonLights.delete(friendId);
+    return true;
+  }
+  console.warn('[Lemon] A light block refused to clear; will retry');
+  return false;
 }
 
 system.runInterval(() => {
@@ -1044,7 +1067,7 @@ system.runInterval(() => {
         const previous = lemonLights.get(friend.id);
         if (previous && previous.dimension === name
             && previous.x === where.x && previous.y === where.y && previous.z === where.z) continue;
-        clearLemonLight(friend.id);
+        if (!clearLemonLight(friend.id)) continue;
         const block = dimension.getBlock(where);
         if (!block || (block.typeId !== 'minecraft:air' && block.typeId !== 'minecraft:light_block')) continue;
         block.setPermutation(BlockPermutation.resolve('minecraft:light_block', { block_light_level: LEMON_LIGHT_LEVEL }));

@@ -167,7 +167,8 @@ class PackTests(unittest.TestCase):
             "BlockPermutation.resolve('minecraft:light_block'",
             'const lemonLights = new Map()',
             "removedEntityId && lemonLights.has(removedEntityId)",
-            "block?.typeId === 'minecraft:light_block'",
+            "block.typeId !== 'minecraft:light_block'",
+            'setPermutation(LEMON_AIR_PERMUTATION)',
             "block.typeId !== 'minecraft:air'",
         ]:
             self.assertIn(needle, script, f'lemon light-friend feature missing: {needle}')
@@ -300,9 +301,9 @@ class PackTests(unittest.TestCase):
             for atlas in ['item_texture.json', 'terrain_texture.json']:
                 for entry in read(rp / 'textures' / atlas)['texture_data'].values():
                     self.assertTrue((rp / (entry['textures'] + '.png')).exists())
-        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 26])
+        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 27])
         with zipfile.ZipFile(ROOT / 'dist/Fruity-Friends-Dedicated-Server.zip') as z:
-            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 26])
+            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 27])
 
     def test_fruit_basket_item_recipe_and_script(self):
         bp, rp = ROOT / 'packs/Plum_BP', ROOT / 'packs/Plum_RP'

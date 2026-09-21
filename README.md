@@ -20,6 +20,8 @@ Version **1.2.25** fixes a pack-load schema error in every fruit item: `minecraf
 
 Version **1.2.26** fixes another pack-load error surfaced on **Bedrock 1.26+**: every fruit leaf block declared `"ambient_occlusion": false` in `minecraft:material_instances`, but current engines validate `ambient_occlusion` as a decimal (vanilla writes `0.0`), so the boolean form logs a schema error when the pack loads. The leaf material now matches the 1.26 standard.
 
+Version **1.2.27** makes Lemon's moving light reliable: removing a light block is now verified (and retried on later passes if an unloaded chunk or a stubborn block gets in the way), so a light can never be permanently "ghosted" in the world when Lemon moves or is removed.
+
 ## Downloads
 
 - **`dist/Fruity-Friends-Dedicated-Server.zip`** — the AI edition, behavior/resource packs, Python AI service, and server setup instructions. This is the edition for your requested setup.
@@ -106,7 +108,7 @@ Banana is a tall — about **1.5 blocks** — sunny-yellow cube friend with a go
 
 ## Updating from version 1.1.0
 
-Reimport the updated offline add-on, or stop BDS and replace the pack folders from the new server archive. On BDS, update both world pack-list entries to **`[1,2,26]`**, preserving entries for other packs. Replace `plum-service/bridge.py` too and restart the bridge so the AI knows about Apple, Applezon, Blueberry, the Collector chest, Lemon the Light Friend, Banana the Prankster, and the five kinds of fruit trees. Keep existing pack UUIDs, credentials, and world data. Existing tamed friends carried over from older worlds keep working: friends that were sitting migrate to **Stay**, and others keep their old follow-the-owner behavior as **Follow**.
+Reimport the updated offline add-on, or stop BDS and replace the pack folders from the new server archive. On BDS, update both world pack-list entries to **`[1,2,27]`**, preserving entries for other packs. Replace `plum-service/bridge.py` too and restart the bridge so the AI knows about Apple, Applezon, Blueberry, the Collector chest, Lemon the Light Friend, Banana the Prankster, and the five kinds of fruit trees. Keep existing pack UUIDs, credentials, and world data. Existing tamed friends carried over from older worlds keep working: friends that were sitting migrate to **Stay**, and others keep their old follow-the-owner behavior as **Follow**.
 
 ## Protection and following
 
