@@ -2,7 +2,7 @@
   "format_version": "1.20.10",
   "minecraft:recipe_shaped": {
     "description": {
-      "identifier": "fruit_basket"
+      "identifier": "friend:fruit_basket"
     },
     "tags": [
       "crafting_table"

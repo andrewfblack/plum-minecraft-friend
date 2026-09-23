@@ -301,9 +301,9 @@ class PackTests(unittest.TestCase):
             for atlas in ['item_texture.json', 'terrain_texture.json']:
                 for entry in read(rp / 'textures' / atlas)['texture_data'].values():
                     self.assertTrue((rp / (entry['textures'] + '.png')).exists())
-        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 27])
+        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 28])
         with zipfile.ZipFile(ROOT / 'dist/Fruity-Friends-Dedicated-Server.zip') as z:
-            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 27])
+            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 28])
 
     def test_fruit_basket_item_recipe_and_script(self):
         bp, rp = ROOT / 'packs/Plum_BP', ROOT / 'packs/Plum_RP'
@@ -314,7 +314,8 @@ class PackTests(unittest.TestCase):
         icon_key = components['minecraft:icon']['textures']['default']
         self.assertEqual(components['minecraft:display_name']['value'], 'item.friend:fruit_basket.name')
         recipe = read(bp / 'recipes/fruit_basket.json')['minecraft:recipe_shaped']
-        self.assertEqual(recipe['description']['identifier'], 'fruit_basket')
+        self.assertEqual(recipe['description']['identifier'], 'friend:fruit_basket',
+                         'custom recipe identifiers must be namespaced')
         self.assertEqual(recipe['result'], {'item': 'friend:fruit_basket', 'count': 1})
         pattern = recipe['pattern']
         self.assertEqual(pattern, ['X X', ' X '], 'bucket-shaped stick recipe: two on top, one in the middle')

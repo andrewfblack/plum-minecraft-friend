@@ -27,18 +27,18 @@ Copy the two JSON files from `world-pack-lists` into `worlds/YOUR_WORLD/`. **If 
 Behavior pack:
 
 ```json
-[{"pack_id":"01d84fd1-31dd-4b92-a942-c8e59ce38191","version":[1,2,27]}]
+[{"pack_id":"01d84fd1-31dd-4b92-a942-c8e59ce38191","version":[1,2,28]}]
 ```
 
 Resource pack:
 
 ```json
-[{"pack_id":"834d72cc-8c7f-498f-adfa-269e215f86e8","version":[1,2,27]}]
+[{"pack_id":"834d72cc-8c7f-498f-adfa-269e215f86e8","version":[1,2,28]}]
 ```
 
 Set `texturepack-required=true` in `server.properties` so players receive Plum's appearance. Do not enable the offline pack alongside the AI pack; they are two editions of the same add-on.
 
-**Updating an existing Fruity Friends installation:** replace the pack folders and `plum-service/bridge.py`, change both existing world-pack entries to `[1,2,27]`, and restart both processes. Preserve your current credentials/configuration. New plum, apple, blueberry, lemon and banana trees appear only in newly generated terrain; explore new plains/forests (or warm biomes like deserts, savannas and jungles for lemons, jungles for bananas) or plant a Creative sapling in an old area.
+**Updating an existing Fruity Friends installation:** replace the pack folders and `plum-service/bridge.py`, change both existing world-pack entries to `[1,2,28]`, and restart both processes. Preserve your current credentials/configuration. New plum, apple, blueberry, lemon and banana trees appear only in newly generated terrain; explore new plains/forests (or warm biomes like deserts, savannas and jungles for lemons, jungles for bananas) or plant a Creative sapling in an old area.
 
 ## 3. Allow the scripts to reach their local service
 
