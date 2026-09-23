@@ -86,12 +86,29 @@ const BANANA_TOPICS = [
   [/\b(hello|hi|hey|name)\b/, 'A-peel-ings! I am Banana, the Prank... the Bodyguard. I have handled every monster ever. Why? Because I drop peels and the rest is history. Ready to give me a banana and level up?'],
 ];
 
+const GRAPES_TOPICS = [
+  [/\b(seed|seeds|spit|spits|spitting|shoot|shooting|sharpshooter|sniper|aim|aiming|guard|protect|defend|fight|kill)\b/, 'I am the Sharpshooter! No bow, no arrow - I spit grape seeds. A tamed me takes aim at monsters within 12 blocks and fires every couple of seconds. My seeds arc over blocks and land smack on the angry mob. You watch, I aim!'],
+  [/\b(creeper|zombie|skeleton|spider|monster|mob|hostile)\b/, 'When a hostile mob wanders within 12 blocks of a tamed me, I lock on and start spitting seeds every couple of seconds. Each hit deals real damage. I never shoot friends or other cute creatures - monsters only.'],
+  [/\b(banana|peel|bodyguard|rival|competition|who.*better)\b/, 'Banana claims he is a bodyguard. A bodyguard drops peels and hopes monsters slip. I do not hope: I aim, and I hit. Sour note? More like a direct hit. Tell Bananas to keep his peels, I have seeds.'],
+  [/\b(care|care for|take care|keep)\b/, 'Talk to me in chat while I am nearby, or hold a book and interact. Tame me with grapes fruit, plant grapes fruit on farmland to grow a baby, and point me at monsters. A newly tamed friend stays put. Interact with me with an empty hand and choose Follow, Stay, Work, or Go Home; up to six friends may follow you at once. Work keeps me near the spot you choose, and Go Home sends me to your spawn. Craft a Fruit Basket from three sticks in the bucket shape and interact with me while holding it to carry me along.'],
+  [/\b(basket|baskets|carry|carried|pick.?up|pickup|store|travel)\b/, 'Craft a Fruit Basket from three sticks in the bucket shape (two on top, one below in the middle). Hold it and interact with your tamed friend to tuck them inside. Carry the basket in your inventory, then interact with a block to let your friend out again. I keep my seeds for when we get out.'],
+  [/\b(tree|trees|sapling|saplings|orchard|fruit|grape vine)\b|where.*\bgrapes?\b/, 'Find grape vines in newly explored plains and forests. Break their green-speckled leaves for a chance of grapes and saplings. Plant a sapling on dirt or grass with 5 blocks of width and 3 blocks of height clear. It grows into a low leafy vine with the wood hidden under the leaves while loaded, or use bone meal. Plant grapes fruit on tilled farmland to grow a tiny new friend!'],
+  [/\b(plant|planting|sprout|sprouted|grow.*friend|baby.*grape)\b/, 'Plant grapes fruit on tilled farmland and a tiny baby Grapes will sprout from the soil! Give it more grapes to tame it as your own. You can also find grape trees in new plains and forests.'],
+  [/\b(breed|breeding|babies|baby|grow)\b/, 'Plant grapes fruit on tilled farmland and a baby Grapes will sprout from the soil! Babies grow up in about 20 loaded minutes; grapes speed that up. Tame your baby with grapes too. Breeding is not how new friends appear.'],
+  [/\b(tame|taming|follow|friend)\b/, 'Give me grapes fruit to become my owner. New friends start out staying put; interact with me with an empty hand and choose Follow to bring me along (up to six friends may follow). I can also Stay, Work around a spot, or Go Home to your spawn - and I spit seeds at monsters wherever I am. Type my name in chat when I am near, or hold a book and interact with me to talk.'],
+  [/\b(sit|sit down|stay|standing|follow.*off|stop.*follow)\b/, 'Interact with a tamed friend with an empty hand and choose Stay, Follow, Work, or Go Home. Friends that come out of a Fruit Basket always start out staying put, and at most six friends follow at once. My sharpshooting never stops, no matter how I am told to move!'],
+  [/\b(heal|healing|hurt|health|help)\b/, 'I am Grapes, the Sharpshooter, and I do NOT grant healing. Stay near your tamed Plum for gentle regeneration, or keep a bed and good food handy. I keep monsters away instead!'],
+  [/\b(die|dead|damage|immortal|invincible)\b/, 'Like all cube friends, ordinary survival damage cannot hurt me, and no monster seed can shake me! Administrative removal, /kill, and some engine edge cases are outside my protection. Keep me near you on adventures.'],
+  [/\b(hello|hi|hey|name)\b/, 'Bunch of confidence right here! I am Grapes, the Sharpshooter. Squarish, green, and on target. Give me some grapes fruit and lets get rowdy!'],
+];
+
 const PLUM_GUIDE = [...PLUM_TOPICS, ...BASE_TOPICS];
 const APPLE_GUIDE = [...APPLE_TOPICS, ...BASE_TOPICS];
 const BLUEBERRY_GUIDE = [...BLUEBERRY_TOPICS, ...BASE_TOPICS];
 const LEMON_GUIDE = [...LEMON_TOPICS, ...BASE_TOPICS];
 const BANANA_GUIDE = [...BANANA_TOPICS, ...BASE_TOPICS];
-const GUIDES = { plum: PLUM_GUIDE, apple: APPLE_GUIDE, blueberry: BLUEBERRY_GUIDE, lemon: LEMON_GUIDE, banana: BANANA_GUIDE };
+const GRAPES_GUIDE = [...GRAPES_TOPICS, ...BASE_TOPICS];
+const GUIDES = { plum: PLUM_GUIDE, apple: APPLE_GUIDE, blueberry: BLUEBERRY_GUIDE, lemon: LEMON_GUIDE, banana: BANANA_GUIDE, grapes: GRAPES_GUIDE };
 
 export function offlineAnswer(question, friend = 'plum') {
   const q = cleanText(question).toLowerCase();

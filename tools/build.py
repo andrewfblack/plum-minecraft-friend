@@ -62,6 +62,15 @@ FRIENDS = {
         'tall': True, 'collision_height': 1.4, 'prankster': True,
         'palette': ((255, 214, 40, 255), (196, 140, 16, 255), (255, 235, 120, 255), (150, 100, 30, 255), (255, 255, 255, 255), (250, 150, 170, 255)),
     },
+    'grapes': {
+        'file': 'grapes',
+        'title': 'Grapes', 'entity': 'grapes:friend', 'fruit': 'grapes:grapes', 'family': 'grapes_friend',
+        'egg': ('#4B9E45', '#A8E65C'),
+        # Squarish bunch of green grapes: a standard cube buddy whose whole surface
+        # is covered in little round grapes, capped with a leafy crown.
+        # (main, edge, light, dark, white, pink)
+        'palette': ((124, 196, 92, 255), (48, 122, 58, 255), (172, 226, 126, 255), (32, 84, 44, 255), (250, 255, 246, 255), (196, 226, 148, 255)),
+    },
 }
 
 def friend_geometry(name):
@@ -76,7 +85,7 @@ def friend_geometry(name):
         uv['west'] = {'uv': [16, 0], 'uv_size': [16, height]}
         uv['up'] = {'uv': [0, 24], 'uv_size': [16, 16]}
         uv['down'] = {'uv': [16, 24], 'uv_size': [16, 16]}
-    elif name in ('apple', 'blueberry', 'lemon'):
+    elif name in ('apple', 'blueberry', 'lemon', 'grapes'):
         # Topper friends wear a dedicated top sheet and a plain bottom sheet.
         height, texture_height, bounds = 12, 32, 2
         uv['up'] = {'uv': [0, 16], 'uv_size': [16, 16]}
@@ -85,11 +94,40 @@ def friend_geometry(name):
         height, texture_height, bounds = 12, 16, 2
     return {'format_version': '1.12.0', 'minecraft:geometry': [{'description': {'identifier': f'geometry.{name}', 'texture_width': 32, 'texture_height': texture_height, 'visible_bounds_width': 2, 'visible_bounds_height': bounds, 'visible_bounds_offset': [0, bounds / 2 - 0.5, 0]}, 'bones': [{'name': 'body', 'pivot': [0, 6, 0] if name != 'banana' else [0, 12, 0], 'cubes': [{'origin': [-6, 0, -6], 'size': [12, height, 12], 'uv': uv}]}]}]}
 
+def grape_cluster(main, edge, light, dark):
+    """A 16x16 fill of small overlapping round grapes, so the cube reads as a bunch."""
+    highlight, stem = (208, 240, 164, 255), (126, 88, 44, 255)
+    tile = [[edge if x in (0, 15) or y in (0, 15) else main for x in range(16)] for y in range(16)]
+    centers = []
+    for row in range(6):
+        y = 1 + row * 3  # grape center rows: 1, 4, 7, 10, 13
+        xs = range(1, 16, 4) if row % 2 else range(3, 16, 4)
+        for x in xs:
+            if y <= 15: centers.append((x, y, row % 2))
+    for cx, cy, parity in centers:
+        for dy in range(-2, 3):
+            for dx in range(-2, 3):
+                d2 = dx * dx + dy * dy
+                if d2 > 4: continue
+                nx, ny = cx + dx, cy + dy
+                if not (0 <= nx < 16 and 0 <= ny < 16): continue
+                if d2 >= 3: tile[ny][nx] = dark            # grape outline
+                elif dy <= -1: tile[ny][nx] = light        # lit upper half
+                else: tile[ny][nx] = main
+        tile[cy - 1][cx - 1] = highlight                   # catch-light
+    for x in range(7, 9):
+        tile[0][x] = stem                                  # where the bunch hangs from
+    return tile
+
 def friend_texture(name):
     """Purple Plum keeps the classic 32x16 sheet; Apple, Blueberry, and Lemon add
-    a 32x32 two-sheet top; Banana is the tall one with a 32x40 sheet."""
+    a 32x32 two-sheet top; Banana is the tall one with a 32x40 sheet; Grapes is a
+    32x32 sheet covered in small round grapes with a leafy crown on the top face."""
     main, edge, light, dark, white, pink = FRIENDS[name]['palette']
-    tile = [[edge if x in (0, 15) or y in (0, 15) else light if y == 1 else main for x in range(16)] for y in range(16)]
+    if name == 'grapes':
+        tile = grape_cluster(main, edge, light, dark)
+    else:
+        tile = [[edge if x in (0, 15) or y in (0, 15) else light if y == 1 else main for x in range(16)] for y in range(16)]
     if name == 'banana':
         # Tall goofy Prankster. The body is 24 rows tall, face near the top.
         tilerow = lambda y: [edge if x in (0, 15) or y in (0, 23) else light if y == 1 else main for x in range(16)]
@@ -164,6 +202,16 @@ def friend_texture(name):
         top[8][3] = calyx_light
         for x, y in [(6, 4), (10, 4), (8, 5)]: top[y][x] = calyx_dark
         for x, y in [(3, 7), (12, 9), (4, 12), (11, 6), (2, 10), (13, 12)]: top[y][x] = bloom
+    elif name == 'grapes':
+        # Grapes: a woody stem at the crown of the bunch, ringed by tiny green leaves.
+        stem, leaf_dark, leaf_mid, leaf_light = (126, 88, 44, 255), (54, 118, 44, 255), (96, 176, 70, 255), (156, 214, 110, 255)
+        for x, y in [(7, 1), (8, 1), (9, 1), (8, 2), (8, 3), (7, 2), (9, 2)]: top[y][x] = stem
+        for x, y in [(4, 4), (5, 3), (6, 2), (10, 2), (11, 3), (12, 4),
+                     (4, 6), (5, 7), (6, 7), (10, 7), (11, 7), (12, 6),
+                     (6, 10), (7, 11), (8, 11), (9, 11), (10, 10)]: top[y][x] = leaf_mid
+        for x, y in [(5, 4), (6, 3), (10, 3), (11, 4), (3, 5), (13, 5),
+                     (5, 8), (11, 8), (7, 12), (8, 12), (9, 12)]: top[y][x] = leaf_dark
+        for x, y in [(5, 5), (6, 6), (10, 6), (11, 5), (7, 13), (9, 13)]: top[y][x] = leaf_light
     return [face[y] + tile[y] for y in range(16)] + [top[y] + bottom[y] for y in range(16)]
 
 def build_friend(name, data):
@@ -360,15 +408,68 @@ def build_peel_trap(bp, rp, write):
         'controller.render.banana_peel': {'geometry': 'Geometry.default', 'materials': [{'*': 'Material.default'}], 'textures': ['Texture.default']},
     }})
 
+def grape_seed_pixels():
+    """A single green grape seed sprite for the Sharpshooter's spit projectile."""
+    clear = (0, 0, 0, 0)
+    dark, mid, light = (44, 100, 52, 255), (104, 176, 80, 255), (172, 222, 124, 255)
+    grid = [[clear for _ in range(16)] for _ in range(16)]
+    # A tear-drop shaped seed filling most of the icon.
+    for y in range(3, 14):
+        half = max(2, round(6 - (y - 8.5) ** 2 / 12))
+        for x in range(8 - half, 8 + half):
+            if 0 <= x < 16:
+                grid[y][x] = dark if x in (8 - half, 8 + half - 1) or y in (3, 13) else mid
+    for x, y in [(7, 5), (6, 6), (7, 6), (8, 7)]: grid[y][x] = light
+    grid[2][8] = dark
+    return grid
+
+def build_grape_seed(bp, rp, write, png):
+    """A spit grape seed: a script-launched projectile that damages hostile mobs."""
+    write(bp / 'entities/grapes_seed.json', {
+        'format_version': '1.21.0',
+        'minecraft:entity': {
+            'description': {'identifier': 'grapes:seed', 'is_spawnable': False, 'is_summonable': False, 'is_experimental': False},
+            'component_groups': {'grapes:despawn': {'minecraft:instant_despawn': {}}},
+            'components': {
+                'minecraft:type_family': {'family': ['grapes_seed', 'projectile']},
+                'minecraft:projectile': {
+                    'gravity': 0.05,
+                    'hit_sound': 'item.slime',
+                    'on_hit': {'remove_on_hit': {}},
+                },
+                'minecraft:collision_box': {'width': 0.25, 'height': 0.25},
+                'minecraft:physics': {},
+                'minecraft:pushable': {'is_pushable': False, 'is_pushable_by_piston': False},
+                'minecraft:timer': {'looping': False, 'time': 6.5, 'time_down_event': {'event': 'grapes:expire', 'target': 'self'}},
+            },
+            'events': {'grapes:expire': {'add': {'component_groups': ['grapes:despawn']}}},
+        },
+    })
+    faces = {face: {'uv': [0, 0], 'uv_size': [16, 16]} for face in ('north', 'south', 'east', 'west', 'up', 'down')}
+    write(rp / 'entity/grapes_seed.entity.json', {'format_version': '1.10.0', 'minecraft:client_entity': {'description': {
+        'identifier': 'grapes:seed', 'materials': {'default': 'entity_alphatest'},
+        'textures': {'default': 'textures/entity/grapes_seed'}, 'geometry': {'default': 'geometry.grapes_seed'},
+        'render_controllers': ['controller.render.grapes_seed'],
+    }}})
+    write(rp / 'models/entity/grapes_seed.geo.json', {'format_version': '1.12.0', 'minecraft:geometry': [{
+        'description': {'identifier': 'geometry.grapes_seed', 'texture_width': 16, 'texture_height': 16,
+                        'visible_bounds_width': 1, 'visible_bounds_height': 1, 'visible_bounds_offset': [0, 0.2, 0]},
+        'bones': [{'name': 'seed', 'pivot': [0, 0, 0], 'cubes': [{'origin': [-2, -2, -2], 'size': [4, 4, 4], 'uv': faces}]}],
+    }]})
+    write(rp / 'render_controllers/grapes_seed.render_controllers.json', {'format_version': '1.8.0', 'render_controllers': {
+        'controller.render.grapes_seed': {'geometry': 'Geometry.default', 'materials': [{'*': 'Material.default'}], 'textures': ['Texture.default']},
+    }})
+    png(rp / 'textures/entity/grapes_seed.png', grape_seed_pixels())
+
 def build(net_version='1.0.0-beta', admin_version='1.0.0-beta'):
-    version = [1, 2, 28]
+    version = [1, 2, 29]
     for path, name, uid, modules in [
         (BP, 'Fruity Friends', BP_ID, [
             {'type': 'data', 'uuid': 'fce620e4-42ac-4477-a84b-c8113d47ba2e', 'version': version},
             {'type': 'script', 'language': 'javascript', 'entry': 'scripts/main.js', 'uuid': 'a91c511c-d9d5-48e5-82c9-25cc48706cbb', 'version': version}]),
         (RP, 'Fruity Friends Resources', RP_ID, [
             {'type': 'resources', 'uuid': '6b250c6d-d093-4cb1-b16b-a42cd137d4bb', 'version': version}])]:
-        manifest = {'format_version': 2, 'header': {'name': name, 'description': 'Smiling cube companions with babies, healing, shopping, collecting, light, and a prankster. Friends use a universal Follow/Stay/Work/Go Home system; Apple runs the Applezon shop; Blueberry collects drops; Lemon casts moving block light; Banana (the Prankster) drops peels that trip up monsters.', 'uuid': uid, 'version': version, 'min_engine_version': [1, 21, 90]}, 'modules': modules}
+        manifest = {'format_version': 2, 'header': {'name': name, 'description': 'Smiling cube companions with babies, healing, shopping, collecting, light, pranks, and seed-shooting. Friends use a universal Follow/Stay/Work/Go Home system; Apple runs the Applezon shop; Blueberry collects drops; Lemon casts moving block light; Banana (the Prankster) drops peels that trip up monsters; Grapes (the Sharpshooter) spits seeds at hostile mobs.', 'uuid': uid, 'version': version, 'min_engine_version': [1, 21, 90]}, 'modules': modules}
         if path == BP:
             manifest['dependencies'] = [{'uuid': RP_ID, 'version': version}, {'module_name': '@minecraft/server', 'version': '2.0.0'}, {'module_name': '@minecraft/server-ui', 'version': '2.0.0'}]
         write(path / 'manifest.json', manifest)
@@ -387,6 +488,7 @@ def build(net_version='1.0.0-beta', admin_version='1.0.0-beta'):
     build_orchard(BP, RP, ROOT, write, png)
     build_basket(BP, RP, write, png)
     build_peel_trap(BP, RP, write)
+    build_grape_seed(BP, RP, write, png)
     out = ROOT / 'dist/Fruity-Friends.mcaddon'
     out.parent.mkdir(exist_ok=True)
     with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as archive:
@@ -407,16 +509,16 @@ This zip contains the server packs and a Python service; it is not a mobile impo
 
 ## Play
 
-1. To start in Survival, use a plum, apple, blueberry, lemon or banana fruit on tilled farmland: a sprout appears
+1. To start in Survival, use a plum, apple, blueberry, lemon, banana or grape fruit on tilled farmland: a sprout appears
    and grows into a baby friend on its own (or interact with it to sprout it immediately).
    In Creative, spawn friends with the matching Spawn Egg instead.
 2. Give each friend its own fruit to tame them: a plum tames Plum, an apple tames Apple, a
-   blueberry tames Blueberry, a lemon tames Lemon, and a banana tames Banana.
+   blueberry tames Blueberry, a lemon tames Lemon, a banana tames Banana, and grapes tame Grapes.
    A newly tamed friend stays put where it is. Interact with an empty hand (or, for Blueberry,
    choose Movement in his chest menu) to open the Movement menu: Follow, Stay, Work, or Go Home.
    Up to six friends can follow you at once. Work keeps a friend within 20 blocks of where you
    set it; Go Home sends a friend to your spawn point, where it roams within 10 blocks.
-3. Hold a book and interact (Talk to Plum / Talk to Apple / Talk to Blueberry / Talk to Lemon / Talk to Banana on touch, right-click on PC).
+3. Hold a book and interact (Talk to Plum / Talk to Apple / Talk to Blueberry / Talk to Lemon / Talk to Banana / Talk to Grapes on touch, right-click on PC).
 4. Choose Ask a question and type your message. Replies are private.
 5. Plant a fruit on tilled farmland to grow a baby friend; it sprouts and grows in 20 loaded minutes.
 6. Tame the baby with its fruit; more fruit speeds its growth. Stay within 8 blocks of your tamed Plum for regeneration. Apple does not heal you;
@@ -430,17 +532,20 @@ This zip contains the server packs and a Python service; it is not a mobile impo
    non-pickup banana peel trap. The first hostile mob that steps close slips and slows; an unused peel
    removes itself after two minutes. He does not heal you and
    his co-workers are unimpressed.
-10. Craft a Fruit Basket from three sticks in the bucket shape, then hold it and interact with a tamed
+10. Grapes is the Sharpshooter: this squarish bunch of green grapes spits grape seeds at hostile mobs
+   (no bow and arrow - just seeds). A tamed Grapes takes aim at monsters within 12 blocks, dealing
+   damage with lovely arcing spits. Grapes does not heal you; stay near your tamed Plum for that.
+11. Craft a Fruit Basket from three sticks in the bucket shape, then hold it and interact with a tamed
    friend to tuck them inside (Blueberry keeps his chest contents). Carry them in your inventory and interact with a block to let them out again — they always come out in Stay mode, waiting for your next order.
 
-Find plum, apple and blueberry trees in newly generated plains and forests, lemon trees in warm
+Find plum, apple, blueberry and grape trees in newly generated plains and forests, lemon trees in warm
 biomes like deserts, savannas and jungles, and banana trees in jungles. Break their fruit-speckled
 leaves in Survival for the matching fruit and sapling. Plant a sapling on soil with a clear
 5-wide, 6-high space; wait for growth or use bone meal. Leaves do not decay automatically.
 The fruit works as a seed and snack: plant it on farmland to grow a baby friend.
 
 Updating from 1.1.0: replace both pack folders and the bridge script, update each Fruity Friends
-world-pack-list entry to [1,2,28], and restart. Keep existing credentials and UUIDs.
+world-pack-list entry to [1,2,29], and restart. Keep existing credentials and UUIDs.
 
 Friends resist ordinary damage and do not naturally despawn. Administrative removal,
 /kill, and engine edge cases are outside this protection. Unloaded companions cannot

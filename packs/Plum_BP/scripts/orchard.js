@@ -2,7 +2,7 @@ import { system, EquipmentSlot, GameMode } from '@minecraft/server';
 import { growTree } from './tree_growth.js';
 
 // A fruit planted on tilled farmland becomes a sprout that grows into a baby friend.
-const SPROUT_FRIEND = { 'plum:plum_sprout': 'plum:friend', 'apple:apple_sprout': 'apple:friend', 'blueberry:blueberry_sprout': 'blueberry:friend', 'lemon:lemon_sprout': 'lemon:friend', 'banana:banana_sprout': 'banana:friend' };
+const SPROUT_FRIEND = { 'plum:plum_sprout': 'plum:friend', 'apple:apple_sprout': 'apple:friend', 'blueberry:blueberry_sprout': 'blueberry:friend', 'lemon:lemon_sprout': 'lemon:friend', 'banana:banana_sprout': 'banana:friend', 'grapes:grapes_sprout': 'grapes:friend' };
 
 function growFriend(sprout) {
   const friendType = SPROUT_FRIEND[sprout.typeId];
@@ -34,7 +34,8 @@ function makeComponent(fruit) {
       const held = equipment?.getEquipment(EquipmentSlot.Mainhand);
       if (held?.typeId !== 'minecraft:bone_meal') return;
       if (!growTree(block)) {
-        player.onScreenDisplay.setActionBar(`${fruit} saplings need soil and clear space: 5 blocks wide, 6 blocks tall.`);
+        const space = fruit === 'grapes' ? '5 blocks wide, 3 blocks tall' : '5 blocks wide, 6 blocks tall';
+        player.onScreenDisplay.setActionBar(`${fruit} saplings need soil and clear space: ${space}.`);
         return;
       }
       if (player.getGameMode() !== GameMode.Creative) {
@@ -68,5 +69,6 @@ system.beforeEvents.startup.subscribe(({ blockComponentRegistry }) => {
   blockComponentRegistry.registerCustomComponent('blueberry:grow_tree', makeComponent('Blueberry'));
   blockComponentRegistry.registerCustomComponent('lemon:grow_tree', makeComponent('Lemon'));
   blockComponentRegistry.registerCustomComponent('banana:grow_tree', makeComponent('Banana'));
+  blockComponentRegistry.registerCustomComponent('grapes:grow_tree', makeComponent('Grapes'));
   blockComponentRegistry.registerCustomComponent('friend:sprout_grow', makeSproutComponent());
 });

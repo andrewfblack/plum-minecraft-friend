@@ -24,6 +24,8 @@ Version **1.2.27** makes Lemon's moving light reliable: removing a light block i
 
 Version **1.2.28** fixes the remaining current-engine pack-load error: the Fruit Basket recipe now uses the required namespaced identifier `friend:fruit_basket` instead of the invalid bare identifier `fruit_basket`.
 
+Version **1.2.29** adds **Grapes**, a squarish little bunch of green grapes and the **Sharpshooter**: a tamed Grapes takes aim at hostile mobs within 12 blocks and spits grape seeds at them every couple of seconds. Each seed is a real physics projectile that arcs over blocks — no bow, just seeds.
+
 ## Downloads
 
 - **`dist/Fruity-Friends-Dedicated-Server.zip`** — the AI edition, behavior/resource packs, Python AI service, and server setup instructions. This is the edition for your requested setup.
@@ -108,9 +110,21 @@ Banana is a tall — about **1.5 blocks** — sunny-yellow cube friend with a go
 
 ![Banana's face](art/banana-face.png)
 
+## Grapes the Sharpshooter
+
+Grapes is a squarish little bunch of green grapes — a standard 1-block cube buddy whose whole surface is covered in tiny round grapes with a leafy crown, and who finally gives the Fruity Friends family some firepower. He works like the others — plant **grapes fruit** on tilled farmland to grow a baby Grapes, tame him with **grapes fruit**, and talk with a book or in chat — but his job is combat support.
+
+- **He spits grape seeds.** A tamed, loaded Grapes locks onto the nearest hostile mob (zombie, creeper, skeleton, spider, and friends) within **12 blocks** and spits a grape seed at it about every **two seconds**. Each seed is a real physics projectile with **ballistic aiming** — it arcs over blocks and drops right on the target, dealing damage. No bow, no arrow, and no friendly fire: he only ever opens fire on monsters.
+- **He does not heal you.** Stay near your tamed Plum for that.
+- **He is very confident.** Grapes answers questions with cheerful sharpshooter energy and loves to point out that he hits what he aims at while Banana just drops peels and hopes.
+- Find **grape vines in newly generated plains and forests**, same as the plum, apple, and blueberry trees. Break their green-speckled leaves in Survival for grapes and Grape Saplings. A planted Grape Sapling grows into a low, leafy **vine**: a single log completely hidden beneath a 5-wide, 3-tall mound of leaves (use bone meal or wait — saplings need just 5 blocks of width and 3 blocks of height clear). Drops, planting, and bone-meal growth match the other fruits. `/give @s grapes:grapes_sapling 1` and `/give @s grapes:grapes 16` work in Creative too.
+- Interact with Grapes with an **empty hand** for the standard **Movement** menu — **Follow, Stay, Work, Go Home**. His sharpshooting keeps running in every movement mode, as long as he is tamed and loaded.
+
+![Grapes's face](art/grapes-face.png)
+
 ## Updating from version 1.1.0
 
-Reimport the updated offline add-on, or stop BDS and replace the pack folders from the new server archive. On BDS, update both world pack-list entries to **`[1,2,28]`**, preserving entries for other packs. Replace `plum-service/bridge.py` too and restart the bridge so the AI knows about Apple, Applezon, Blueberry, the Collector chest, Lemon the Light Friend, Banana the Prankster, and the five kinds of fruit trees. Keep existing pack UUIDs, credentials, and world data. Existing tamed friends carried over from older worlds keep working: friends that were sitting migrate to **Stay**, and others keep their old follow-the-owner behavior as **Follow**.
+Reimport the updated offline add-on, or stop BDS and replace the pack folders from the new server archive. On BDS, update both world pack-list entries to **`[1,2,29]`**, preserving entries for other packs. Replace `plum-service/bridge.py` too and restart the bridge so the AI knows about Apple, Applezon, Blueberry, the Collector chest, Lemon the Light Friend, Banana the Prankster, Grapes the Sharpshooter, and the six kinds of fruit trees. Keep existing pack UUIDs, credentials, and world data. Existing tamed friends carried over from older worlds keep working: friends that were sitting migrate to **Stay**, and others keep their old follow-the-owner behavior as **Follow**.
 
 ## Protection and following
 
@@ -144,11 +158,11 @@ Tree tests also cover complete sapling growth, blocked/unloaded destinations, ro
 - Tame five friends, set four to Follow, and confirm the fifth cannot Follow until one follower is set to Stay or Work, sent Home, or tucked into a Fruit Basket.
 - Set a friend to Work and walk away; confirm it roams within 20 blocks of the spot you chose and returns after being pushed outside.
 - Send a friend Home; confirm it arrives at your bed and roams within 10 blocks of it instead of staying put, and that it stays put if you have not slept in a bed yet.
-- Interact with an empty hand on a tamed Plum, Apple, Lemon, or Banana and confirm the Follow/Stay/Work/Go Home menu appears; on Blueberry confirm the empty hand opens his chest and Movement lives inside it.
+- Interact with an empty hand on a tamed Plum, Apple, Lemon, Banana, or Grapes and confirm the Follow/Stay/Work/Go Home menu appears; on Blueberry confirm the empty hand opens his chest and Movement lives inside it.
 - Craft a Fruit Basket from three sticks, hold it and interact with a tamed friend, then interact with a block to release it; confirm the name, baby/sit state, owner, and (for Blueberry) chest items return, and that the friend comes out staying put no matter what mode it was in before.
 - Reload the world and confirm modes and Work Anchors persist.
 - In a two-player session confirm each player independently gets six Follow slots.
-- Find plum, apple and blueberry trees in new plains/forest terrain, lemon trees in warm biomes (desert, savanna, jungle), and banana trees in jungles; break leaves in Survival to verify each fruit and sapling drop.
+- Find plum, apple, blueberry and grape trees in new plains/forest terrain, lemon trees in warm biomes (desert, savanna, jungle), and banana trees in jungles; break leaves in Survival to verify each fruit and sapling drop.
 - Plant a sapling, test bone meal and natural growth, and confirm a nearby wall/chest is preserved when growth is blocked.
 - Verify fruit icons, fruit planting, sprout growth, and sapling rendering on mobile and PC.
 - Tame a Banana, wait about 30 seconds, and confirm he drops a peel trap that cannot be picked up; lead a zombie or creeper within one block and confirm it slips, slows, and consumes the peel. Confirm an unused peel removes itself after two minutes, no new peels appear while Banana is untamed or in a basket, and Banana renders about 1.5 blocks tall with his goofy face in adult and baby forms.
@@ -156,6 +170,7 @@ Tree tests also cover complete sapling growth, blocked/unloaded destinations, ro
 - Carry a Blueberry with items in his chest in a Fruit Basket and confirm the items return when he is released.
 - Tame a Lemon and confirm he remains visible in darkness, places light at his feet without replacing solid blocks, and removes his previous light as he moves or is removed; untamed Lemons should place no light.
 - Confirm Lemon's grumpy face (angled brows and a frown) renders on the front of both adult and baby forms.
+- Tame a Grapes, lead a zombie, creeper, or skeleton within 12 blocks, and confirm he spits grape seeds every couple of seconds that arc over obstacles and deal damage; confirm he does not shoot friends, peaceful mobs, or untamed players, that he keeps shooting in every movement mode, and that he renders as a green bunch of grapes in adult and baby forms.
 - Hold a book and open the conversation on both mobile and PC. Verify cancel/reopen and private answers.
 - Ask a follow-up AI question; confirm a second player's history is separate.
 - Stop the bridge and confirm an offline answer appears instead of a stuck conversation.

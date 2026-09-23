@@ -63,6 +63,18 @@
     },
     "banana_bark": {
       "textures": "textures/blocks/banana_bark"
+    },
+    "grapes_leaves": {
+      "textures": "textures/blocks/grapes_leaves"
+    },
+    "grapes_sapling_leaf": {
+      "textures": "textures/blocks/grapes_sapling_leaf"
+    },
+    "grapes_sprout": {
+      "textures": "textures/blocks/grapes_sprout"
+    },
+    "grapes_bark": {
+      "textures": "textures/blocks/grapes_bark"
     }
   }
 }

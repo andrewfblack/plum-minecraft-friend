@@ -48,5 +48,14 @@
   },
   "banana:banana_sprout": {
     "sound": "grass"
+  },
+  "grapes:grapes_leaves": {
+    "sound": "grass"
+  },
+  "grapes:grapes_sapling": {
+    "sound": "grass"
+  },
+  "grapes:grapes_sprout": {
+    "sound": "grass"
   }
 }

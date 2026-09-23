@@ -120,4 +120,14 @@ class BridgeTests(unittest.TestCase):
             self.assertIn('Banana is an adult', sent['input'][-1]['content'])
         self.assertEqual(self.state.answer(self.body(friend='banana'))[0], 200)
 
+    def test_grapes_friend_selects_sharpshooter_instructions(self):
+        payload = {'output': [{'type': 'message', 'content': [{'type': 'output_text', 'text': 'Seeds away! Sharpshooting is go!'}]}]}
+        with patch('urllib.request.urlopen', return_value=io.BytesIO(json.dumps(payload).encode())) as mocked:
+            self.assertEqual(bridge.ask_openai('a creeper is coming!', [], 'minecraft:overworld', False, 'fake-key', 'test-model', friend='grapes'), 'Seeds away! Sharpshooting is go!')
+            sent = json.loads(mocked.call_args.args[0].data)
+            self.assertIn('Sharpshooter', sent['instructions'])
+            self.assertIn('12 blocks', sent['instructions'])
+            self.assertIn('Grapes is an adult', sent['input'][-1]['content'])
+        self.assertEqual(self.state.answer(self.body(friend='grapes'))[0], 200)
+
 if __name__ == '__main__': unittest.main()

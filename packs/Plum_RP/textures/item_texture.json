@@ -17,6 +17,9 @@
     "banana_fruit": {
       "textures": "textures/items/banana"
     },
+    "grapes_fruit": {
+      "textures": "textures/items/grapes"
+    },
     "fruit_basket": {
       "textures": "textures/items/basket"
     }

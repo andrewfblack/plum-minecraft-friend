@@ -55,6 +55,17 @@ test('banana answers correctly but wraps everything in terrible puns', () => {
   assert.match(offlineAnswer('How do I make a bed?', 'banana'), /three matching wool/);
 });
 
+test('grapes answers about seed-shooting, sharpshooting, and rivalry, not healing', () => {
+  assert.match(offlineAnswer('do you spit seeds?', 'grapes'), /No bow, no arrow/);
+  assert.match(offlineAnswer('how do you shoot at monsters?', 'grapes'), /12 blocks/);
+  assert.match(offlineAnswer('how do I care for Grapes?', 'grapes'), /Tame me with grapes fruit/);
+  assert.match(offlineAnswer('where can I find grapes?', 'grapes'), /plains and forests/);
+  assert.match(offlineAnswer('does Grapes heal me?', 'grapes'), /do NOT grant healing/);
+  assert.match(offlineAnswer('who is better, you or Banana?', 'grapes'), /Banana|seeds/);
+  assert.match(offlineAnswer('how do I grow a baby Grapes?', 'grapes'), /baby Grapes will sprout/);
+  assert.match(offlineAnswer('How do I make a bed?', 'grapes'), /three matching wool/);
+});
+
 test('input bounds and formatting cannot inject chat colors or control characters', () => {
   assert.equal(cleanText('§cHello\nfriend'), 'Hello friend');
   assert.equal(cleanText('a'.repeat(1000)).length, 400);

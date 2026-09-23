@@ -1,7 +1,7 @@
 """Generate Survival fruit/tree assets for both cube friends alongside the companion packs."""
 
 SOIL = ['minecraft:grass_block', 'minecraft:dirt', 'minecraft:coarse_dirt', 'minecraft:podzol', 'minecraft:moss_block']
-FRUIT_LABELS = {'plum': 'Plum', 'apple': 'Apple', 'blueberry': 'Blueberry', 'lemon': 'Lemon', 'banana': 'Banana'}
+FRUIT_LABELS = {'plum': 'Plum', 'apple': 'Apple', 'blueberry': 'Blueberry', 'lemon': 'Lemon', 'banana': 'Banana', 'grapes': 'Grapes'}
 # (dark, mid, light, highlight) per fruit, shared by the fruit sprite and the sprout/leaf art.
 FRUIT_COLORS = {
     'plum': [(74, 30, 109, 255), (118, 46, 166, 255), (159, 74, 202, 255), (212, 147, 239, 255)],
@@ -9,6 +9,7 @@ FRUIT_COLORS = {
     'blueberry': [(22, 44, 148, 255), (37, 66, 205, 255), (84, 126, 240, 255), (160, 200, 255, 255)],
     'lemon': [(168, 128, 14, 255), (224, 176, 32, 255), (250, 216, 110, 255), (255, 240, 170, 255)],
     'banana': [(140, 100, 20, 255), (218, 168, 26, 255), (255, 220, 92, 255), (255, 245, 200, 255)],
+    'grapes': [(58, 128, 62, 255), (110, 184, 84, 255), (158, 218, 116, 255), (214, 240, 170, 255)],
 }
 
 def _pool(item, chance=1):
@@ -31,6 +32,8 @@ def _sprout_pixels(colors, fruit):
         stem, green, highlight = (146, 100, 40, 255), (86, 158, 44, 255), (255, 240, 170, 255)
     elif fruit == 'banana':
         stem, green, highlight = (120, 84, 30, 255), (86, 158, 44, 255), (255, 245, 200, 255)
+    elif fruit == 'grapes':
+        stem, green, highlight = (110, 74, 40, 255), (86, 158, 44, 255), (214, 240, 170, 255)
     else:
         stem, green, highlight = (100, 69, 37, 255), (99, 168, 65, 255), (212, 147, 239, 255)
     sprout = [[clear for _ in range(16)] for _ in range(16)]
@@ -57,12 +60,30 @@ def _fruit_textures(bp, rp, png, fruit):
     clear = (0, 0, 0, 0)
     colors = FRUIT_COLORS[fruit]
     fruit_pixels = [[clear for _ in range(16)] for _ in range(16)]
-    for y in range(4, 15):
-        for x in range(2, 14):
-            d = ((x - 7.5) / 5.5) ** 2 + ((y - 9) / 5.5) ** 2
-            if d <= 1:
-                fruit_pixels[y][x] = colors[0 if d > 0.72 else 2 if x < 8 else 1]
-    for x, y in [(5, 6), (6, 6), (5, 7)]: fruit_pixels[y][x] = colors[3]
+    if fruit == 'grapes':
+        # A small grape bunch: three overlapping round grapes, outlined and lit,
+        # with a short stem and a leaf on top.
+        for cx, cy, r in [(6, 12, 3), (10, 12, 3), (8, 9, 3)]:
+            for y in range(cy - r, cy + r + 1):
+                for x in range(cx - r, cx + r + 1):
+                    if 0 <= x < 16 and 0 <= y < 16 and (x - cx) ** 2 + (y - cy) ** 2 <= r * r:
+                        fruit_pixels[y][x] = colors[1]
+        for cx, cy, r in [(6, 12, 3), (10, 12, 3), (8, 9, 3)]:
+            for y in range(cy - r, cy + r + 1):
+                for x in range(cx - r, cx + r + 1):
+                    d2 = (x - cx) ** 2 + (y - cy) ** 2
+                    if 0 <= x < 16 and 0 <= y < 16 and r * r - 2 <= d2 <= r * r:
+                        fruit_pixels[y][x] = colors[0]
+        for x, y in [(4, 10), (8, 7), (9, 10)]: fruit_pixels[y][x] = colors[3]
+        for x, y in [(8, 5), (8, 4), (8, 3)]: fruit_pixels[y][x] = (110, 74, 40, 255)
+        for x, y in [(9, 3), (10, 3), (10, 4), (11, 2)]: fruit_pixels[y][x] = (86, 158, 44, 255)
+    else:
+        for y in range(4, 15):
+            for x in range(2, 14):
+                d = ((x - 7.5) / 5.5) ** 2 + ((y - 9) / 5.5) ** 2
+                if d <= 1:
+                    fruit_pixels[y][x] = colors[0 if d > 0.72 else 2 if x < 8 else 1]
+        for x, y in [(5, 6), (6, 6), (5, 7)]: fruit_pixels[y][x] = colors[3]
     if fruit == 'plum':
         for x, y in [(8, 4), (8, 3), (9, 2)]: fruit_pixels[y][x] = (100, 69, 37, 255)
         for x, y in [(10, 2), (11, 2), (10, 3), (12, 1)]: fruit_pixels[y][x] = (99, 168, 65, 255)
@@ -77,6 +98,8 @@ def _fruit_textures(bp, rp, png, fruit):
         for x, y in [(7, 4), (8, 4), (9, 4), (8, 3)]: fruit_pixels[y][x] = (120, 84, 30, 255)
         for x, y in [(10, 2), (11, 2), (10, 3), (12, 1)]: fruit_pixels[y][x] = (86, 158, 44, 255)
         for x, y in [(6, 13), (7, 13), (8, 13), (9, 13), (7, 12), (9, 12)]: fruit_pixels[y][x] = (140, 100, 20, 255)
+    elif fruit == 'grapes':
+        pass  # the bunch already carries its own stem and leaf
     else:
         # Blueberry wears a tiny green calyx crown like a real berry.
         for x, y in [(8, 3), (8, 4), (7, 4), (9, 4), (8, 2)]: fruit_pixels[y][x] = (46, 96, 40, 255)
@@ -191,11 +214,13 @@ def build_fruit(bp, rp, root, write, png, fruit, accumulate, biomes=('plains', '
     write(bp / f'loot_tables/blocks/{fruit}_leaves.json', {'pools': [_pool(item, 0.35), _pool(sapling_block, 0.1)]})
     write(bp / f'loot_tables/blocks/{fruit}_sapling.json', {'pools': [_pool(sapling_block)]})
     write(bp / f'loot_tables/blocks/{fruit}_sprout.json', {'pools': [_pool(item)]})
+    trunk = {'trunk_block': 'minecraft:oak_log', 'trunk_height': {'range_min': 1, 'range_max': 1}} if fruit == 'grapes' else {'trunk_block': 'minecraft:oak_log', 'trunk_height': {'range_min': 4, 'range_max': 4}}
+    canopy = {'leaf_block': leaf, 'canopy_offset': {'min': 0, 'max': 0}, 'min_width': 2, 'canopy_slope': {'rise': 1, 'run': 1}, 'variation_chance': {'numerator': 1, 'denominator': 1}} if fruit == 'grapes' else {'leaf_block': leaf, 'canopy_offset': {'min': -2, 'max': -2}, 'min_width': 2, 'canopy_slope': {'rise': 1, 'run': 1}, 'variation_chance': {'numerator': 1, 'denominator': 1}}
     write(bp / f'features/{fruit}_tree.json', {
         'format_version': '1.13.0', 'minecraft:tree_feature': {
             'description': {'identifier': tree},
-            'trunk': {'trunk_block': 'minecraft:oak_log', 'trunk_height': {'range_min': 4, 'range_max': 4}},
-            'canopy': {'leaf_block': leaf, 'canopy_offset': {'min': -2, 'max': -2}, 'min_width': 2, 'canopy_slope': {'rise': 1, 'run': 1}, 'variation_chance': {'numerator': 1, 'denominator': 1}},
+            'trunk': trunk,
+            'canopy': canopy,
             'base_block': 'minecraft:dirt', 'may_grow_on': SOIL,
             'may_replace': ['minecraft:air', 'minecraft:short_grass', 'minecraft:tall_grass', leaf],
             'may_grow_through': ['minecraft:air', 'minecraft:short_grass', 'minecraft:tall_grass']
@@ -273,7 +298,7 @@ def peel_pixels():
 
 def build_orchard(bp, rp, root, write, png):
     accumulate = {'textures': {}, 'terrain': {}, 'sounds': {}, 'lines': []}
-    for fruit in ('plum', 'apple', 'blueberry', 'lemon', 'banana'):
+    for fruit in ('plum', 'apple', 'blueberry', 'lemon', 'banana', 'grapes'):
         pixels = _fruit_textures(bp, rp, png, fruit)
         biomes = ('jungle',) if fruit == 'banana' else (('desert', 'savanna', 'jungle') if fruit == 'lemon' else ('plains', 'forest'))
         build_fruit(bp, rp, root, write, png, fruit, accumulate, biomes=biomes)

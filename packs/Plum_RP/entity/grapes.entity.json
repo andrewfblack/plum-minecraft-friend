@@ -1,0 +1,36 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "grapes:friend",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/grapes"
+      },
+      "geometry": {
+        "default": "geometry.grapes"
+      },
+      "render_controllers": [
+        "controller.render.grapes"
+      ],
+      "animations": {
+        "bob": "animation.grapes.bob",
+        "sit": "animation.grapes.sit"
+      },
+      "scripts": {
+        "animate": [
+          "bob",
+          {
+            "sit": "query.is_sitting"
+          }
+        ]
+      },
+      "spawn_egg": {
+        "base_color": "#4B9E45",
+        "overlay_color": "#A8E65C"
+      }
+    }
+  }
+}

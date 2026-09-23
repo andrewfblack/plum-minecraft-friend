@@ -1,0 +1,20 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "grapes:seed",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/grapes_seed"
+      },
+      "geometry": {
+        "default": "geometry.grapes_seed"
+      },
+      "render_controllers": [
+        "controller.render.grapes_seed"
+      ]
+    }
+  }
+}

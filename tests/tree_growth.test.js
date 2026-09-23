@@ -69,3 +69,21 @@ test('partial placement failure restores the sapling and original blocks', () =>
   assert.equal(f.sapling.typeId, 'plum:plum_sapling');
   for (const step of treePlan(f.origin).slice(1)) assert.equal(f.dimension.getBlock(step.location).typeId, 'minecraft:air');
 });
+
+test('grapes grow into a one-log vine with the wood completely hidden by a leaf mound', () => {
+  const f = fixture();
+  f.sapling.setType('grapes:grapes_sapling');
+  const plan = treePlan(f.origin, 'grapes:grapes_sapling');
+  assert.equal(new Set(plan.map(p => JSON.stringify(p.location))).size, plan.length);
+  assert.equal(plan.length, 35);
+  assert.equal(Math.max(...plan.map(p => p.location.y)), f.origin.y + 2);
+  assert.equal(growTree(f.sapling), true);
+  assert.equal(f.sapling.typeId, 'minecraft:oak_log');
+  assert.equal(f.writes.filter(([, type]) => type === 'minecraft:oak_log').length, 1);
+  assert.equal(f.writes.filter(([, type]) => type === 'grapes:grapes_leaves').length, 34);
+  const dirs = [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1], [0, 1, 0]];
+  for (const [dx, dy, dz] of dirs) {
+    assert.equal(f.dimension.getBlock({ x: f.origin.x + dx, y: f.origin.y + dy, z: f.origin.z + dz }).typeId, 'grapes:grapes_leaves');
+  }
+  assert.equal(growTree(f.sapling), false, 'the hidden trunk is not a sapling, so it cannot regrow');
+});

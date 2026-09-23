@@ -1,0 +1,37 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:item": {
+    "description": {
+      "identifier": "grapes:grapes",
+      "menu_category": {
+        "category": "nature"
+      }
+    },
+    "components": {
+      "minecraft:display_name": {
+        "value": "item.grapes:grapes.name"
+      },
+      "minecraft:icon": {
+        "textures": {
+          "default": "grapes_fruit"
+        }
+      },
+      "minecraft:max_stack_size": 64,
+      "minecraft:block_placer": {
+        "block": "grapes:grapes_sprout",
+        "use_on": [
+          "minecraft:farmland"
+        ]
+      },
+      "minecraft:food": {
+        "nutrition": 4,
+        "saturation_modifier": 0.3
+      },
+      "minecraft:use_animation": "eat",
+      "minecraft:use_modifiers": {
+        "use_duration": 1.6,
+        "movement_modifier": 0.35
+      }
+    }
+  }
+}

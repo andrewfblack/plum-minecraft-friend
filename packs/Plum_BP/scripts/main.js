@@ -1,4 +1,4 @@
-import { world, system, EquipmentSlot, ItemStack, Player, BlockPermutation } from '@minecraft/server';
+import { world, system, EquipmentSlot, ItemStack, Player, BlockPermutation, EntityDamageCause } from '@minecraft/server';
 import { ActionFormData, ModalFormData } from '@minecraft/server-ui';
 import { answerQuestion, chatLabelFor } from './provider.js';
 import { cleanText } from './knowledge.js';
@@ -7,6 +7,10 @@ import {
   MAX_FOLLOWING_FRIENDS, WORK_RADIUS, HOME_RADIUS, MODE,
   readMode, setMode, readWorkAnchor, setWorkAnchor, defaultMode, describeMode, returnPlan,
 } from './friend_state.js';
+import {
+  GRAPE_SEED_ENTITY, GRAPE_RANGE, GRAPE_COOLDOWN,
+  GRAPE_DAMAGE, GRAPE_MOUTH_HEIGHT, GRAPE_MONSTER_FAMILY, seedVelocity,
+} from './seed.js';
 import './orchard.js';
 
 const openForms = new Set();
@@ -60,11 +64,20 @@ const FRIENDS = {
     tamedMsg: 'Give me a banana fruit to tame me first. Only my owner can open my conversation.',
     plantMsg: 'A tiny fruiting sprout pokes through the soil! It will grow into a baby Banana — one banana tames it.',
   },
+  'grapes:friend': {
+    name: 'Grapes', color: '§a', fruit: 'grapes:grapes', sharpshooter: true,
+    title: (baby) => baby ? 'Little Grapes' : 'Grapes',
+    body: (baby, label) => `Hi, ready to get rowdy!\n${label}\n\nI am the Sharpshooter: I spit grape seeds at monsters. No bow, no arrow - just seeds.`,
+    askTitle: 'Ask Grapes', replyTitle: 'Grapes says...',
+    care: 'Tame me by giving me grapes fruit. Plant grapes fruit on tilled farmland to grow a baby. Babies grow in 20 loaded minutes and can be tamed too. I am the Sharpshooter: when I am tamed I take aim at hostile mobs within 12 blocks and spit grape seeds at them every couple of seconds. Each seed hurts, and my spits arc nicely over blocks, so stand back and enjoy the show. Monsters never hurt me - I am a friend. Once tamed I stay put; interact with me with an empty hand and choose Follow, Stay, Work, or Go Home. Craft a Fruit Basket from three sticks in the bucket shape and interact with me while holding it to carry me along. Talk to me in chat while I am near you, or hold a book and interact!',
+    tamedMsg: 'Give me some grapes fruit to tame me first. Only my owner can open my conversation.',
+    plantMsg: 'A tiny fruiting sprout pokes through the soil! It will grow into a baby Grapes — grapes fruit tames it.',
+  },
 };
 
 const TYPES = new Set(Object.keys(FRIENDS));
-const FRUIT_FRIEND = { 'plum:plum': 'plum:friend', 'apple:apple': 'apple:friend', 'blueberry:blueberry': 'blueberry:friend', 'lemon:lemon': 'lemon:friend', 'banana:banana': 'banana:friend' };
-const FRIEND_NAMES = { plum: 'plum:friend', apple: 'apple:friend', blueberry: 'blueberry:friend', lemon: 'lemon:friend', banana: 'banana:friend' };
+const FRUIT_FRIEND = { 'plum:plum': 'plum:friend', 'apple:apple': 'apple:friend', 'blueberry:blueberry': 'blueberry:friend', 'lemon:lemon': 'lemon:friend', 'banana:banana': 'banana:friend', 'grapes:grapes': 'grapes:friend' };
+const FRIEND_NAMES = { plum: 'plum:friend', apple: 'apple:friend', blueberry: 'blueberry:friend', lemon: 'lemon:friend', banana: 'banana:friend', grapes: 'grapes:friend' };
 
 const BASKET = 'friend:fruit_basket';
 const BASKET_STORE = 'basket:friend';
@@ -1134,6 +1147,60 @@ system.runInterval(() => {
     }
   }
 }, 2);
+
+// Grapes is the Sharpshooter: a tamed Grapes stands his ground (any movement
+// mode) and spits a grape seed at the nearest hostile mob within GRAPE_RANGE
+// every couple of seconds. The seed is a real physics projectile launched along
+// the ballistic arc computed in seed.js, so every visible spit actually flies
+// and lands where you see it land. Damage is applied when the seed connects.
+const grapesSchedule = new Map(); // friend.id -> tick it may shoot again
+
+system.runInterval(() => {
+  for (const name of ['overworld', 'nether', 'the_end']) {
+    const dimension = world.getDimension(name);
+    for (const friend of dimension.getEntities({ type: 'grapes:friend' })) {
+      try {
+        if (!friend.isValid) continue;
+        if (!friend.getComponent('minecraft:tameable')?.tamedToPlayerId) continue;
+        const now = system.currentTick;
+        if (now < (grapesSchedule.get(friend.id) ?? 0)) continue;
+        const hostiles = dimension.getEntities({ families: [GRAPE_MONSTER_FAMILY], location: friend.location, maxDistance: GRAPE_RANGE });
+        if (!hostiles.length) continue;
+        const hostile = hostiles
+          .filter(target => target.isValid)
+          .sort((a, b) => distance(a.location, friend.location) - distance(b.location, friend.location))[0];
+        if (!hostile) continue;
+        const from = { x: friend.location.x, y: friend.location.y + GRAPE_MOUTH_HEIGHT, z: friend.location.z };
+        const to = { x: hostile.location.x, y: hostile.location.y + 0.95, z: hostile.location.z };
+        const seed = dimension.spawnEntity(GRAPE_SEED_ENTITY, from);
+        const projectile = seed.getComponent('minecraft:projectile');
+        if (projectile) projectile.shoot(seedVelocity(from, to), { uncertainty: 0.05 });
+        grapesSchedule.set(friend.id, now + GRAPE_COOLDOWN);
+      } catch (error) { console.warn(`[Grapes] Sharpshooter skipped: ${error}`); }
+    }
+  }
+}, 10);
+
+// Seeds that land on a hostile mob deal Grapes' damage to it; seeds that hit a
+// block or expire just vanish (remove_on_hit + the entity timer handle it). A
+// grazing seed that clips a friend does nothing - friends are damage-immune.
+world.afterEvents.projectileHitEntity.subscribe((event) => {
+  try {
+    if (event.projectile?.typeId !== GRAPE_SEED_ENTITY) return;
+    const victim = event.getEntityHit()?.entity;
+    if (!victim?.isValid) return;
+    const family = victim.getComponent('minecraft:type_family');
+    if (!family?.hasTypeFamily(GRAPE_MONSTER_FAMILY)) return;
+    victim.applyDamage(GRAPE_DAMAGE, { damagingProjectile: event.projectile, cause: EntityDamageCause.projectile });
+  } catch (error) { console.warn(`[Grapes] Seed hit skipped: ${error}`); }
+});
+
+world.afterEvents.projectileHitBlock.subscribe((event) => {
+  try {
+    if (event.projectile?.typeId !== GRAPE_SEED_ENTITY) return;
+    if (event.projectile.isValid) event.projectile.remove();
+  } catch { /* it may already be gone */ }
+});
 
 // Universal upkeep, once per second: keeps every loaded Fruity Friend in its
 // persisted movement state (reapplying groups after a reload), enforces the shared

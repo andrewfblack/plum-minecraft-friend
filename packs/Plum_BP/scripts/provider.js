@@ -4,6 +4,7 @@ export function chatLabelFor(friend) {
     : friend === 'blueberry' ? 'Collector cargo desk • offline help'
     : friend === 'lemon' ? 'Warm orchard light • offline help'
     : friend === 'banana' ? 'Certified peel patrol • offline help'
+    : friend === 'grapes' ? 'Sharpshooter target lock • offline help'
     : 'Offline Minecraft guide';
 }
 export async function answerQuestion(question, context) {

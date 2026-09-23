@@ -1,0 +1,57 @@
+{
+  "format_version": "1.21.0",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "grapes:seed",
+      "is_spawnable": false,
+      "is_summonable": false,
+      "is_experimental": false
+    },
+    "component_groups": {
+      "grapes:despawn": {
+        "minecraft:instant_despawn": {}
+      }
+    },
+    "components": {
+      "minecraft:type_family": {
+        "family": [
+          "grapes_seed",
+          "projectile"
+        ]
+      },
+      "minecraft:projectile": {
+        "gravity": 0.05,
+        "hit_sound": "item.slime",
+        "on_hit": {
+          "remove_on_hit": {}
+        }
+      },
+      "minecraft:collision_box": {
+        "width": 0.25,
+        "height": 0.25
+      },
+      "minecraft:physics": {},
+      "minecraft:pushable": {
+        "is_pushable": false,
+        "is_pushable_by_piston": false
+      },
+      "minecraft:timer": {
+        "looping": false,
+        "time": 6.5,
+        "time_down_event": {
+          "event": "grapes:expire",
+          "target": "self"
+        }
+      }
+    },
+    "events": {
+      "grapes:expire": {
+        "add": {
+          "component_groups": [
+            "grapes:despawn"
+          ]
+        }
+      }
+    }
+  }
+}
