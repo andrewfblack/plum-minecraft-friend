@@ -1,4 +1,4 @@
-import { world, system, EquipmentSlot, ItemStack, Player, BlockPermutation, EntityDamageCause } from '@minecraft/server';
+import { world, system, EquipmentSlot, ItemStack, Player, BlockPermutation, BlockVolume, EntityDamageCause } from '@minecraft/server';
 import { ActionFormData, ModalFormData } from '@minecraft/server-ui';
 import { answerQuestion, chatLabelFor } from './provider.js';
 import { cleanText } from './knowledge.js';
@@ -11,6 +11,10 @@ import {
   GRAPE_SEED_ENTITY, GRAPE_RANGE, GRAPE_COOLDOWN,
   GRAPE_DAMAGE, GRAPE_MOUTH_HEIGHT, GRAPE_MONSTER_FAMILY, seedVelocity,
 } from './seed.js';
+import {
+  CROP_TYPES, GRASS_TYPES, isCrop, isMature, nextGrowth, replantItem,
+  harvestDrops, forageDrops, mergeDrops,
+} from './farm.js';
 import './orchard.js';
 
 const openForms = new Set();
@@ -73,11 +77,29 @@ const FRIENDS = {
     tamedMsg: 'Give me some grapes fruit to tame me first. Only my owner can open my conversation.',
     plantMsg: 'A tiny fruiting sprout pokes through the soil! It will grow into a baby Grapes — grapes fruit tames it.',
   },
+  'strawberry:friend': {
+    name: 'Strawberry', color: '§4', fruit: 'strawberry:strawberry', farmer: true,
+    title: (baby) => baby ? 'Little Strawberry' : 'Strawberry',
+    body: (baby, label) => `Hi, farmhand buddy!\n${label}\n\nI am the Farmer: set me to Work and I tend fields - I speed growth, harvest ripe crops, and replant the seeds. Plant a strawberry on tilled farmland to grow a baby.`,
+    askTitle: 'Ask Strawberry', replyTitle: 'Strawberry says...',
+    care: 'Tame me by giving me a strawberry. Plant a strawberry on tilled farmland to grow a baby. Babies grow in 20 loaded minutes and can be tamed too. I am the Farmer - my job changes with my mode! Set me to Work and I tend a field around my Work Anchor: I quicken wheat, carrots, potatoes, and beetroot, harvest the ripe crops, and replant the seed so the field keeps producing. While following, or staying at home, I forage instead: I still speed up growth and gather ripe crops, but I do not replant; I break grass looking for seeds. Everything I gather goes into my farm chest - interact with me with an empty hand to open it, store what you hold, take the harvest out, or pick Movement. I will tell you when my farm chest is full. Craft a Fruit Basket from three sticks in the bucket shape and interact with me while holding it to carry me along - my farm chest comes too. Talk to me in chat while I am near you, or hold a book and interact!',
+    tamedMsg: 'Give me a strawberry fruit to tame me first. Only my owner can open my farm chest or conversation.',
+    plantMsg: 'A tiny fruiting sprout pokes through the soil! It will grow into a baby Strawberry — a strawberry tames it.',
+  },
+  'coconut:friend': {
+    name: 'Coconut', color: '§8', fruit: 'coconut:coconut', bodyguard: true,
+    title: (baby) => baby ? 'Little Coconut' : 'Coconut',
+    body: (baby, label) => `Hi, protector buddy!\n${label}\n\nI am the Bodyguard: when monsters get too close, I slam the ground and knock them flying. Plant a coconut on tilled farmland to grow a baby.`,
+    askTitle: 'Ask Coconut', replyTitle: 'Coconut says...',
+    care: 'Tame me by giving me a coconut fruit. Plant a coconut on tilled farmland to grow a baby. Babies grow in 20 loaded minutes and can be tamed too. I am the Bodyguard: about every three seconds I check around me for hostile mobs and slam the ground, flinging every monster in range away with a bit of damage. Set me to Work and I guard that exact spot with a wider radius of 8 blocks; following, staying, or going home, I escort you and guard up to 6 blocks around wherever I already am. I only slam when something hostile is actually close - no monsters, no show, and I do not go looking for fights. Monsters cannot hurt me - I am a friend. Once tamed I stay put; interact with me with an empty hand and choose Follow, Stay, Work, or Go Home. Craft a Fruit Basket from three sticks in the bucket shape and interact with me while holding it to carry me along. Talk to me in chat while I am near you, or hold a book and interact!',
+    tamedMsg: 'Give me a coconut fruit to tame me first. Only my owner can open my conversation.',
+    plantMsg: 'A tiny fruiting sprout pokes through the soil! It will grow into a baby Coconut — a coconut tames it.',
+  },
 };
 
 const TYPES = new Set(Object.keys(FRIENDS));
-const FRUIT_FRIEND = { 'plum:plum': 'plum:friend', 'apple:apple': 'apple:friend', 'blueberry:blueberry': 'blueberry:friend', 'lemon:lemon': 'lemon:friend', 'banana:banana': 'banana:friend', 'grapes:grapes': 'grapes:friend' };
-const FRIEND_NAMES = { plum: 'plum:friend', apple: 'apple:friend', blueberry: 'blueberry:friend', lemon: 'lemon:friend', banana: 'banana:friend', grapes: 'grapes:friend' };
+const FRUIT_FRIEND = { 'plum:plum': 'plum:friend', 'apple:apple': 'apple:friend', 'blueberry:blueberry': 'blueberry:friend', 'lemon:lemon': 'lemon:friend', 'banana:banana': 'banana:friend', 'grapes:grapes': 'grapes:friend', 'strawberry:strawberry': 'strawberry:friend', 'coconut:coconut': 'coconut:friend' };
+const FRIEND_NAMES = { plum: 'plum:friend', apple: 'apple:friend', blueberry: 'blueberry:friend', lemon: 'lemon:friend', banana: 'banana:friend', grapes: 'grapes:friend', strawberry: 'strawberry:friend', coconut: 'coconut:friend' };
 
 const BASKET = 'friend:fruit_basket';
 const BASKET_STORE = 'basket:friend';
@@ -89,18 +111,27 @@ function basketContents(stack) {
   try { return JSON.parse(/** @type {string} */ (raw)); } catch { return null; }
 }
 
-// Blueberry is a Collector: his own portable chest rides on the entity as a
-// serialized dynamic property (kept through the Fruit Basket snapshot too).
-// The slot math lives in chest.js so it can be tested without a live world.
-const CHEST_KEY = 'blueberry:chest';
+// Blueberry is a Collector and Strawberry is a Farmer: each carries his own
+// portable chest on the entity as a serialized dynamic property (kept through
+// the Fruit Basket snapshot too). The property is keyed per friend type, so a
+// Blueberry's loot and a Strawberry's harvest never mix. The slot math lives in
+// chest.js so it can be tested without a live world.
+const chestKey = (friend) => `${friend.typeId.split(':')[0]}:chest`;
 const chestMax = (id) => new ItemStack(id, 1).maxAmount;
 
 function readChest(friend) {
-  return parseChest(friend.getDynamicProperty(CHEST_KEY));
+  return parseChest(friend.getDynamicProperty(chestKey(friend)));
 }
 
 function writeChest(friend, slots) {
-  friend.setDynamicProperty(CHEST_KEY, serializeChest(slots));
+  friend.setDynamicProperty(chestKey(friend), serializeChest(slots));
+}
+
+// The chest's display name and blurb follow the friend who owns it.
+function chestBlurb(cfg) {
+  return cfg.farmer
+    ? 'I keep the harvest safe in here! Wheat, carrots, potatoes, beetroot, and any seeds I find as I work the fields.'
+    : 'I scoop up dropped items for you!';
 }
 
 // Spawn a raw count safely, splitting it across stacks that respect the cap.
@@ -122,17 +153,17 @@ function notifyOwnerPrefixed(ownerId, prefix, text, interval = 60) {
   owner.onScreenDisplay.setActionBar(`${prefix}§r: ${text}`);
 }
 
-function notifyOwner(ownerId, text) {
-  notifyOwnerPrefixed(ownerId, '§9Blueberry', text);
+function notifyOwner(ownerId, cfg, text) {
+  notifyOwnerPrefixed(ownerId, `${cfg.color}${cfg.name}`, text);
 }
 
 async function openChest(player, friend) {
   if (openForms.has(player.id)) return;
   const cfg = FRIENDS[friend.typeId];
-  if (!cfg?.collector || !player.isValid || !friend.isValid) return;
+  if (!cfg || !(cfg.collector || cfg.farmer) || !player.isValid || !friend.isValid) return;
   const tamed = friend.getComponent('minecraft:tameable');
   if (!tamed?.tamedToPlayerId || tamed.tamedToPlayerId !== player.id) {
-    friendSay(player, cfg, 'Give me a blueberry fruit to tame me first; only my owner can open my chest.');
+    friendSay(player, cfg, cfg.tamedMsg);
     return;
   }
   if (!nearOwner(player, friend)) {
@@ -144,8 +175,9 @@ async function openChest(player, friend) {
     while (nearOwner(player, friend)) {
       const slots = readChest(friend);
       const used = slots.filter(Boolean).length;
-      const boxed = new ActionFormData().title('Blueberry\u2019s chest')
-        .body(`I scoop up dropped items for you!\n\n${used} of ${CHEST_SLOTS} slots used. Store the stack in your hand, take one out, or just peek inside.`)
+      const chestName = cfg.farmer ? 'Strawberry\u2019s farm chest' : 'Blueberry\u2019s chest';
+      const boxed = new ActionFormData().title(chestName)
+        .body(`${chestBlurb(cfg)}\n\n${used} of ${CHEST_SLOTS} slots used. Store the stack in your hand, take one out, or just peek inside.`)
         .button('Store item from hand')
         .button('Take an item')
         .button('View contents')
@@ -164,7 +196,7 @@ async function openChest(player, friend) {
       }
     }
   } catch (error) {
-    console.warn(`[Blueberry] Chest unavailable: ${error}`);
+    console.warn(`[${cfg.name}] Chest unavailable: ${error}`);
   } finally {
     openForms.delete(player.id);
   }
@@ -222,7 +254,7 @@ async function takeChestItem(player, friend) {
     friendSay(player, cfg, 'My chest is empty - nothing to take.');
     return;
   }
-  const list = new ActionFormData().title('Blueberry\u2019s chest')
+  const list = new ActionFormData().title(cfg.farmer ? 'Strawberry\u2019s farm chest' : 'Blueberry\u2019s chest')
     .body('Pick a stack to take out.');
   for (const { slot } of items) list.button(`${slot.count} \u00d7 ${slot.id.replace(/^minecraft:/, '')}`);
   list.button('Back');
@@ -258,10 +290,11 @@ async function takeChestItem(player, friend) {
 
 async function viewChest(player, friend) {
   if (!player.isValid || !friend.isValid) return;
+  const cfg = FRIENDS[friend.typeId];
   const slots = readChest(friend);
   const used = slots.filter(Boolean).length;
   const lines = slots.map((slot, i) => slot ? `${i + 1}. ${slot.count} \u00d7 ${slot.id.replace(/^minecraft:/, '')}` : null).filter(Boolean);
-  const view = new ActionFormData().title('Blueberry\u2019s chest')
+  const view = new ActionFormData().title(cfg.farmer ? 'Strawberry\u2019s farm chest' : 'Blueberry\u2019s chest')
     .body(lines.length ? `${used} of ${CHEST_SLOTS} slots used:\n${lines.join('\n')}` : 'Empty! I will scoop up dropped items as we adventure.')
     .button('Back');
   await view.show(player);
@@ -274,6 +307,7 @@ system.runInterval(() => {
     for (const friend of dimension.getEntities({ type: 'blueberry:friend' })) {
       try {
         if (!friend.isValid) continue;
+        const cfg = FRIENDS[friend.typeId];
         const tamed = friend.getComponent('minecraft:tameable');
         if (!tamed?.tamedToPlayerId) continue;
         const drops = dimension.getEntities({ type: 'minecraft:item', location: friend.location, maxDistance: 4 });
@@ -291,21 +325,126 @@ system.runInterval(() => {
             result = chestStore(readChest(friend), typeId, amount, chestMax);
             writeChest(friend, result.slots);
           } catch (error) {
-            console.warn(`[Blueberry] Collector skipped: ${error}`);
+            console.warn(`[${cfg.name}] Collector skipped: ${error}`);
             spawnStacks(dimension, typeId, amount, where);
             continue;
           }
           spawnStacks(dimension, typeId, result.leftover, where);
           if (result.stored <= 0) {
-            if (chestIsFull(result.slots)) notifyOwner(tamed.tamedToPlayerId, 'My chest is full! Interact with me to empty it.');
+            if (chestIsFull(result.slots)) notifyOwner(tamed.tamedToPlayerId, cfg, 'My chest is full! Interact with me to empty it.');
           } else if (result.leftover > 0) {
-            notifyOwner(tamed.tamedToPlayerId, `Picked up ${result.stored}, but my chest is nearly full!`);
+            notifyOwner(tamed.tamedToPlayerId, cfg, `Picked up ${result.stored}, but my chest is nearly full!`);
           }
         }
       } catch (error) { console.warn(`[Blueberry] Collector skipped: ${error}`); }
     }
   }
 }, 10);
+
+// Strawberry is the Farmer: his job follows his movement mode. While tamed and
+// loaded he gently hastens every immature wheat/carrot/potato/beetroot crop
+// near his work center. In WORK mode he tends the field around his Work Anchor,
+// harvesting ripe crops and replanting the seed so it keeps producing. In every
+// other mode (following, staying, or at home) he forages instead: he still
+// gathers ripe crops - but never replants - and breaks grass looking for seeds.
+// Everything he collects goes into his farm chest; overflow lands where he is.
+const FARM_RADIUS = 8; // blocks around his work center (the patch he patrols)
+const FARM_GROWTH_CHANCE = 0.4; // probability a young crop jumps a stage per pass
+const FARM_INTERVAL = 40; // ticks between passes (~2 seconds)
+const FARM_GRASS_LIMIT = 4; // grass broken per foraging pass
+const GRASS_BREAK_CHANCE = 0.45; // chance a foraging pass actually breaks grass
+
+function farmCenter(friend) {
+  const mode = readMode(friend);
+  if (mode === MODE.WORK) {
+    const anchor = readWorkAnchor(friend);
+    if (anchor && anchor.dim === friend.dimension.id) {
+      return { x: anchor.x, z: anchor.z, y: anchor.y };
+    }
+  }
+  return { x: friend.location.x, z: friend.location.z, y: friend.location.y };
+}
+
+// Stash a pile of drops in the farm chest; whatever does not fit is dropped at
+// `where`. Returns the total stored this pass.
+function storeHarvest(friend, drops, where) {
+  let stored = 0;
+  let slots = readChest(friend);
+  for (const stack of mergeDrops(drops)) {
+    const result = chestStore(slots, stack.id, stack.count, chestMax);
+    stored += result.stored;
+    slots = result.slots;
+    if (result.leftover > 0) spawnStacks(friend.dimension, stack.id, result.leftover, where);
+  }
+  try { writeChest(friend, slots); } catch { /* next pass retries */ }
+  return stored;
+}
+
+system.runInterval(() => {
+  for (const name of ['overworld', 'nether', 'the_end']) {
+    const dimension = world.getDimension(name);
+    for (const friend of dimension.getEntities({ type: 'strawberry:friend' })) {
+      try {
+        if (!friend.isValid) continue;
+        const cfg = FRIENDS[friend.typeId];
+        const tamed = friend.getComponent('minecraft:tameable');
+        if (!tamed?.tamedToPlayerId) continue;
+        const center = farmCenter(friend);
+        const min = { x: Math.floor(center.x) - FARM_RADIUS, y: Math.floor(center.y) - 2, z: Math.floor(center.z) - FARM_RADIUS };
+        const max = { x: Math.floor(center.x) + FARM_RADIUS, y: Math.floor(center.y) + 3, z: Math.floor(center.z) + FARM_RADIUS };
+        const volume = new BlockVolume(min, max);
+        const tending = readMode(friend) === MODE.WORK;
+
+        // Speed young crops, harvest the ripe ones; in WORK mode replant them.
+        const crops = dimension.getBlocks(volume, { includeTypes: CROP_TYPES });
+        for (const location of crops.getBlockLocationIterator()) {
+          const block = dimension.getBlock(location);
+          if (!block) continue;
+          const typeId = block.typeId;
+          const growth = block.permutation.getState('growth');
+          if (!isCrop(typeId) || typeof growth !== 'number') continue;
+          if (isMature(typeId, growth)) {
+            // Gather the ripe crop. In WORK mode he consumes one seed to replant.
+            const drops = harvestDrops(typeId, Math.random);
+            if (tending) {
+              const seed = replantItem(typeId);
+              const seedDrop = seed ? drops.find((d) => d.id === seed) : null;
+              if (seedDrop && seedDrop.count > 0) {
+                seedDrop.count -= 1; // the plant it becomes
+                try { block.setPermutation(BlockPermutation.resolve(typeId, { growth: 0 })); } catch { continue; }
+                storeHarvest(friend, drops, block.location);
+                continue;
+              }
+            }
+            try { block.setType('minecraft:air'); } catch { continue; }
+            storeHarvest(friend, drops, block.location);
+          } else {
+            const next = nextGrowth(typeId, growth);
+            if (next != null && Math.random() < FARM_GROWTH_CHANCE) {
+              try { block.setPermutation(BlockPermutation.resolve(typeId, { growth: next })); } catch { /* leave it */ }
+            }
+          }
+        }
+
+        // Foraging: everywhere but WORK mode he rustles grass for seeds.
+        if (!tending && Math.random() < GRASS_BREAK_CHANCE) {
+          const grass = dimension.getBlocks(volume, { includeTypes: GRASS_TYPES });
+          let broken = 0;
+          for (const location of grass.getBlockLocationIterator()) {
+            if (broken >= FARM_GRASS_LIMIT) break;
+            const block = dimension.getBlock(location);
+            if (!block) continue;
+            const where = block.location;
+            try { block.setType('minecraft:air'); } catch { continue; }
+            broken++;
+            const drops = forageDrops(Math.random);
+            if (drops.length) storeHarvest(friend, drops, where);
+          }
+        }
+      } catch (error) { console.warn(`[Strawberry] Farmer upkeep skipped: ${error}`); }
+    }
+  }
+}, FARM_INTERVAL);
 
 const CATALOG = [
   { item: 'minecraft:diamond_pickaxe', label: 'Diamond Pickaxe', tags: ['pickaxe', 'tool', 'diamond', 'mine', 'ore'] },
@@ -642,7 +781,7 @@ function captureInBasket(player, friend) {
     baby: friend.hasComponent('minecraft:is_baby'),
     sitting: friend.hasComponent('minecraft:is_sitting'),
     owner: player.id,
-    chest: cfg.collector ? readChest(friend) : undefined,
+    chest: (cfg.collector || cfg.farmer) ? readChest(friend) : undefined,
   });
   const filled = new ItemStack(BASKET, 1);
   filled.setDynamicProperty(BASKET_STORE, snapshot);
@@ -830,7 +969,7 @@ async function talk(player, friend) {
   try {
     const baby = friend.hasComponent('minecraft:is_baby');
     const action = new ActionFormData().title(cfg.title(baby)).body(cfg.body(baby, chatLabelFor(cfg.name.toLowerCase())));
-    const jobButton = cfg.shop ? 'Shop at Applezon' : cfg.collector ? 'Open my chest' : undefined;
+    const jobButton = cfg.shop ? 'Shop at Applezon' : (cfg.collector || cfg.farmer) ? 'Open my chest' : undefined;
     action.button('Ask a question');
     if (jobButton) action.button(jobButton);
     action.button('How do I care for you?');
@@ -905,11 +1044,11 @@ world.beforeEvents.playerInteractWithEntity.subscribe((event) => {
     system.run(() => { void captureInBasket(player, target); });
     return;
   }
-  // Empty hand: Blueberry opens his portable chest; everyone else gets the Movement menu
-  // (Follow, Stay, Work, Go Home).
+  // Empty hand: Blueberry opens his chest, Strawberry opens his farm chest;
+  // everyone else gets the Movement menu (Follow, Stay, Work, Go Home).
   if (!itemStack || itemStack.typeId === 'minecraft:air') {
     event.cancel = true;
-    if (FRIENDS[target.typeId]?.collector) system.run(() => { void openChest(player, target); });
+    if (FRIENDS[target.typeId]?.collector || FRIENDS[target.typeId]?.farmer) system.run(() => { void openChest(player, target); });
     else system.run(() => { void modeMenu(player, target); });
     return;
   }
@@ -1201,6 +1340,56 @@ world.afterEvents.projectileHitBlock.subscribe((event) => {
     if (event.projectile.isValid) event.projectile.remove();
   } catch { /* it may already be gone */ }
 });
+
+// Coconut is the Bodyguard: a tamed Coconut only reacts when hostile mobs get
+// close - he slams the ground and sends every monster in range flying with a bit
+// of damage. Set him to Work and the blast centers on his Work Anchor with a
+// wider guard radius; in every other mode he escorts you and guards a tighter
+// radius around wherever he already stands. No hostiles in range, no slam.
+const COCONUT_INTERVAL = 60; // ticks between slams (~3 seconds)
+const COCONUT_KNOCKBACK_RADIUS = 6; // escort blast radius in blocks
+const COCONUT_GUARD_RADIUS = 8; // Work-mode guard radius in blocks
+const COCONUT_DAMAGE = 3;
+const COCONUT_POWER = 1.6; // horizontal knockback strength
+const COCONUT_UP = 0.38; // pop of the blast
+const COCONUT_MONSTER_FAMILY = 'monster';
+const coconutSlam = new Map(); // friend.id -> tick it may slam again
+
+system.runInterval(() => {
+  for (const name of DIMENSIONS) {
+    const dimension = world.getDimension(name);
+    for (const friend of dimension.getEntities({ type: 'coconut:friend' })) {
+      try {
+        if (!friend.isValid) continue;
+        const ownerId = friend.getComponent('minecraft:tameable')?.tamedToPlayerId;
+        if (!ownerId) continue;
+        const now = system.currentTick;
+        if (now < (coconutSlam.get(friend.id) ?? 0)) continue;
+        const mode = readMode(friend);
+        const anchor = mode === MODE.WORK ? readWorkAnchor(friend) : null;
+        const center = anchor ?? friend.location;
+        const radius = anchor ? COCONUT_GUARD_RADIUS : COCONUT_KNOCKBACK_RADIUS;
+        const hostiles = dimension.getEntities({ families: [COCONUT_MONSTER_FAMILY], location: center, maxDistance: radius })
+          .filter(target => target.isValid);
+        if (!hostiles.length) continue;
+        for (const hostile of hostiles) {
+          const dx = hostile.location.x - center.x;
+          const dz = hostile.location.z - center.z;
+          const dist = Math.max(0.001, Math.hypot(dx, dz));
+          const slingshot = Math.min(1, dist / radius);
+          hostile.applyDamage(COCONUT_DAMAGE, { cause: EntityDamageCause.entityAttack });
+          hostile.applyImpulse({
+            x: (dx / dist) * COCONUT_POWER * slingshot,
+            y: COCONUT_UP,
+            z: (dz / dist) * COCONUT_POWER * slingshot,
+          });
+        }
+        coconutSlam.set(friend.id, now + COCONUT_INTERVAL);
+        dimension.spawnParticle('minecraft:explosion_particle', { x: center.x, y: center.y + 0.2, z: center.z });
+      } catch (error) { console.warn(`[Coconut] Bodyguard slam skipped: ${error}`); }
+    }
+  }
+}, 10);
 
 // Universal upkeep, once per second: keeps every loaded Fruity Friend in its
 // persisted movement state (reapplying groups after a reload), enforces the shared

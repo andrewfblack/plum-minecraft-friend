@@ -57,5 +57,23 @@
   },
   "grapes:grapes_sprout": {
     "sound": "grass"
+  },
+  "strawberry:strawberry_leaves": {
+    "sound": "grass"
+  },
+  "strawberry:strawberry_sapling": {
+    "sound": "grass"
+  },
+  "strawberry:strawberry_sprout": {
+    "sound": "grass"
+  },
+  "coconut:coconut_leaves": {
+    "sound": "grass"
+  },
+  "coconut:coconut_sapling": {
+    "sound": "grass"
+  },
+  "coconut:coconut_sprout": {
+    "sound": "grass"
   }
 }

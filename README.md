@@ -26,6 +26,10 @@ Version **1.2.28** fixes the remaining current-engine pack-load error: the Fruit
 
 Version **1.2.29** adds **Grapes**, a squarish little bunch of green grapes and the **Sharpshooter**: a tamed Grapes takes aim at hostile mobs within 12 blocks and spits grape seeds at them every couple of seconds. Each seed is a real physics projectile that arcs over blocks — no bow, just seeds.
 
+Version **1.2.30** adds **Strawberry**, a little red cube crowned with green leaves and the **Farmer**. His job follows his mode: set to **Work**, he tends a field around the spot you pick — he quickens young wheat, carrots, potatoes, and beetroot, harvests the ripe crops, and replants the seed so the field keeps producing. Following (or staying at home), he forages instead: he still speeds growth and gathers ripe crops, but never replants — he breaks grass looking for seeds instead. Everything he gathers goes into **his own farm chest** (empty-hand interact opens it), so planting fruit on farmland or the seven kinds of trees and bushes is the whole food chain.
+
+Version **1.2.31** adds **Coconut**, a fuzzy brown cube crowned with a little palm-frond bunch and the **Bodyguard**. About every three seconds he checks around him for hostile mobs: if any monster is close enough, he **slams the ground** and sends every hostile in the blast flying with a bit of damage. His guarding follows his movement mode — set to **Work**, he guards that exact spot with a wider **8-block** radius; following, staying, or roaming home, he escorts you and guards up to **6 blocks** around wherever he is. He only slams when something hostile is actually close — no monsters, no show — and he never goes looking for fights. Find tall **coconut palms on beaches** (they grow on sand) in newly generated terrain, and plant a **coconut fruit** on tilled farmland to grow a baby Coconut, so the whole family now runs on eight kinds of fruit.
+
 ## Downloads
 
 - **`dist/Fruity-Friends-Dedicated-Server.zip`** — the AI edition, behavior/resource packs, Python AI service, and server setup instructions. This is the edition for your requested setup.
@@ -122,9 +126,35 @@ Grapes is a squarish little bunch of green grapes — a standard 1-block cube bu
 
 ![Grapes's face](art/grapes-face.png)
 
+## Strawberry the Farmer
+
+Strawberry is a little red cube friend with a green leafy crown on top — a standard 1-block cube buddy, exactly like Grapes. He works like the others — plant a **strawberry fruit** on tilled farmland to grow a baby Strawberry, tame him with a **strawberry**, and talk with a book or in chat — but his job changes with his movement mode.
+
+- **Work mode = Tend Crops.** Set Strawberry to **Work** and he tends a field around the spot you picked: he **quickens** young wheat, carrots, potatoes, and beetroot (each healthy crop sometimes jumps a growth stage), **harvests** the ripe ones, and **replants the seed** so the field keeps producing. He does not replant otherwise.
+- **Follow / Stay / Go Home = Forage.** When he is following you, staying put, or roaming home, Strawberry forages instead: he still speeds up nearby crops and gathers the ripe ones, but he **never replants** — he breaks grass looking for seeds instead.
+- **He has his own farm chest.** Everything he gathers goes into a **27-slot farm chest**. Interact with him with an **empty hand** to open it: **store** the stack in your hand, **take** a stack out, **view** the contents, or pick **Movement**. When his chest is full he warns his owner so you can empty it. His chest travels with him in a **Fruit Basket**.
+- **He does not heal you.** Stay near your tamed Plum for that.
+- **He is a cheerful farmhand.** Strawberry answers questions with warm, down-to-earth farming energy and is quietly proud that his fields never stop producing.
+- Find low **strawberry bushes in newly generated plains** — plains only, no forests. Break their red-speckled leaves in Survival for strawberries and Strawberry Saplings. A planted Strawberry Sapling grows into a tiny leafy **mound**: a single log completely hidden under five hugging leaf blocks (use bone meal or wait — saplings need just a **3-wide, 2-high** clear pocket). Drops, planting, and bone-meal growth match the other fruits. `/give @s strawberry:strawberry_sapling 1` and `/give @s strawberry:strawberry 16` work in Creative too.
+- Interact with Strawberry with an **empty hand** for his farm chest, where **Movement** sets **Follow, Stay, Work, Go Home** — exactly like Blueberry's chest menu. His farming runs in every movement mode while he is tamed and loaded.
+
+![Strawberry's face](art/strawberry-face.png)
+
+## Coconut the Bodyguard
+
+Coconut is a fuzzy brown cube friend with a little palm-frond crown and a cheery grin — a standard 1-block cube buddy, exactly like the other bottom-row cubes. He works like the others — plant a **coconut fruit** on tilled farmland to grow a baby Coconut, tame him with a **coconut**, and talk with a book or in chat — but his job is the protection detail the whole family (namely Banana) keeps claiming.
+
+- **He slams hostiles away.** About every **three seconds**, a tamed Coconut checks around him for hostile mobs. If any monster is close, he **slams the ground**: every hostile in the blast is **knocked flying** (the push is strongest up close) with a small bit of damage. He only slams when something hostile is actually in range — no monsters, no show — and he never goes looking for fights.
+- **His guarding follows his mode.** Set him to **Work** and he guards that exact spot with a wider **8-block** radius. Following, staying, or roaming home, he **escorts** you instead and guards up to **6 blocks** around wherever he is. His guard runs in every movement mode while he is tamed and loaded; untamed Coconuts stay strictly decorative.
+- **He is a proud guard.** Coconut answers questions with warm, brawny "guard post" energy and is quietly certain that monsters think twice before they start something near him.
+- Find tall **coconut palms on beaches** in newly generated terrain — beach biomes only, and they root in **sand**. Break their frond-speckled leaves in Survival for coconuts and Coconut Saplings. A planted Coconut Sapling grows into a **tall slim palm**: five log blocks of bare trunk capped by a snug frond tuft (use bone meal or wait — palms need a **5-wide, 7-high** clear pocket). Drops, planting, and bone-meal growth match the other fruits. `/give @s coconut:coconut_sapling 1` and `/give @s coconut:coconut 16` work in Creative too.
+- Interact with Coconut with an **empty hand** for the standard **Movement** menu — **Follow, Stay, Work, Go Home**. He carries no chest.
+
+![Coconut's face](art/coconut-face.png)
+
 ## Updating from version 1.1.0
 
-Reimport the updated offline add-on, or stop BDS and replace the pack folders from the new server archive. On BDS, update both world pack-list entries to **`[1,2,29]`**, preserving entries for other packs. Replace `plum-service/bridge.py` too and restart the bridge so the AI knows about Apple, Applezon, Blueberry, the Collector chest, Lemon the Light Friend, Banana the Prankster, Grapes the Sharpshooter, and the six kinds of fruit trees. Keep existing pack UUIDs, credentials, and world data. Existing tamed friends carried over from older worlds keep working: friends that were sitting migrate to **Stay**, and others keep their old follow-the-owner behavior as **Follow**.
+Reimport the updated offline add-on, or stop BDS and replace the pack folders from the new server archive. On BDS, update both world pack-list entries to **`[1,2,31]`**, preserving entries for other packs. Replace `plum-service/bridge.py` too and restart the bridge so the AI knows about Apple, Applezon, Blueberry, the Collector chest, Lemon the Light Friend, Banana the Prankster, Grapes the Sharpshooter, Strawberry the Farmer, Coconut the Bodyguard, and the eight kinds of fruit trees. Keep existing pack UUIDs, credentials, and world data. Existing tamed friends carried over from older worlds keep working: friends that were sitting migrate to **Stay**, and others keep their old follow-the-owner behavior as **Follow**.
 
 ## Protection and following
 
@@ -158,11 +188,11 @@ Tree tests also cover complete sapling growth, blocked/unloaded destinations, ro
 - Tame five friends, set four to Follow, and confirm the fifth cannot Follow until one follower is set to Stay or Work, sent Home, or tucked into a Fruit Basket.
 - Set a friend to Work and walk away; confirm it roams within 20 blocks of the spot you chose and returns after being pushed outside.
 - Send a friend Home; confirm it arrives at your bed and roams within 10 blocks of it instead of staying put, and that it stays put if you have not slept in a bed yet.
-- Interact with an empty hand on a tamed Plum, Apple, Lemon, Banana, or Grapes and confirm the Follow/Stay/Work/Go Home menu appears; on Blueberry confirm the empty hand opens his chest and Movement lives inside it.
+- Interact with an empty hand on a tamed Plum, Apple, Lemon, Banana, Grapes, or Coconut and confirm the Follow/Stay/Work/Go Home menu appears; on Blueberry confirm the empty hand opens his chest and Movement lives inside it; on Strawberry confirm the empty hand opens his farm chest with Movement inside it too.
 - Craft a Fruit Basket from three sticks, hold it and interact with a tamed friend, then interact with a block to release it; confirm the name, baby/sit state, owner, and (for Blueberry) chest items return, and that the friend comes out staying put no matter what mode it was in before.
 - Reload the world and confirm modes and Work Anchors persist.
 - In a two-player session confirm each player independently gets six Follow slots.
-- Find plum, apple, blueberry and grape trees in new plains/forest terrain, lemon trees in warm biomes (desert, savanna, jungle), and banana trees in jungles; break leaves in Survival to verify each fruit and sapling drop.
+- Find plum, apple, blueberry and grape trees in new plains/forest terrain, lemon trees in warm biomes (desert, savanna, jungle), banana trees in jungles, low strawberry bushes in plains only, and tall coconut palms on beaches (rooted in sand); break leaves in Survival to verify each fruit and sapling drop.
 - Plant a sapling, test bone meal and natural growth, and confirm a nearby wall/chest is preserved when growth is blocked.
 - Verify fruit icons, fruit planting, sprout growth, and sapling rendering on mobile and PC.
 - Tame a Banana, wait about 30 seconds, and confirm he drops a peel trap that cannot be picked up; lead a zombie or creeper within one block and confirm it slips, slows, and consumes the peel. Confirm an unused peel removes itself after two minutes, no new peels appear while Banana is untamed or in a basket, and Banana renders about 1.5 blocks tall with his goofy face in adult and baby forms.
@@ -171,6 +201,12 @@ Tree tests also cover complete sapling growth, blocked/unloaded destinations, ro
 - Tame a Lemon and confirm he remains visible in darkness, places light at his feet without replacing solid blocks, and removes his previous light as he moves or is removed; untamed Lemons should place no light.
 - Confirm Lemon's grumpy face (angled brows and a frown) renders on the front of both adult and baby forms.
 - Tame a Grapes, lead a zombie, creeper, or skeleton within 12 blocks, and confirm he spits grape seeds every couple of seconds that arc over obstacles and deal damage; confirm he does not shoot friends, peaceful mobs, or untamed players, that he keeps shooting in every movement mode, and that he renders as a green bunch of grapes in adult and baby forms.
+- Tame a Strawberry and confirm he quietens young wheat/carrots/potatoes/beetroot near him, harvests ripe crops, and replants the seed in Work mode; set him to Follow and confirm he harvests without replanting and breaks grass for seeds instead.
+- Confirm a Strawberry's gathered harvest lands in his farm chest (empty-hand interact opens it; store/take/view all work), that he warns his owner when it fills, that Movement lives inside the chest menu, and that the chest travels with him in a Fruit Basket.
+- Plant a Strawberry Sapling in a tight 3-wide, 2-high pocket and confirm a low leafy mound (of strawberry leaves) forms with the single log hidden under it.
+- Tame a Coconut, lead a zombie, creeper, or skeleton within 6 blocks, and confirm he slams every few seconds — hostiles fly away with a bit of damage and a burst appears at his feet; confirm he never slams with no hostiles nearby and never targets peaceable mobs.
+- Set a Coconut to Work, confirm he guards that spot with a wider 8-block radius even when you walk away; set him to Follow and confirm he escorts you instead. Confirm an untamed Coconut never slams, and that he renders as a fuzzy brown cube with three dark eyes and a grin in adult and baby forms.
+- Plant a Coconut Sapling on sand in a 5-wide, 7-high pocket and confirm a tall slim palm (five logs of bare trunk with a snug frond tuft on top) forms.
 - Hold a book and open the conversation on both mobile and PC. Verify cancel/reopen and private answers.
 - Ask a follow-up AI question; confirm a second player's history is separate.
 - Stop the bridge and confirm an offline answer appears instead of a stuck conversation.
@@ -192,4 +228,4 @@ python3 -m unittest discover -s tests -p 'test_*.py' -v
 
 On Windows, use `py` instead of `python3` if appropriate. Keep pack UUIDs stable when updating an existing world. Both editions share UUIDs: use **one edition at a time**, not both together.
 
-The entity intentionally keeps `format_version: 1.21.0`. Babies come only from planting fruit; breeding remains disabled. Movement is universal and persisted by [friend_state.js](packs/Plum_BP/scripts/friend_state.js): up to six friends may use **Follow**, while **Stay**, **Work**, **Home**, and **Basket** do not consume follower slots. The data-driven `minecraft:on_tame` callback persists **Stay** immediately so a newly tamed friend cannot be mistaken for a legacy follower before its sit component appears. [main.js](packs/Plum_BP/scripts/main.js) enforces movement, Blueberry's 27-slot Collector chest, Lemon's moving light block, Banana's non-pickup peel traps, and the Fruit Basket. Offline chat uses [knowledge.js](packs/Plum_BP/scripts/knowledge.js); the server build replaces only [provider.js](packs/Plum_BP/scripts/provider.js).
+The entity intentionally keeps `format_version: 1.21.0`. Babies come only from planting fruit; breeding remains disabled. Movement is universal and persisted by [friend_state.js](packs/Plum_BP/scripts/friend_state.js): up to six friends may use **Follow**, while **Stay**, **Work**, **Home**, and **Basket** do not consume follower slots. The data-driven `minecraft:on_tame` callback persists **Stay** immediately so a newly tamed friend cannot be mistaken for a legacy follower before its sit component appears. [main.js](packs/Plum_BP/scripts/main.js) enforces movement, Blueberry's 27-slot Collector chest and Strawberry's 27-slot farm chest (each keyed per friend type), Lemon's moving light block, Banana's non-pickup peel traps, Strawberry's crop tending/foraging (the pure crop math lives in [farm.js](packs/Plum_BP/scripts/farm.js)), Coconut's bodyguard shockwave slams, and the Fruit Basket. Offline chat uses [knowledge.js](packs/Plum_BP/scripts/knowledge.js); the server build replaces only [provider.js](packs/Plum_BP/scripts/provider.js).

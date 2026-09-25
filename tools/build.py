@@ -43,7 +43,7 @@ FRIENDS = {
     },
     'blueberry': {
         'file': 'blueberry',
-        'title': 'Blueberry', 'entity': 'blueberry:friend', 'fruit': 'blueberry:blueberry', 'family': 'blueberry_friend',
+        'title': 'Blueberry', 'entity': 'blueberry:friend', 'fruit': 'blueberry:blueberry', 'family': 'blueberry_friend', 'chest': True,
         'egg': ('#1F4FD8', '#A7E0F2'),
         'palette': ((37, 66, 205, 255), (23, 45, 148, 255), (84, 126, 240, 255), (14, 27, 88, 255), (251, 252, 255, 255), (232, 150, 200, 255)),
     },
@@ -71,6 +71,23 @@ FRIENDS = {
         # (main, edge, light, dark, white, pink)
         'palette': ((124, 196, 92, 255), (48, 122, 58, 255), (172, 226, 126, 255), (32, 84, 44, 255), (250, 255, 246, 255), (196, 226, 148, 255)),
     },
+    'strawberry': {
+        'file': 'strawberry',
+        'title': 'Strawberry', 'entity': 'strawberry:friend', 'fruit': 'strawberry:strawberry', 'family': 'strawberry_friend',
+        # The Farmer: a plump red berry cube wearing a green calyx crown, with pale
+        # seed dimples over his sides and a cheerful face.
+        'chest': True,
+        'egg': ('#D42A3A', '#5AAB48'),
+        'palette': ((208, 40, 58, 255), (142, 22, 40, 255), (246, 96, 92, 255), (86, 14, 28, 255), (255, 248, 244, 255), (255, 156, 156, 255)),
+    },
+    'coconut': {
+        'file': 'coconut',
+        'title': 'Coconut', 'entity': 'coconut:friend', 'fruit': 'coconut:coconut', 'family': 'coconut_friend',
+        # The Bodyguard: a fuzzy brown coconut cube wearing a small palm-frond crown,
+        # with three classic dark "eyes" and a cheery open smile.
+        'egg': ('#96723C', '#E8D5B0'),
+        'palette': ((176, 122, 72, 255), (100, 66, 38, 255), (218, 170, 124, 255), (62, 40, 22, 255), (250, 234, 210, 255), (255, 184, 168, 255)),
+    },
 }
 
 def friend_geometry(name):
@@ -85,7 +102,7 @@ def friend_geometry(name):
         uv['west'] = {'uv': [16, 0], 'uv_size': [16, height]}
         uv['up'] = {'uv': [0, 24], 'uv_size': [16, 16]}
         uv['down'] = {'uv': [16, 24], 'uv_size': [16, 16]}
-    elif name in ('apple', 'blueberry', 'lemon', 'grapes'):
+    elif name in ('apple', 'blueberry', 'lemon', 'grapes', 'strawberry', 'coconut'):
         # Topper friends wear a dedicated top sheet and a plain bottom sheet.
         height, texture_height, bounds = 12, 32, 2
         uv['up'] = {'uv': [0, 16], 'uv_size': [16, 16]}
@@ -122,12 +139,31 @@ def grape_cluster(main, edge, light, dark):
 def friend_texture(name):
     """Purple Plum keeps the classic 32x16 sheet; Apple, Blueberry, and Lemon add
     a 32x32 two-sheet top; Banana is the tall one with a 32x40 sheet; Grapes is a
-    32x32 sheet covered in small round grapes with a leafy crown on the top face."""
+    32x32 sheet covered in small round grapes with a leafy crown on the top face;
+    Strawberry is a 32x32 sheet of a plump red berry dotted with seeds under a
+    green calyx crown; Coconut is a 32x32 sheet of a fuzzy brown husk with three
+    dark "eyes" and a cheery grin under a small palm-frond crown."""
     main, edge, light, dark, white, pink = FRIENDS[name]['palette']
     if name == 'grapes':
         tile = grape_cluster(main, edge, light, dark)
     else:
         tile = [[edge if x in (0, 15) or y in (0, 15) else light if y == 1 else main for x in range(16)] for y in range(16)]
+    if name == 'strawberry':
+        # Pale seed dimples sprinkled over the berry's sides, like a real strawberry.
+        seed = (250, 212, 142, 255)
+        for x, y in [(2, 3), (5, 4), (9, 3), (12, 5), (3, 8), (7, 7), (11, 8), (13, 9),
+                     (2, 12), (5, 13), (9, 13), (12, 12), (7, 12), (4, 6), (6, 11), (11, 10)]:
+            if not (x in (0, 15) or y in (0, 15)):
+                tile[y][x] = seed
+    if name == 'coconut':
+        # Hairy husk: darker speckles around the outer ring of every face, so the
+        # whole cube reads as a fuzzy brown coconut (the face is drawn over these).
+        hair = (134, 90, 52, 255)
+        for x, y in [(2, 3), (4, 2), (10, 2), (13, 3), (14, 5), (1, 8), (2, 11), (3, 13),
+                     (6, 14), (10, 14), (13, 13), (14, 10), (2, 6), (5, 1), (12, 1), (4, 14),
+                     (13, 8), (1, 12), (11, 3), (3, 5)]:
+            if not (x in (0, 15) or y in (0, 15)):
+                tile[y][x] = hair
     if name == 'banana':
         # Tall goofy Prankster. The body is 24 rows tall, face near the top.
         tilerow = lambda y: [edge if x in (0, 15) or y in (0, 23) else light if y == 1 else main for x in range(16)]
@@ -168,6 +204,18 @@ def friend_texture(name):
         for x, y in [(11, 2), (10, 3)]: face[y][x] = dark
         frown = [(4, 12), (5, 11), (6, 10), (7, 9), (8, 9), (9, 10), (10, 11), (11, 12)]
         for x, y in frown: face[y][x] = dark
+    elif name == 'coconut':
+        # Cheery bodyguard: a wide open grin with white teeth and a happy pink
+        # tongue, plus his third "eye" — the round stem scar under his chin.
+        for x in range(4, 12): face[10][x] = dark
+        for y in range(11, 14):
+            face[y][4] = face[y][11] = dark
+        for x in range(5, 11):
+            face[11][x] = white
+            face[12][x] = dark
+            face[13][x] = pink
+        for x in (6, 8): face[10][x] = white
+        face[14][7] = dark
     else:
         for x, y in [(4, 10), (5, 11), (6, 12), (7, 12), (8, 12), (9, 12), (10, 11), (11, 10)]: face[y][x] = dark
     for x in (2, 3, 12, 13): face[9][x] = pink
@@ -212,6 +260,28 @@ def friend_texture(name):
         for x, y in [(5, 4), (6, 3), (10, 3), (11, 4), (3, 5), (13, 5),
                      (5, 8), (11, 8), (7, 12), (8, 12), (9, 12)]: top[y][x] = leaf_dark
         for x, y in [(5, 5), (6, 6), (10, 6), (11, 5), (7, 13), (9, 13)]: top[y][x] = leaf_light
+    elif name == 'strawberry':
+        # Strawberry: a broad starry green calyx crown over the berry, with a short stem.
+        leaf_dark, leaf_mid, leaf_light, stem = (52, 112, 42, 255), (88, 164, 58, 255), (156, 214, 100, 255), (124, 92, 50, 255)
+        for x, y in [(8, 1), (8, 2), (9, 1)]: top[y][x] = stem
+        for x, y in [(4, 2), (5, 3), (4, 4), (5, 5), (11, 2), (12, 3), (11, 4), (12, 5),
+                     (2, 6), (3, 7), (2, 8), (3, 9), (13, 6), (12, 7), (13, 8), (12, 9),
+                     (4, 11), (5, 10), (6, 12), (7, 13), (9, 13), (10, 12), (11, 11), (12, 10),
+                     (6, 4), (7, 4), (8, 4), (9, 4), (10, 4)]: top[y][x] = leaf_mid
+        for x, y in [(6, 6), (7, 6), (8, 6), (9, 6), (10, 6), (5, 7), (11, 7)]: top[y][x] = leaf_dark
+        for x, y in [(8, 7), (7, 8), (8, 8), (9, 8)]: top[y][x] = leaf_light
+        for x, y in [(5, 13), (11, 13)]: top[y][x] = leaf_dark
+    elif name == 'coconut':
+        # A small palm-frond crown: a brown stub hub with green fronds fanning out.
+        palm_dark, palm_mid, palm_light, stub = (52, 116, 44, 255), (98, 178, 72, 255), (164, 220, 122, 255), (124, 88, 46, 255)
+        for x, y in [(7, 1), (8, 1), (9, 1), (8, 2), (7, 2), (9, 2), (8, 3)]: top[y][x] = stub
+        for x, y in [(4, 2), (5, 2), (6, 2), (3, 3), (4, 3), (5, 3), (2, 4), (2, 5),
+                     (10, 2), (11, 2), (12, 2), (11, 3), (12, 3), (13, 3), (14, 4), (14, 5),
+                     (3, 6), (4, 6), (5, 6), (6, 6), (9, 6), (10, 6), (11, 6), (12, 6),
+                     (4, 9), (5, 9), (6, 9), (9, 9), (10, 9), (11, 9),
+                     (5, 11), (6, 11), (7, 11), (8, 11), (9, 11), (6, 12), (7, 12), (8, 12)]: top[y][x] = palm_mid
+        for x, y in [(2, 4), (14, 4), (3, 3), (13, 3), (3, 6), (12, 6), (5, 11), (10, 11)]: top[y][x] = palm_dark
+        for x, y in [(4, 2), (12, 2), (3, 6), (12, 6), (7, 11)]: top[y][x] = palm_light
     return [face[y] + tile[y] for y in range(16)] + [top[y] + bottom[y] for y in range(16)]
 
 def build_friend(name, data):
@@ -230,7 +300,7 @@ def build_friend(name, data):
             },
             'interact_text': text,
         }
-    empty_text = f'action.interact.{name}_chest' if name == 'blueberry' else f'action.interact.{name}_manage'
+    empty_text = f'action.interact.{name}_chest' if data.get('chest') else f'action.interact.{name}_manage'
     groups = {
         f'{name}:adult': {
             'minecraft:scale': {'value': 1},
@@ -462,14 +532,14 @@ def build_grape_seed(bp, rp, write, png):
     png(rp / 'textures/entity/grapes_seed.png', grape_seed_pixels())
 
 def build(net_version='1.0.0-beta', admin_version='1.0.0-beta'):
-    version = [1, 2, 29]
+    version = [1, 2, 31]
     for path, name, uid, modules in [
         (BP, 'Fruity Friends', BP_ID, [
             {'type': 'data', 'uuid': 'fce620e4-42ac-4477-a84b-c8113d47ba2e', 'version': version},
             {'type': 'script', 'language': 'javascript', 'entry': 'scripts/main.js', 'uuid': 'a91c511c-d9d5-48e5-82c9-25cc48706cbb', 'version': version}]),
         (RP, 'Fruity Friends Resources', RP_ID, [
             {'type': 'resources', 'uuid': '6b250c6d-d093-4cb1-b16b-a42cd137d4bb', 'version': version}])]:
-        manifest = {'format_version': 2, 'header': {'name': name, 'description': 'Smiling cube companions with babies, healing, shopping, collecting, light, pranks, and seed-shooting. Friends use a universal Follow/Stay/Work/Go Home system; Apple runs the Applezon shop; Blueberry collects drops; Lemon casts moving block light; Banana (the Prankster) drops peels that trip up monsters; Grapes (the Sharpshooter) spits seeds at hostile mobs.', 'uuid': uid, 'version': version, 'min_engine_version': [1, 21, 90]}, 'modules': modules}
+        manifest = {'format_version': 2, 'header': {'name': name, 'description': 'Smiling cube companions with babies, healing, shopping, collecting, light, pranks, and bodyguarding. Friends use a universal Follow/Stay/Work/Go Home system; Apple runs the Applezon shop; Blueberry collects drops; Lemon casts moving block light; Banana (the Prankster) drops peels that trip up monsters; Grapes (the Sharpshooter) spits seeds at hostile mobs; Strawberry (the Farmer) tends crops; Coconut (the Bodyguard) slams the ground to knock back hostile mobs.', 'uuid': uid, 'version': version, 'min_engine_version': [1, 21, 90]}, 'modules': modules}
         if path == BP:
             manifest['dependencies'] = [{'uuid': RP_ID, 'version': version}, {'module_name': '@minecraft/server', 'version': '2.0.0'}, {'module_name': '@minecraft/server-ui', 'version': '2.0.0'}]
         write(path / 'manifest.json', manifest)
@@ -479,8 +549,8 @@ def build(net_version='1.0.0-beta', admin_version='1.0.0-beta'):
     lines = []
     for name, data in FRIENDS.items():
         build_friend(name, data)
-        empty_label = f'Open {data["title"]}\'s Chest' if name == 'blueberry' else f'Manage {data["title"]}'
-        empty_key = 'chest' if name == 'blueberry' else 'manage'
+        empty_label = f'Open {data["title"]}\'s Farm Chest' if name == 'strawberry' else (f'Open {data["title"]}\'s Chest' if name == 'blueberry' else f'Manage {data["title"]}')
+        empty_key = 'chest' if data.get('chest') else 'manage'
         lines.append(f'entity.{data["entity"]}.name={data["title"]}\nitem.spawn_egg.entity.{data["entity"]}.name={data["title"]} Spawn Egg\naction.interact.{name}_{empty_key}={empty_label}\naction.interact.{name}_talk=Talk to {data["title"]}\n')
     (RP / 'texts/en_US.lang').write_text(''.join(lines), encoding='utf-8')
     icon = [[friend_texture('plum')[:16][y // 8][x // 8] for x in range(128)] for y in range(128)]
@@ -509,16 +579,17 @@ This zip contains the server packs and a Python service; it is not a mobile impo
 
 ## Play
 
-1. To start in Survival, use a plum, apple, blueberry, lemon, banana or grape fruit on tilled farmland: a sprout appears
+1. To start in Survival, use a plum, apple, blueberry, lemon, banana, grape, strawberry or coconut fruit on tilled farmland: a sprout appears
    and grows into a baby friend on its own (or interact with it to sprout it immediately).
    In Creative, spawn friends with the matching Spawn Egg instead.
 2. Give each friend its own fruit to tame them: a plum tames Plum, an apple tames Apple, a
-   blueberry tames Blueberry, a lemon tames Lemon, a banana tames Banana, and grapes tame Grapes.
-   A newly tamed friend stays put where it is. Interact with an empty hand (or, for Blueberry,
-   choose Movement in his chest menu) to open the Movement menu: Follow, Stay, Work, or Go Home.
+   blueberry tames Blueberry, a lemon tames Lemon, a banana tames Banana, grapes tame Grapes,
+   a strawberry tames Strawberry, and a coconut tames Coconut.
+   A newly tamed friend stays put where it is. Interact with an empty hand (or, for Blueberry and Strawberry,
+   choose Movement in their chest menu) to open the Movement menu: Follow, Stay, Work, or Go Home.
    Up to six friends can follow you at once. Work keeps a friend within 20 blocks of where you
    set it; Go Home sends a friend to your spawn point, where it roams within 10 blocks.
-3. Hold a book and interact (Talk to Plum / Talk to Apple / Talk to Blueberry / Talk to Lemon / Talk to Banana / Talk to Grapes on touch, right-click on PC).
+3. Hold a book and interact (Talk to Plum / Talk to Apple / Talk to Blueberry / Talk to Lemon / Talk to Banana / Talk to Grapes / Talk to Strawberry / Talk to Coconut on touch, right-click on PC).
 4. Choose Ask a question and type your message. Replies are private.
 5. Plant a fruit on tilled farmland to grow a baby friend; it sprouts and grows in 20 loaded minutes.
 6. Tame the baby with its fruit; more fruit speeds its growth. Stay within 8 blocks of your tamed Plum for regeneration. Apple does not heal you;
@@ -533,19 +604,35 @@ This zip contains the server packs and a Python service; it is not a mobile impo
    removes itself after two minutes. He does not heal you and
    his co-workers are unimpressed.
 10. Grapes is the Sharpshooter: this squarish bunch of green grapes spits grape seeds at hostile mobs
-   (no bow and arrow - just seeds). A tamed Grapes takes aim at monsters within 12 blocks, dealing
-   damage with lovely arcing spits. Grapes does not heal you; stay near your tamed Plum for that.
-11. Craft a Fruit Basket from three sticks in the bucket shape, then hold it and interact with a tamed
-   friend to tuck them inside (Blueberry keeps his chest contents). Carry them in your inventory and interact with a block to let them out again — they always come out in Stay mode, waiting for your next order.
+    (no bow and arrow - just seeds). A tamed Grapes takes aim at monsters within 12 blocks, dealing
+    damage with lovely arcing spits. Grapes does not heal you; stay near your tamed Plum for that.
+11. Strawberry is the Farmer: the only cube friend whose job changes with his mode. Set him to Work and he
+    tends fields - he quickens immature wheat, carrots, potatoes, and beetroot, harvests ripe crops, and
+    replants the seeds so the field keeps producing. Following (or staying at home), he forages instead:
+    he still speeds growth and gathers ripe crops, breaks grass looking for seeds, and never replants.
+    Everything he gathers goes into his own farm chest: interact with him with an empty hand to open it,
+    store what you hold, take the harvest out, or pick Movement. Strawberry does not heal you; stay near
+    your tamed Plum for that.
+12. Coconut is the Bodyguard: about every three seconds he checks for hostile mobs around him and slams
+    the palm-frond ground, knocking every monster nearby away with a bit of damage. Set him to Work and
+    he guards that spot with a wider radius (8 blocks); following or staying at home, he escorts you and
+    guards up to 6 blocks around wherever he is. He only slams when something hostile is actually close,
+    and he does not heal you; stay near your tamed Plum for that.
+13. Craft a Fruit Basket from three sticks in the bucket shape, then hold it and interact with a tamed
+    friend to tuck them inside (Blueberry keeps his chest contents; Strawberry keeps his farm chest).
+    Carry them in your inventory and interact with a block to let them out again — they always come out in Stay mode, waiting for your next order.
 
 Find plum, apple, blueberry and grape trees in newly generated plains and forests, lemon trees in warm
-biomes like deserts, savannas and jungles, and banana trees in jungles. Break their fruit-speckled
-leaves in Survival for the matching fruit and sapling. Plant a sapling on soil with a clear
-5-wide, 6-high space; wait for growth or use bone meal. Leaves do not decay automatically.
+biomes like deserts, savannas and jungles, banana trees in jungles, low strawberry bushes in plains
+only, and tall coconut palms on beaches. Break their fruit-speckled leaves in Survival for the matching
+fruit and sapling. Plant a sapling
+on soil with a clear space (strawberries need just a tiny 3-wide, 2-high pocket; the other fruit trees
+need 5-wide, 6-high; coconut palms are taller and need 5-wide, 7-high); wait for growth or use bone meal.
+Leaves do not decay automatically.
 The fruit works as a seed and snack: plant it on farmland to grow a baby friend.
 
 Updating from 1.1.0: replace both pack folders and the bridge script, update each Fruity Friends
-world-pack-list entry to [1,2,29], and restart. Keep existing credentials and UUIDs.
+world-pack-list entry to [1,2,31], and restart. Keep existing credentials and UUIDs.
 
 Friends resist ordinary damage and do not naturally despawn. Administrative removal,
 /kill, and engine edge cases are outside this protection. Unloaded companions cannot

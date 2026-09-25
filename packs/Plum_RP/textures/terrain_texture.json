@@ -75,6 +75,30 @@
     },
     "grapes_bark": {
       "textures": "textures/blocks/grapes_bark"
+    },
+    "strawberry_leaves": {
+      "textures": "textures/blocks/strawberry_leaves"
+    },
+    "strawberry_sapling_leaf": {
+      "textures": "textures/blocks/strawberry_sapling_leaf"
+    },
+    "strawberry_sprout": {
+      "textures": "textures/blocks/strawberry_sprout"
+    },
+    "strawberry_bark": {
+      "textures": "textures/blocks/strawberry_bark"
+    },
+    "coconut_leaves": {
+      "textures": "textures/blocks/coconut_leaves"
+    },
+    "coconut_sapling_leaf": {
+      "textures": "textures/blocks/coconut_sapling_leaf"
+    },
+    "coconut_sprout": {
+      "textures": "textures/blocks/coconut_sprout"
+    },
+    "coconut_bark": {
+      "textures": "textures/blocks/coconut_bark"
     }
   }
 }

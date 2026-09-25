@@ -66,6 +66,27 @@ test('grapes answers about seed-shooting, sharpshooting, and rivalry, not healin
   assert.match(offlineAnswer('How do I make a bed?', 'grapes'), /three matching wool/);
 });
 
+test('strawberry answers about farming, his farm chest, and plains-only bushes, not healing', () => {
+  assert.match(offlineAnswer('do you tend crops?', 'strawberry'), /Work/);
+  assert.match(offlineAnswer('do you replant crops?', 'strawberry'), /seed so the field keeps producing/);
+  assert.match(offlineAnswer('what happens when you follow me?', 'strawberry'), /forage|break grass/);
+  assert.match(offlineAnswer('how do I open your chest?', 'strawberry'), /empty hand|farm chest/);
+  assert.match(offlineAnswer('where can I find strawberries?', 'strawberry'), /plains/);
+  assert.match(offlineAnswer('does Strawberry heal me?', 'strawberry'), /do NOT grant healing/);
+  assert.match(offlineAnswer('how do I grow a baby Strawberry?', 'strawberry'), /baby Strawberry will sprout/);
+  assert.match(offlineAnswer('How do I make a bed?', 'strawberry'), /three matching wool/);
+});
+
+test('coconut answers about slams, guarding by mode, and beach palms, not healing', () => {
+  assert.match(offlineAnswer('do you knock back monsters?', 'coconut'), /slam|Bodyguard/);
+  assert.match(offlineAnswer('what happens when I set you to Work?', 'coconut'), /8 blocks/);
+  assert.match(offlineAnswer('do you slam when nothing is near?', 'coconut'), /no monsters, no show/);
+  assert.match(offlineAnswer('where can I find coconuts?', 'coconut'), /beaches/);
+  assert.match(offlineAnswer('how do I grow a baby Coconut?', 'coconut'), /baby Coconut will sprout/);
+  assert.match(offlineAnswer('does Coconut heal me?', 'coconut'), /do NOT grant healing/);
+  assert.match(offlineAnswer('How do I make a bed?', 'coconut'), /three matching wool/);
+});
+
 test('input bounds and formatting cannot inject chat colors or control characters', () => {
   assert.equal(cleanText('§cHello\nfriend'), 'Hello friend');
   assert.equal(cleanText('a'.repeat(1000)).length, 400);

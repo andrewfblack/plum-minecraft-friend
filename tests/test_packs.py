@@ -25,7 +25,7 @@ class PackTests(unittest.TestCase):
                     self.assertTrue(any(d.get('module_name') == '@minecraft/server-net' for d in manifest['dependencies']))
 
     def test_lifecycle_references_and_baby_growth(self):
-        for file in ['friend.json', 'apple.json', 'blueberry.json', 'lemon.json', 'banana.json', 'grapes.json']:
+        for file in ['friend.json', 'apple.json', 'blueberry.json', 'lemon.json', 'banana.json', 'grapes.json', 'strawberry.json', 'coconut.json']:
             entity = json.loads((ROOT / 'packs/Plum_BP/entities' / file).read_text())['minecraft:entity']
             groups = entity['component_groups']
             for event in entity['events'].values():
@@ -59,7 +59,7 @@ class PackTests(unittest.TestCase):
 
     def test_universal_movement_modes(self):
         lang = (ROOT / 'packs/Plum_RP/texts/en_US.lang').read_text()
-        for file in ['friend.json', 'apple.json', 'blueberry.json', 'lemon.json', 'banana.json', 'grapes.json']:
+        for file in ['friend.json', 'apple.json', 'blueberry.json', 'lemon.json', 'banana.json', 'grapes.json', 'strawberry.json', 'coconut.json']:
             entity = json.loads((ROOT / 'packs/Plum_BP/entities' / file).read_text())['minecraft:entity']
             groups = entity['component_groups']
             prefix = entity['description']['identifier'].split(':')[0]
@@ -77,7 +77,7 @@ class PackTests(unittest.TestCase):
                               entry['on_interact']['filters']['all_of'])
             self.assertEqual(
                 {entry['interact_text'] for entry in interactions},
-                {f'action.interact.{prefix}_chest' if prefix == 'blueberry' else f'action.interact.{prefix}_manage',
+                {f'action.interact.{prefix}_chest' if prefix in ('blueberry', 'strawberry') else f'action.interact.{prefix}_manage',
                  f'action.interact.{prefix}_talk'})
             held_filters = [entry['on_interact']['filters']['all_of'][-1] for entry in interactions]
             self.assertEqual(held_filters[0], {'test': 'all_slots_empty', 'subject': 'other', 'value': 'hand'})
@@ -134,12 +134,12 @@ class PackTests(unittest.TestCase):
         script = (bp / 'scripts/main.js').read_text()
         for needle in [
             "import { CHEST_SLOTS, parseChest, serializeChest, chestIsFull, chestStore, chestTake } from './chest.js'",
-            "const CHEST_KEY = 'blueberry:chest'",
+            "const chestKey = (friend) =>",
             'function openChest(player, friend)',
             'storeHeldItem(player, friend)', 'takeChestItem(player, friend)',
             "type: 'minecraft:item'", "getComponent('minecraft:item')",
             "FRIENDS[target.typeId]?.collector", 'readChest(friend)',
-            "chest: cfg.collector ? readChest(friend) : undefined",
+            "(cfg.collector || cfg.farmer) ? readChest(friend) : undefined",
         ]:
             self.assertIn(needle, script, f'blueberry collector/chest feature missing: {needle}')
         chest_module = (bp / 'scripts/chest.js').read_text()
@@ -268,9 +268,93 @@ class PackTests(unittest.TestCase):
         self.assertIn('entity.grapes:friend.name=Grapes', lang)
         self.assertIn('Talk to Grapes', lang)
 
+    def test_strawberry_farmer_tends_crops(self):
+        bp, rp = ROOT / 'packs/Plum_BP', ROOT / 'packs/Plum_RP'
+        def read(path): return json.loads((bp / path).read_text())
+        entity = read('entities/strawberry.json')['minecraft:entity']
+        groups = entity['component_groups']
+        self.assertEqual(entity['components']['minecraft:tameable']['tame_items'], ['strawberry:strawberry'])
+        self.assertEqual(groups['strawberry:baby']['minecraft:ageable']['feed_items'], ['strawberry:strawberry'])
+        self.assertEqual(entity['components']['minecraft:type_family']['family'][0], 'strawberry_friend')
+        self.assertNotIn('minecraft:breedable', groups['strawberry:adult'])
+        self.assertEqual(entity['components']['minecraft:collision_box']['height'], 0.75, 'Strawberry is a standard cube friend (not tall like Banana)')
+        script = (bp / 'scripts/main.js').read_text()
+        for needle in [
+            "'strawberry:friend':", "name: 'Strawberry'", "fruit: 'strawberry:strawberry'", 'farmer: true',
+            "'strawberry:strawberry': 'strawberry:friend'", "strawberry: 'strawberry:friend'",
+            "from './farm.js'",
+            'FARM_RADIUS', 'FARM_INTERVAL',
+            'harvestDrops(', 'replantItem(', 'storeHarvest(', 'GRASS_TYPES', 'CROP_TYPES',
+            "FRIENDS[target.typeId]?.farmer",
+        ]:
+            self.assertIn(needle, script, f'strawberry farmer feature missing: {needle}')
+        farm_module = (bp / 'scripts/farm.js').read_text()
+        for needle in [
+            'export const CROPS', "maxGrowth: 7", "maxGrowth: 3",
+            'export function isMature', 'export function nextGrowth',
+            'export function harvestDrops', 'export function replantItem',
+            'export function forageDrops', 'export function mergeDrops',
+        ]:
+            self.assertIn(needle, farm_module, f'farm module missing: {needle}')
+        self.assertIn("'strawberry:strawberry_sprout': 'strawberry:friend'", (bp / 'scripts/orchard.js').read_text())
+        self.assertIn("registerCustomComponent('strawberry:grow_tree'", (bp / 'scripts/orchard.js').read_text())
+        growth = (bp / 'scripts/tree_growth.js').read_text()
+        self.assertIn("'strawberry:strawberry_sapling': ['minecraft:oak_log', 'strawberry:strawberry_leaves']", growth)
+        self.assertIn('strawberryBushPlan', growth)
+        lang = (rp / 'texts/en_US.lang').read_text()
+        self.assertIn('entity.strawberry:friend.name=Strawberry', lang)
+        self.assertIn('Talk to Strawberry', lang)
+        self.assertIn("Open Strawberry's Farm Chest", lang)
+        self.assertTrue((rp / 'textures/entity/strawberry.png').exists())
+        self.assertTrue((rp / 'models/entity/strawberry.geo.json').exists())
+
+    def test_coconut_bodyguard_and_tall_palm(self):
+        bp, rp = ROOT / 'packs/Plum_BP', ROOT / 'packs/Plum_RP'
+        def read(path): return json.loads((bp / path).read_text())
+        entity = read('entities/coconut.json')['minecraft:entity']
+        groups = entity['component_groups']
+        self.assertEqual(entity['components']['minecraft:tameable']['tame_items'], ['coconut:coconut'])
+        self.assertEqual(groups['coconut:baby']['minecraft:ageable']['feed_items'], ['coconut:coconut'])
+        self.assertEqual(entity['components']['minecraft:type_family']['family'][0], 'coconut_friend')
+        self.assertNotIn('minecraft:breedable', groups['coconut:adult'])
+        self.assertEqual(entity['components']['minecraft:collision_box']['height'], 0.75, 'Coconut is a standard cube friend (not tall like Banana)')
+        script = (bp / 'scripts/main.js').read_text()
+        for needle in [
+            "'coconut:friend':", "name: 'Coconut'", "color: '§8'", "fruit: 'coconut:coconut'", 'bodyguard: true',
+            "'coconut:coconut': 'coconut:friend'", "coconut: 'coconut:friend'",
+            'COCONUT_INTERVAL = 60', 'COCONUT_KNOCKBACK_RADIUS = 6', 'COCONUT_GUARD_RADIUS = 8',
+            'COCONUT_DAMAGE', 'COCONUT_POWER', 'coconutSlam',
+            'families: [COCONUT_MONSTER_FAMILY]',
+            'readMode(friend)', 'readWorkAnchor(friend)',
+            'applyImpulse', 'applyDamage(COCONUT_DAMAGE',
+            "spawnParticle('minecraft:explosion_particle'",
+        ]:
+            self.assertIn(needle, script, f'coconut bodyguard feature missing: {needle}')
+        self.assertIn("'coconut:coconut_sprout': 'coconut:friend'", (bp / 'scripts/orchard.js').read_text())
+        self.assertIn("registerCustomComponent('coconut:grow_tree'", (bp / 'scripts/orchard.js').read_text())
+        growth = (bp / 'scripts/tree_growth.js').read_text()
+        self.assertIn("'coconut:coconut_sapling': ['minecraft:oak_log', 'coconut:coconut_leaves']", growth)
+        self.assertIn('coconutPalmPlan', growth)
+        tree = read('features/coconut_tree.json')['minecraft:tree_feature']
+        self.assertEqual(tree['trunk']['trunk_height'], {'range_min': 5, 'range_max': 5}, 'coconut palms have a tall five-log trunk')
+        self.assertEqual(tree['canopy']['canopy_offset'], {'min': 0, 'max': 0})
+        self.assertEqual(tree['canopy']['min_width'], 1)
+        self.assertEqual(tree['base_block'], 'minecraft:sand', 'palms root in the sand of beaches')
+        rule = read('feature_rules/coconut_tree_rule.json')['minecraft:feature_rules']
+        included = {tag['value'] for tag in rule['conditions']['minecraft:biome_filter']['all_of'][1]['any_of']}
+        self.assertEqual(included, {'beach'}, 'coconut palms grow only on beaches')
+        self.assertIn('minecraft:sand', read('blocks/coconut_sapling.json')['minecraft:block']['components']['minecraft:placement_filter']['conditions'][0]['block_filter'])
+        lang = (rp / 'texts/en_US.lang').read_text()
+        self.assertIn('entity.coconut:friend.name=Coconut', lang)
+        self.assertIn('Talk to Coconut', lang)
+        self.assertIn('Manage Coconut', lang)
+        self.assertNotIn("Coconut's Chest", lang, 'Coconut carries no chest')
+        self.assertTrue((rp / 'textures/entity/coconut.png').exists())
+        self.assertTrue((rp / 'models/entity/coconut.geo.json').exists())
+
     def test_model_and_texture_references(self):
         rp = ROOT / 'packs/Plum_RP'
-        client_files = {'plum': 'entity/friend.entity.json', 'apple': 'entity/apple.entity.json', 'blueberry': 'entity/blueberry.entity.json', 'lemon': 'entity/lemon.entity.json', 'banana': 'entity/banana.entity.json', 'grapes': 'entity/grapes.entity.json'}
+        client_files = {'plum': 'entity/friend.entity.json', 'apple': 'entity/apple.entity.json', 'blueberry': 'entity/blueberry.entity.json', 'lemon': 'entity/lemon.entity.json', 'banana': 'entity/banana.entity.json', 'grapes': 'entity/grapes.entity.json', 'strawberry': 'entity/strawberry.entity.json', 'coconut': 'entity/coconut.entity.json'}
         for name, client_file in client_files.items():
             client = json.loads((rp / client_file).read_text())['minecraft:client_entity']['description']
             self.assertEqual(client['identifier'], f'{name}:friend')
@@ -289,7 +373,7 @@ class PackTests(unittest.TestCase):
     def test_survival_fruit_chain_and_versioned_update(self):
         bp, rp = ROOT / 'packs/Plum_BP', ROOT / 'packs/Plum_RP'
         def read(path): return json.loads(path.read_text())
-        for fruit, entity_file in [('plum', 'friend.json'), ('apple', 'apple.json'), ('blueberry', 'blueberry.json'), ('lemon', 'lemon.json'), ('banana', 'banana.json'), ('grapes', 'grapes.json')]:
+        for fruit, entity_file in [('plum', 'friend.json'), ('apple', 'apple.json'), ('blueberry', 'blueberry.json'), ('lemon', 'lemon.json'), ('banana', 'banana.json'), ('grapes', 'grapes.json'), ('strawberry', 'strawberry.json'), ('coconut', 'coconut.json')]:
             fruit_item = read(bp / 'items' / f'{fruit}.json')['minecraft:item']['description']['identifier']
             self.assertEqual(fruit_item, f'{fruit}:{fruit}')
             icon = read(bp / 'items' / f'{fruit}.json')['minecraft:item']['components']['minecraft:icon']
@@ -311,10 +395,16 @@ class PackTests(unittest.TestCase):
             if fruit == 'grapes':
                 self.assertEqual(tree['trunk']['trunk_height'], {'range_min': 1, 'range_max': 1})
                 self.assertEqual(tree['canopy']['canopy_offset'], {'min': 0, 'max': 0})
+            elif fruit == 'strawberry':
+                self.assertEqual(tree['trunk']['trunk_height'], {'range_min': 1, 'range_max': 1})
+                self.assertEqual(tree['canopy']['canopy_offset'], {'min': 0, 'max': 0})
+            elif fruit == 'coconut':
+                self.assertEqual(tree['trunk']['trunk_height'], {'range_min': 5, 'range_max': 5}, 'coconut palms use a tall five-log trunk')
+                self.assertEqual(tree['canopy']['canopy_offset'], {'min': 0, 'max': 0})
             else:
                 self.assertEqual(tree['trunk']['trunk_height'], {'range_min': 4, 'range_max': 4})
                 self.assertEqual(tree['canopy']['canopy_offset'], {'min': -2, 'max': -2})
-            self.assertEqual(tree['canopy']['min_width'], 2)
+            self.assertEqual(tree['canopy']['min_width'], 1 if fruit in ('strawberry', 'coconut') else 2)
             self.assertEqual(tree['canopy']['variation_chance'], {'numerator': 1, 'denominator': 1})
             included = {tag['value'] for tag in rule['conditions']['minecraft:biome_filter']['all_of'][1]['any_of']}
             if fruit == 'lemon':
@@ -325,8 +415,14 @@ class PackTests(unittest.TestCase):
                 self.assertEqual(included, {'jungle'}, 'banana trees grow only in jungles')
                 self.assertNotIn('plains', included)
                 self.assertNotIn('desert', included)
-            else:
-                self.assertEqual(included, {'plains', 'forest'})
+            elif fruit == 'strawberry':
+                self.assertEqual(included, {'plains'}, 'strawberry bushes grow only in plains')
+                self.assertNotIn('forest', included)
+                self.assertNotIn('jungle', included)
+            elif fruit == 'coconut':
+                self.assertEqual(included, {'beach'}, 'coconut palms grow only on beaches')
+                self.assertNotIn('plains', included)
+                self.assertNotIn('forest', included)
                 self.assertNotIn('jungle', included)
             leaves = read(bp / 'blocks' / f'{fruit}_leaves.json')['minecraft:block']
             self.assertEqual(tree['canopy']['leaf_block'], leaves['description']['identifier'])
@@ -350,9 +446,9 @@ class PackTests(unittest.TestCase):
             for atlas in ['item_texture.json', 'terrain_texture.json']:
                 for entry in read(rp / 'textures' / atlas)['texture_data'].values():
                     self.assertTrue((rp / (entry['textures'] + '.png')).exists())
-        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 29])
+        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 31])
         with zipfile.ZipFile(ROOT / 'dist/Fruity-Friends-Dedicated-Server.zip') as z:
-            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 29])
+            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 31])
 
     def test_fruit_basket_item_recipe_and_script(self):
         bp, rp = ROOT / 'packs/Plum_BP', ROOT / 'packs/Plum_RP'
@@ -413,7 +509,7 @@ class PackTests(unittest.TestCase):
         orchard = (bp / 'scripts/orchard.js').read_text()
         sprouts = [block_id for block_id, component in declared if block_id.endswith('_sprout')]
         saplings = sorted(block_id for block_id, component in declared if block_id.endswith('_sapling'))
-        self.assertEqual(saplings, ['apple:apple_sapling', 'banana:banana_sapling', 'blueberry:blueberry_sapling', 'grapes:grapes_sapling', 'lemon:lemon_sapling', 'plum:plum_sapling'])
+        self.assertEqual(saplings, ['apple:apple_sapling', 'banana:banana_sapling', 'blueberry:blueberry_sapling', 'coconut:coconut_sapling', 'grapes:grapes_sapling', 'lemon:lemon_sapling', 'plum:plum_sapling', 'strawberry:strawberry_sapling'])
         for _, component in declared:
             self.assertIn(f"registerCustomComponent('{component}'", orchard, f'{component} must be registered in orchard.js')
         for sprout_id in sprouts:

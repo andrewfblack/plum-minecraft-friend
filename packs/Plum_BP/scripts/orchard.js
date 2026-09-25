@@ -2,7 +2,7 @@ import { system, EquipmentSlot, GameMode } from '@minecraft/server';
 import { growTree } from './tree_growth.js';
 
 // A fruit planted on tilled farmland becomes a sprout that grows into a baby friend.
-const SPROUT_FRIEND = { 'plum:plum_sprout': 'plum:friend', 'apple:apple_sprout': 'apple:friend', 'blueberry:blueberry_sprout': 'blueberry:friend', 'lemon:lemon_sprout': 'lemon:friend', 'banana:banana_sprout': 'banana:friend', 'grapes:grapes_sprout': 'grapes:friend' };
+const SPROUT_FRIEND = { 'plum:plum_sprout': 'plum:friend', 'apple:apple_sprout': 'apple:friend', 'blueberry:blueberry_sprout': 'blueberry:friend', 'lemon:lemon_sprout': 'lemon:friend', 'banana:banana_sprout': 'banana:friend', 'grapes:grapes_sprout': 'grapes:friend', 'strawberry:strawberry_sprout': 'strawberry:friend', 'coconut:coconut_sprout': 'coconut:friend' };
 
 function growFriend(sprout) {
   const friendType = SPROUT_FRIEND[sprout.typeId];
@@ -34,7 +34,10 @@ function makeComponent(fruit) {
       const held = equipment?.getEquipment(EquipmentSlot.Mainhand);
       if (held?.typeId !== 'minecraft:bone_meal') return;
       if (!growTree(block)) {
-        const space = fruit === 'grapes' ? '5 blocks wide, 3 blocks tall' : '5 blocks wide, 6 blocks tall';
+        const space = fruit === 'Strawberry' ? '3 blocks wide, 2 blocks tall'
+          : fruit === 'Grapes' ? '5 blocks wide, 3 blocks tall'
+          : fruit === 'Coconut' ? '5 blocks wide, 7 blocks tall'
+          : '5 blocks wide, 6 blocks tall';
         player.onScreenDisplay.setActionBar(`${fruit} saplings need soil and clear space: ${space}.`);
         return;
       }
@@ -70,5 +73,7 @@ system.beforeEvents.startup.subscribe(({ blockComponentRegistry }) => {
   blockComponentRegistry.registerCustomComponent('lemon:grow_tree', makeComponent('Lemon'));
   blockComponentRegistry.registerCustomComponent('banana:grow_tree', makeComponent('Banana'));
   blockComponentRegistry.registerCustomComponent('grapes:grow_tree', makeComponent('Grapes'));
+  blockComponentRegistry.registerCustomComponent('strawberry:grow_tree', makeComponent('Strawberry'));
+  blockComponentRegistry.registerCustomComponent('coconut:grow_tree', makeComponent('Coconut'));
   blockComponentRegistry.registerCustomComponent('friend:sprout_grow', makeSproutComponent());
 });

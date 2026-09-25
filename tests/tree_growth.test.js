@@ -87,3 +87,41 @@ test('grapes grow into a one-log vine with the wood completely hidden by a leaf 
   }
   assert.equal(growTree(f.sapling), false, 'the hidden trunk is not a sapling, so it cannot regrow');
 });
+
+test('strawberries grow into a tiny mound: one log with five hugging leaf blocks', () => {
+  const f = fixture();
+  f.sapling.setType('strawberry:strawberry_sapling');
+  const plan = treePlan(f.origin, 'strawberry:strawberry_sapling');
+  assert.equal(new Set(plan.map(p => JSON.stringify(p.location))).size, plan.length);
+  assert.equal(plan.length, 6);
+  assert.equal(Math.max(...plan.map(p => p.location.y)), f.origin.y + 1);
+  assert.equal(growTree(f.sapling), true);
+  assert.equal(f.sapling.typeId, 'minecraft:oak_log');
+  assert.equal(f.writes.filter(([, type]) => type === 'minecraft:oak_log').length, 1);
+  assert.equal(f.writes.filter(([, type]) => type === 'strawberry:strawberry_leaves').length, 5);
+  const dirs = [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1], [0, 1, 0]];
+  for (const [dx, dy, dz] of dirs) {
+    assert.equal(f.dimension.getBlock({ x: f.origin.x + dx, y: f.origin.y + dy, z: f.origin.z + dz }).typeId, 'strawberry:strawberry_leaves');
+  }
+  assert.equal(growTree(f.sapling), false, 'the hidden trunk is not a sapling, so it cannot regrow');
+});
+
+test('coconuts grow into a tall slim palm: five logs with a snug frond tuft on top', () => {
+  const f = fixture();
+  f.sapling.setType('coconut:coconut_sapling');
+  const plan = treePlan(f.origin, 'coconut:coconut_sapling');
+  assert.equal(new Set(plan.map(p => JSON.stringify(p.location))).size, plan.length);
+  assert.equal(plan.length, 14);
+  assert.equal(plan.filter(p => p.type === 'minecraft:oak_log').length, 5);
+  assert.equal(plan.filter(p => p.type === 'coconut:coconut_leaves').length, 9);
+  assert.equal(Math.max(...plan.map(p => p.location.y)), f.origin.y + 6);
+  assert.equal(growTree(f.sapling), true);
+  assert.equal(f.sapling.typeId, 'minecraft:oak_log');
+  assert.equal(f.writes.filter(([, type]) => type === 'minecraft:oak_log').length, 5);
+  assert.equal(f.writes.filter(([, type]) => type === 'coconut:coconut_leaves').length, 9);
+  for (const dy of [0, 1, 2, 3, 4]) {
+    assert.equal(f.dimension.getBlock({ x: f.origin.x, y: f.origin.y + dy, z: f.origin.z }).typeId, 'minecraft:oak_log');
+  }
+  assert.equal(f.dimension.getBlock({ x: f.origin.x, y: f.origin.y + 6, z: f.origin.z }).typeId, 'coconut:coconut_leaves');
+  assert.equal(growTree(f.sapling), false, 'the trunk is not a sapling, so it cannot regrow');
+});

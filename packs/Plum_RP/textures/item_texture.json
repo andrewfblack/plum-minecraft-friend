@@ -20,6 +20,12 @@
     "grapes_fruit": {
       "textures": "textures/items/grapes"
     },
+    "strawberry_fruit": {
+      "textures": "textures/items/strawberry"
+    },
+    "coconut_fruit": {
+      "textures": "textures/items/coconut"
+    },
     "fruit_basket": {
       "textures": "textures/items/basket"
     }

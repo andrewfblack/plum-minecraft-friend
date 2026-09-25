@@ -1,0 +1,36 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "coconut:friend",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/coconut"
+      },
+      "geometry": {
+        "default": "geometry.coconut"
+      },
+      "render_controllers": [
+        "controller.render.coconut"
+      ],
+      "animations": {
+        "bob": "animation.coconut.bob",
+        "sit": "animation.coconut.sit"
+      },
+      "scripts": {
+        "animate": [
+          "bob",
+          {
+            "sit": "query.is_sitting"
+          }
+        ]
+      },
+      "spawn_egg": {
+        "base_color": "#96723C",
+        "overlay_color": "#E8D5B0"
+      }
+    }
+  }
+}

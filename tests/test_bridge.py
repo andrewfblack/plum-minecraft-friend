@@ -130,4 +130,26 @@ class BridgeTests(unittest.TestCase):
             self.assertIn('Grapes is an adult', sent['input'][-1]['content'])
         self.assertEqual(self.state.answer(self.body(friend='grapes'))[0], 200)
 
+    def test_strawberry_friend_selects_farmer_instructions(self):
+        payload = {'output': [{'type': 'message', 'content': [{'type': 'output_text', 'text': 'The harvest is safe in my farm chest!'}]}]}
+        with patch('urllib.request.urlopen', return_value=io.BytesIO(json.dumps(payload).encode())) as mocked:
+            self.assertEqual(bridge.ask_openai('where does my harvest go?', [], 'minecraft:overworld', False, 'fake-key', 'test-model', friend='strawberry'), 'The harvest is safe in my farm chest!')
+            sent = json.loads(mocked.call_args.args[0].data)
+            self.assertIn('Farmer', sent['instructions'])
+            self.assertIn('plains', sent['instructions'])
+            self.assertIn('3-wide, 2-high', sent['instructions'])
+            self.assertIn('Strawberry is an adult', sent['input'][-1]['content'])
+        self.assertEqual(self.state.answer(self.body(friend='strawberry'))[0], 200)
+
+    def test_coconut_friend_selects_bodyguard_instructions(self):
+        payload = {'output': [{'type': 'message', 'content': [{'type': 'output_text', 'text': 'Round, hairy, and ready to rumble!'}]}]}
+        with patch('urllib.request.urlopen', return_value=io.BytesIO(json.dumps(payload).encode())) as mocked:
+            self.assertEqual(bridge.ask_openai('a zombie is chasing us!', [], 'minecraft:overworld', False, 'fake-key', 'test-model', friend='coconut'), 'Round, hairy, and ready to rumble!')
+            sent = json.loads(mocked.call_args.args[0].data)
+            self.assertIn('Bodyguard', sent['instructions'])
+            self.assertIn('8 blocks', sent['instructions'])
+            self.assertIn('beaches', sent['instructions'])
+            self.assertIn('Coconut is an adult', sent['input'][-1]['content'])
+        self.assertEqual(self.state.answer(self.body(friend='coconut'))[0], 200)
+
 if __name__ == '__main__': unittest.main()

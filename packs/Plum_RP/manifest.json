@@ -2,12 +2,12 @@
   "format_version": 2,
   "header": {
     "name": "Fruity Friends Resources",
-    "description": "Smiling cube companions with babies, healing, shopping, collecting, light, pranks, and seed-shooting. Friends use a universal Follow/Stay/Work/Go Home system; Apple runs the Applezon shop; Blueberry collects drops; Lemon casts moving block light; Banana (the Prankster) drops peels that trip up monsters; Grapes (the Sharpshooter) spits seeds at hostile mobs.",
+    "description": "Smiling cube companions with babies, healing, shopping, collecting, light, pranks, and bodyguarding. Friends use a universal Follow/Stay/Work/Go Home system; Apple runs the Applezon shop; Blueberry collects drops; Lemon casts moving block light; Banana (the Prankster) drops peels that trip up monsters; Grapes (the Sharpshooter) spits seeds at hostile mobs; Strawberry (the Farmer) tends crops; Coconut (the Bodyguard) slams the ground to knock back hostile mobs.",
     "uuid": "834d72cc-8c7f-498f-adfa-269e215f86e8",
     "version": [
       1,
       2,
-      29
+      31
     ],
     "min_engine_version": [
       1,
@@ -22,7 +22,7 @@
       "version": [
         1,
         2,
-        29
+        31
       ]
     }
   ]

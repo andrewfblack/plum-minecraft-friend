@@ -1,0 +1,36 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "strawberry:friend",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/strawberry"
+      },
+      "geometry": {
+        "default": "geometry.strawberry"
+      },
+      "render_controllers": [
+        "controller.render.strawberry"
+      ],
+      "animations": {
+        "bob": "animation.strawberry.bob",
+        "sit": "animation.strawberry.sit"
+      },
+      "scripts": {
+        "animate": [
+          "bob",
+          {
+            "sit": "query.is_sitting"
+          }
+        ]
+      },
+      "spawn_egg": {
+        "base_color": "#D42A3A",
+        "overlay_color": "#5AAB48"
+      }
+    }
+  }
+}
