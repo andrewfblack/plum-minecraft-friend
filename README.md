@@ -24,11 +24,13 @@ Version **1.2.27** makes Lemon's moving light reliable: removing a light block i
 
 Version **1.2.28** fixes the remaining current-engine pack-load error: the Fruit Basket recipe now uses the required namespaced identifier `friend:fruit_basket` instead of the invalid bare identifier `fruit_basket`.
 
-Version **1.2.29** adds **Grapes**, a squarish little bunch of green grapes and the **Sharpshooter**: a tamed Grapes takes aim at hostile mobs within 12 blocks and spits grape seeds at them every couple of seconds. Each seed is a real physics projectile that arcs over blocks — no bow, just seeds.
+Version **1.2.29** adds **Grapes**, a real bunch of little green grapes — three layers of tiny round grapes tapering from a leafy stem down to a single point grape — and the **Sharpshooter**: a tamed Grapes takes aim at hostile mobs within 12 blocks and spits grape seeds at them every couple of seconds. Each seed is a real physics projectile that arcs over blocks — no bow, just seeds.
 
 Version **1.2.30** adds **Strawberry**, a little red cube crowned with green leaves and the **Farmer**. His job follows his mode: set to **Work**, he tends a field around the spot you pick — he quickens young wheat, carrots, potatoes, and beetroot, harvests the ripe crops, and replants the seed so the field keeps producing. Following (or staying at home), he forages instead: he still speeds growth and gathers ripe crops, but never replants — he breaks grass looking for seeds instead. Everything he gathers goes into **his own farm chest** (empty-hand interact opens it), so planting fruit on farmland or the seven kinds of trees and bushes is the whole food chain.
 
 Version **1.2.31** adds **Coconut**, a fuzzy brown cube crowned with a little palm-frond bunch and the **Bodyguard**. About every three seconds he checks around him for hostile mobs: if any monster is close enough, he **slams the ground** and sends every hostile in the blast flying with a bit of damage. His guarding follows his movement mode — set to **Work**, he guards that exact spot with a wider **8-block** radius; following, staying, or roaming home, he escorts you and guards up to **6 blocks** around wherever he is. He only slams when something hostile is actually close — no monsters, no show — and he never goes looking for fights. Find tall **coconut palms on beaches** (they grow on sand) in newly generated terrain, and plant a **coconut fruit** on tilled farmland to grow a baby Coconut, so the whole family now runs on eight kinds of fruit.
+
+Version **1.2.32** rebuilds **Grapes** into a real bunch of grapes: instead of a cube whose surface was painted with grapes, he is now three staggered layers of little 4×4×4 grapes — one point grape at the bottom, a 2×2 middle layer, and a 3×3 top layer under a woody stem and four little leaves. One cheerful face (two eyes and a smiling, pink-tongued mouth) spreads across the three front grapes of the top layer. Everything else about the Sharpshooter is unchanged — same taming, same seed-spitting.
 
 ## Downloads
 
@@ -116,7 +118,7 @@ Banana is a tall — about **1.5 blocks** — sunny-yellow cube friend with a go
 
 ## Grapes the Sharpshooter
 
-Grapes is a squarish little bunch of green grapes — a standard 1-block cube buddy whose whole surface is covered in tiny round grapes with a leafy crown, and who finally gives the Fruity Friends family some firepower. He works like the others — plant **grapes fruit** on tilled farmland to grow a baby Grapes, tame him with **grapes fruit**, and talk with a book or in chat — but his job is combat support.
+Grapes is a real bunch of green grapes — not a cube but three staggered layers of little round grapes: one point grape at the bottom, a 2×2 middle layer, and a 3×3 top layer under a woody stem with four little leaves. One cheerful face stretches across the three front grapes of the top layer. He's the fruit friend who finally gives the Fruity Friends family some firepower. He works like the others — plant **grapes fruit** on tilled farmland to grow a baby Grapes, tame him with **grapes fruit**, and talk with a book or in chat — but his job is combat support.
 
 - **He spits grape seeds.** A tamed, loaded Grapes locks onto the nearest hostile mob (zombie, creeper, skeleton, spider, and friends) within **12 blocks** and spits a grape seed at it about every **two seconds**. Each seed is a real physics projectile with **ballistic aiming** — it arcs over blocks and drops right on the target, dealing damage. No bow, no arrow, and no friendly fire: he only ever opens fire on monsters.
 - **He does not heal you.** Stay near your tamed Plum for that.
@@ -128,7 +130,7 @@ Grapes is a squarish little bunch of green grapes — a standard 1-block cube bu
 
 ## Strawberry the Farmer
 
-Strawberry is a little red cube friend with a green leafy crown on top — a standard 1-block cube buddy, exactly like Grapes. He works like the others — plant a **strawberry fruit** on tilled farmland to grow a baby Strawberry, tame him with a **strawberry**, and talk with a book or in chat — but his job changes with his movement mode.
+Strawberry is a little red cube friend with a green leafy crown on top — a standard 1-block cube buddy, the same size as the other cube friends. He works like the others — plant a **strawberry fruit** on tilled farmland to grow a baby Strawberry, tame him with a **strawberry**, and talk with a book or in chat — but his job changes with his movement mode.
 
 - **Work mode = Tend Crops.** Set Strawberry to **Work** and he tends a field around the spot you picked: he **quickens** young wheat, carrots, potatoes, and beetroot (each healthy crop sometimes jumps a growth stage), **harvests** the ripe ones, and **replants the seed** so the field keeps producing. He does not replant otherwise.
 - **Follow / Stay / Go Home = Forage.** When he is following you, staying put, or roaming home, Strawberry forages instead: he still speeds up nearby crops and gathers the ripe ones, but he **never replants** — he breaks grass looking for seeds instead.
@@ -154,7 +156,7 @@ Coconut is a fuzzy brown cube friend with a little palm-frond crown and a cheery
 
 ## Updating from version 1.1.0
 
-Reimport the updated offline add-on, or stop BDS and replace the pack folders from the new server archive. On BDS, update both world pack-list entries to **`[1,2,31]`**, preserving entries for other packs. Replace `plum-service/bridge.py` too and restart the bridge so the AI knows about Apple, Applezon, Blueberry, the Collector chest, Lemon the Light Friend, Banana the Prankster, Grapes the Sharpshooter, Strawberry the Farmer, Coconut the Bodyguard, and the eight kinds of fruit trees. Keep existing pack UUIDs, credentials, and world data. Existing tamed friends carried over from older worlds keep working: friends that were sitting migrate to **Stay**, and others keep their old follow-the-owner behavior as **Follow**.
+Reimport the updated offline add-on, or stop BDS and replace the pack folders from the new server archive. On BDS, update both world pack-list entries to **`[1,2,32]`**, preserving entries for other packs. Replace `plum-service/bridge.py` too and restart the bridge so the AI knows about Apple, Applezon, Blueberry, the Collector chest, Lemon the Light Friend, Banana the Prankster, Grapes the Sharpshooter, Strawberry the Farmer, Coconut the Bodyguard, and the eight kinds of fruit trees. Keep existing pack UUIDs, credentials, and world data. Existing tamed friends carried over from older worlds keep working: friends that were sitting migrate to **Stay**, and others keep their old follow-the-owner behavior as **Follow**.
 
 ## Protection and following
 

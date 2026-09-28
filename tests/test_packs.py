@@ -268,6 +268,27 @@ class PackTests(unittest.TestCase):
         self.assertIn('entity.grapes:friend.name=Grapes', lang)
         self.assertIn('Talk to Grapes', lang)
 
+    def test_grapes_model_is_a_three_layer_bunch(self):
+        rp = ROOT / 'packs/Plum_RP'
+        geo = json.loads((rp / 'models/entity/grapes.geo.json').read_text())['minecraft:geometry'][0]
+        self.assertEqual(geo['description']['texture_width'], 64)
+        self.assertEqual(geo['description']['texture_height'], 32)
+        cubes = geo['bones'][0]['cubes']
+        self.assertEqual(len(cubes), 19, '1 point + 4 middle + 9 top grapes + stem + 4 leaves')
+        fourx = [c['size'][0] for c in cubes if c['size'][1] == 4]
+        self.assertEqual(len(fourx), 14, 'fourteen 4x4x4 grapes across the three layers')
+        fronts = [c for c in cubes if c['origin'][2] == -6]
+        self.assertEqual(len(fronts), 3, 'top layer front row holds the one spread-out face')
+        self.assertEqual([f['uv']['north']['uv'][0] for f in fronts], [16, 32, 48],
+                         'left eye, smile, and right eye tiles across the three front grapes')
+        self.assertTrue(any(c['size'] == [2, 3, 2] for c in cubes), 'woody stem crowns the bunch')
+        self.assertEqual(sum(1 for c in cubes if c['size'] == [2, 1, 2]), 4, 'four little leaves around the stem')
+        from pathlib import Path
+        import struct
+        png_data = (rp / 'textures/entity/grapes.png').read_bytes()
+        w, h = struct.unpack('!2I', png_data[16:24])
+        self.assertEqual((w, h), (64, 32))
+
     def test_strawberry_farmer_tends_crops(self):
         bp, rp = ROOT / 'packs/Plum_BP', ROOT / 'packs/Plum_RP'
         def read(path): return json.loads((bp / path).read_text())
@@ -446,9 +467,9 @@ class PackTests(unittest.TestCase):
             for atlas in ['item_texture.json', 'terrain_texture.json']:
                 for entry in read(rp / 'textures' / atlas)['texture_data'].values():
                     self.assertTrue((rp / (entry['textures'] + '.png')).exists())
-        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 31])
+        self.assertEqual(read(bp / 'manifest.json')['header']['version'], [1, 2, 32])
         with zipfile.ZipFile(ROOT / 'dist/Fruity-Friends-Dedicated-Server.zip') as z:
-            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 31])
+            self.assertEqual(json.loads(z.read('world-pack-lists/world_behavior_packs.json'))[0]['version'], [1, 2, 32])
 
     def test_fruit_basket_item_recipe_and_script(self):
         bp, rp = ROOT / 'packs/Plum_BP', ROOT / 'packs/Plum_RP'

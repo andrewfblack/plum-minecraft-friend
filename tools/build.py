@@ -66,8 +66,9 @@ FRIENDS = {
         'file': 'grapes',
         'title': 'Grapes', 'entity': 'grapes:friend', 'fruit': 'grapes:grapes', 'family': 'grapes_friend',
         'egg': ('#4B9E45', '#A8E65C'),
-        # Squarish bunch of green grapes: a standard cube buddy whose whole surface
-        # is covered in little round grapes, capped with a leafy crown.
+        # A real bunch of grapes: three staggered layers of little 4x4x4 grapes
+        # (1 point grape, 2x2, then 3x3) under a woody stem and leaf crown, with
+        # one cheerful face spread across the three front grapes of the top layer.
         # (main, edge, light, dark, white, pink)
         'palette': ((124, 196, 92, 255), (48, 122, 58, 255), (172, 226, 126, 255), (32, 84, 44, 255), (250, 255, 246, 255), (196, 226, 148, 255)),
     },
@@ -90,7 +91,39 @@ FRIENDS = {
     },
 }
 
+def grape_bunch_geometry():
+    """Grapes is a real 3D bunch: a single point grape at the bottom, a 2x2
+    middle layer, and a 3x3 top layer, each grape a small 4x4x4 cube staggered
+    so the clump tapers like a hanging bunch. A woody stem and four little
+    leaves crown the top; the three front grapes of the top layer carry one
+    happy face spread across their north faces."""
+    def uv_region(x, y):
+        return {face: {'uv': [x, y], 'uv_size': [16, 16]} for face in ('north', 'south', 'east', 'west', 'up', 'down')}
+    def grape(cx, cz, base, north=None):
+        uv = uv_region(0, 0)
+        if north is not None:
+            uv['north'] = {'uv': [north * 16, 0], 'uv_size': [16, 16]}
+        return {'origin': [cx - 2, base, cz - 2], 'size': [4, 4, 4], 'uv': uv}
+    cubes = [grape(0, 0, 0)]                          # bottom point grape
+    for cx in (-2, 2):                                # 2x2 middle layer
+        for cz in (-2, 2):
+            cubes.append(grape(cx, cz, 3))
+    for cx in (-4, 0, 4):                             # 3x3 top layer
+        for cz in (-4, 0, 4):
+            front = {-4: 1, 0: 2, 4: 3}.get(cx) if cz == -4 else None
+            cubes.append(grape(cx, cz, 6, north=front))
+    cubes.append({'origin': [-1, 9.5, -1], 'size': [2, 3, 2], 'uv': uv_region(0, 16)})   # stem
+    for cx in (-3, 1):                                # four little leaves in the crown
+        for cz in (-3, 1):
+            cubes.append({'origin': [cx, 9.5, cz], 'size': [2, 1, 2], 'uv': uv_region(16, 16)})
+    return {'format_version': '1.12.0', 'minecraft:geometry': [{'description': {
+        'identifier': 'geometry.grapes', 'texture_width': 64, 'texture_height': 32,
+        'visible_bounds_width': 2, 'visible_bounds_height': 2, 'visible_bounds_offset': [0, 0.5, 0]},
+        'bones': [{'name': 'body', 'pivot': [0, 6, 0], 'cubes': cubes}]}]}
+
 def friend_geometry(name):
+    if name == 'grapes':
+        return grape_bunch_geometry()
     uv = {face: {'uv': [0 if face == 'north' else 16, 0], 'uv_size': [16, 16]} for face in ['north', 'south', 'east', 'west', 'up', 'down']}
     if name == 'banana':
         # Banana is the tall one: a 12x24x12 box (about 1.5 blocks) so he towers
@@ -111,43 +144,70 @@ def friend_geometry(name):
         height, texture_height, bounds = 12, 16, 2
     return {'format_version': '1.12.0', 'minecraft:geometry': [{'description': {'identifier': f'geometry.{name}', 'texture_width': 32, 'texture_height': texture_height, 'visible_bounds_width': 2, 'visible_bounds_height': bounds, 'visible_bounds_offset': [0, bounds / 2 - 0.5, 0]}, 'bones': [{'name': 'body', 'pivot': [0, 6, 0] if name != 'banana' else [0, 12, 0], 'cubes': [{'origin': [-6, 0, -6], 'size': [12, height, 12], 'uv': uv}]}]}]}
 
-def grape_cluster(main, edge, light, dark):
-    """A 16x16 fill of small overlapping round grapes, so the cube reads as a bunch."""
-    highlight, stem = (208, 240, 164, 255), (126, 88, 44, 255)
-    tile = [[edge if x in (0, 15) or y in (0, 15) else main for x in range(16)] for y in range(16)]
-    centers = []
-    for row in range(6):
-        y = 1 + row * 3  # grape center rows: 1, 4, 7, 10, 13
-        xs = range(1, 16, 4) if row % 2 else range(3, 16, 4)
-        for x in xs:
-            if y <= 15: centers.append((x, y, row % 2))
-    for cx, cy, parity in centers:
-        for dy in range(-2, 3):
-            for dx in range(-2, 3):
-                d2 = dx * dx + dy * dy
-                if d2 > 4: continue
-                nx, ny = cx + dx, cy + dy
-                if not (0 <= nx < 16 and 0 <= ny < 16): continue
-                if d2 >= 3: tile[ny][nx] = dark            # grape outline
-                elif dy <= -1: tile[ny][nx] = light        # lit upper half
-                else: tile[ny][nx] = main
-        tile[cy - 1][cx - 1] = highlight                   # catch-light
-    for x in range(7, 9):
-        tile[0][x] = stem                                  # where the bunch hangs from
+def grape_round(main, edge, light, dark):
+    """A 16x16 single grape face: a round berry with a dark outline that reads
+    as the dim gap between grapes when the tile repeats across the bunch, plus
+    a soft top gleam like a real grape's shine."""
+    tile = [[dark for _ in range(16)] for _ in range(16)]
+    for y in range(16):
+        for x in range(16):
+            rx, ry = x - 7.5, y - 7.0
+            r = (rx * rx + ry * ry) ** 0.5
+            if r > 6.4: continue
+            tile[y][x] = edge if r > 5.4 else main
+    for y in range(16):
+        for x in range(16):
+            if ((x - 4.5) / 2.6) ** 2 + ((y - 3.0) / 3.4) ** 2 <= 1:
+                tile[y][x] = light
     return tile
+
+def blit_oval(tile, cx, cy, rx, ry, color):
+    for y in range(16):
+        for x in range(16):
+            if ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1:
+                tile[y][x] = color
+
+def grape_bunch_texture(main, edge, light, dark, white, pink):
+    """A 64x32 sheet for the 3D bunch: one 16x16 tile per face type. Row 0 is
+    the plain grape, the left eye, the smile, and the right eye — the three
+    front grapes of the top layer carry one face across their north faces.
+    Row 1 is the woody stem and the little leaf green."""
+    plain = grape_round(main, edge, light, dark)
+    left, right, smile = [r[:] for r in plain], [r[:] for r in plain], [r[:] for r in plain]
+    blit_oval(left, 11.6, 6.5, 2.0, 3.0, dark)        # left eye toward the inner edge
+    left[4][10] = left[4][12] = white
+    blit_oval(right, 4.4, 6.5, 2.0, 3.0, dark)        # right eye mirrored
+    right[4][3] = right[4][5] = white
+    for x, y in [(4, 10), (5, 11), (6, 12), (7, 12), (8, 12), (9, 12), (10, 11), (11, 10)]:
+        smile[y][x] = dark                            # cheery U-shaped smile
+    for x in (6, 7, 8, 9): smile[13][x] = pink        # little tongue
+    stem = [[(126, 88, 44, 255) for _ in range(16)] for _ in range(16)]
+    for y in range(16):
+        for x in (0, 15): stem[y][x] = (98, 62, 30, 255)
+        stem[y][3] = stem[y][12] = (110, 74, 36, 255)
+        stem[y][7] = (158, 116, 64, 255)
+    leaf = [[(54, 118, 44, 255) for _ in range(16)] for _ in range(16)]
+    for y in range(16):
+        for x in range(16):
+            if ((x - 7.5) / 6.4) ** 2 + ((y - 7.5) / 7.4) ** 2 <= 1:
+                leaf[y][x] = (96, 176, 70, 255)
+    for y in range(16):
+        leaf[y][7] = leaf[y][8] = (156, 214, 110, 255)
+    return [plain[y] + left[y] + smile[y] + right[y] for y in range(16)] + \
+           [stem[y] + leaf[y] + stem[y] + leaf[y] for y in range(16)]
 
 def friend_texture(name):
     """Purple Plum keeps the classic 32x16 sheet; Apple, Blueberry, and Lemon add
     a 32x32 two-sheet top; Banana is the tall one with a 32x40 sheet; Grapes is a
-    32x32 sheet covered in small round grapes with a leafy crown on the top face;
+    64x32 sheet for a real 3D bunch — one 16x16 tile per face, with the three
+    front grapes of the top layer carrying a single spread-out face;
     Strawberry is a 32x32 sheet of a plump red berry dotted with seeds under a
     green calyx crown; Coconut is a 32x32 sheet of a fuzzy brown husk with three
     dark "eyes" and a cheery grin under a small palm-frond crown."""
     main, edge, light, dark, white, pink = FRIENDS[name]['palette']
     if name == 'grapes':
-        tile = grape_cluster(main, edge, light, dark)
-    else:
-        tile = [[edge if x in (0, 15) or y in (0, 15) else light if y == 1 else main for x in range(16)] for y in range(16)]
+        return grape_bunch_texture(main, edge, light, dark, white, pink)
+    tile = [[edge if x in (0, 15) or y in (0, 15) else light if y == 1 else main for x in range(16)] for y in range(16)]
     if name == 'strawberry':
         # Pale seed dimples sprinkled over the berry's sides, like a real strawberry.
         seed = (250, 212, 142, 255)
@@ -250,16 +310,6 @@ def friend_texture(name):
         top[8][3] = calyx_light
         for x, y in [(6, 4), (10, 4), (8, 5)]: top[y][x] = calyx_dark
         for x, y in [(3, 7), (12, 9), (4, 12), (11, 6), (2, 10), (13, 12)]: top[y][x] = bloom
-    elif name == 'grapes':
-        # Grapes: a woody stem at the crown of the bunch, ringed by tiny green leaves.
-        stem, leaf_dark, leaf_mid, leaf_light = (126, 88, 44, 255), (54, 118, 44, 255), (96, 176, 70, 255), (156, 214, 110, 255)
-        for x, y in [(7, 1), (8, 1), (9, 1), (8, 2), (8, 3), (7, 2), (9, 2)]: top[y][x] = stem
-        for x, y in [(4, 4), (5, 3), (6, 2), (10, 2), (11, 3), (12, 4),
-                     (4, 6), (5, 7), (6, 7), (10, 7), (11, 7), (12, 6),
-                     (6, 10), (7, 11), (8, 11), (9, 11), (10, 10)]: top[y][x] = leaf_mid
-        for x, y in [(5, 4), (6, 3), (10, 3), (11, 4), (3, 5), (13, 5),
-                     (5, 8), (11, 8), (7, 12), (8, 12), (9, 12)]: top[y][x] = leaf_dark
-        for x, y in [(5, 5), (6, 6), (10, 6), (11, 5), (7, 13), (9, 13)]: top[y][x] = leaf_light
     elif name == 'strawberry':
         # Strawberry: a broad starry green calyx crown over the berry, with a short stem.
         leaf_dark, leaf_mid, leaf_light, stem = (52, 112, 42, 255), (88, 164, 58, 255), (156, 214, 100, 255), (124, 92, 50, 255)
@@ -387,7 +437,22 @@ def build_friend(name, data):
         f'animation.{name}.sit': {'loop': True, 'bones': {'body': {'position': [0, -1.8, 0], 'scale': [1.25, 0.7, 1.25]}}}
     }})
     png(RP / f'textures/entity/{name}.png', friend_texture(name))
-    face = friend_texture(name)[:16]
+    sheet = friend_texture(name)
+    if name == 'grapes':
+        # Preview the real front of the bunch: the three top-layer grapes compose
+        # one face (left eye / smile / right eye) across the 12-unit-wide row.
+        face = []
+        for y in range(16):
+            row = []
+            for x in range(16):
+                wx = (x - 7.5) * 0.75                       # world offset from face center
+                if wx < -2: tile, lx = 1, int((wx + 6) * 4)
+                elif wx <= 2: tile, lx = 2, int((wx + 2) * 4)
+                else: tile, lx = 3, int((wx - 2) * 4)
+                row.append(sheet[y][min(15, max(0, tile * 16 + lx))])
+            face.append(row)
+    else:
+        face = sheet[:16]
     png(ROOT / f'art/{name}-face.png', [[face[y // 16][x // 16] for x in range(256)] for y in range(256)])
 
 def basket_texture():
@@ -532,7 +597,7 @@ def build_grape_seed(bp, rp, write, png):
     png(rp / 'textures/entity/grapes_seed.png', grape_seed_pixels())
 
 def build(net_version='1.0.0-beta', admin_version='1.0.0-beta'):
-    version = [1, 2, 31]
+    version = [1, 2, 32]
     for path, name, uid, modules in [
         (BP, 'Fruity Friends', BP_ID, [
             {'type': 'data', 'uuid': 'fce620e4-42ac-4477-a84b-c8113d47ba2e', 'version': version},
@@ -603,7 +668,9 @@ This zip contains the server packs and a Python service; it is not a mobile impo
    non-pickup banana peel trap. The first hostile mob that steps close slips and slows; an unused peel
    removes itself after two minutes. He does not heal you and
    his co-workers are unimpressed.
-10. Grapes is the Sharpshooter: this squarish bunch of green grapes spits grape seeds at hostile mobs
+10. Grapes is the Sharpshooter: a real bunch of little green grapes - three layers of
+    tiny round grapes tapering from a leafy stem down to a single point grape, with one
+    cheerful face across the front - who spits grape seeds at hostile mobs
     (no bow and arrow - just seeds). A tamed Grapes takes aim at monsters within 12 blocks, dealing
     damage with lovely arcing spits. Grapes does not heal you; stay near your tamed Plum for that.
 11. Strawberry is the Farmer: the only cube friend whose job changes with his mode. Set him to Work and he
@@ -632,7 +699,7 @@ Leaves do not decay automatically.
 The fruit works as a seed and snack: plant it on farmland to grow a baby friend.
 
 Updating from 1.1.0: replace both pack folders and the bridge script, update each Fruity Friends
-world-pack-list entry to [1,2,31], and restart. Keep existing credentials and UUIDs.
+world-pack-list entry to [1,2,32], and restart. Keep existing credentials and UUIDs.
 
 Friends resist ordinary damage and do not naturally despawn. Administrative removal,
 /kill, and engine edge cases are outside this protection. Unloaded companions cannot
